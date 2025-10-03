@@ -50,12 +50,13 @@ rule metaphlan:
     output:
         done=touch(join(output_directory, 'metaphlan.done')),
         metaphlan_db=directory(metaphlan_db)
-    conda:
-        '1_novel_strains/envs/metaphlan.yml'
+#    conda:
+#        '1_novel_strains/envs/metaphlan.yml'
     log:
         join(output_directory, 'metaphlan.log')
     shell:
-        'metaphlan --install --bowtie2db {metaphlan_db} --index {metaphlan_index} &> {log}'
+        'pixi run --environment metaphlan metaphlan --install --bowtie2db {metaphlan_db} --index {metaphlan_index} &> {log}'
+#        'pixi run --environment metaphlan metaphlan --install --db_dir {metaphlan_db} --index {metaphlan_index} &> {log}' ## metaphlan 4.2.2
 
 rule kraken_download:
     output:
@@ -63,7 +64,7 @@ rule kraken_download:
     log:
         abspath(join(output_directory, 'kraken-download.log'))
     shell:
-        "mkdir -pv {kraken_db} && cd {kraken_db} && wget --no-directories -r -np -e robots=off http://ftp.tue.mpg.de/ebio/projects/struo2/GTDB_release207/kraken2/ &> {log}"
+        "mkdir -pv {kraken_db} && cd {kraken_db} && wget --no-directories -r -np -c --progress=dot:mega -e robots=off http://ftp.tue.mpg.de/ebio/projects/struo2/GTDB_release207/kraken2/ &> {log}"
 
 rule sourmash:
     input:
@@ -143,12 +144,12 @@ rule map2b:
     output:
         done=touch(join(output_directory, 'map2b.done')),
         map2b_db=directory(map2b_db)
-    conda:
-        "1_novel_strains/envs/MAP2B-20230420-conda.yml"
+    #conda:
+    #    "1_novel_strains/envs/MAP2B-20230420-conda.yml"
     log:
         join(output_directory, 'map2b.log')
     shell:
-        'python3 {map2b_checkout_dir}/scripts/DownloadDB.py -l {map2b_checkout_dir}/config/GTDB.CjePI.database.list -d {map2b_checkout_dir}/database/GTDB &> {log}'
+        'pixi run --environment map2b python3 {map2b_checkout_dir}/scripts/DownloadDB.py -l {map2b_checkout_dir}/config/GTDB.CjePI.database.list -d {map2b_checkout_dir}/database/GTDB &> {log}'
 
 ## metabuli database download doesn't work because it is via sharepoint, which gives an indirect link.
 # rule metabuli_download:

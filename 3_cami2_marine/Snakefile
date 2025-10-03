@@ -1,10 +1,12 @@
 import extern
 import polars as pl
 
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(workflow.snakefile)), '..')))
 from tool_reference_data import *
 
 num_threads = config['benchmarking_threads']
 kraken_num_threads = 999 # never let kraken be parallelised, because otherwise it will exhaust the RAM.
+kraken_num_threads = 1
 
 tools = r207_tools
 
@@ -203,8 +205,8 @@ rule metaphlan_profile:
     output:
         sgb_report=output_dirs_dict['metaphlan'] + "/metaphlan/{sample}.sgb_report",
         done=touch(output_dirs_dict['metaphlan'] + "/metaphlan/{sample}.profile.done")
-    conda:
-        "envs/metaphlan.yml"
+    #conda:
+    #    "envs/metaphlan.yml"
     threads: num_threads
     params:
         cat_reads = output_dirs_dict['metaphlan'] + "/metaphlan/{sample}.cat.fq.gz",
@@ -212,7 +214,7 @@ rule metaphlan_profile:
         output_dirs_dict['metaphlan'] + "/logs/metaphlan/{sample}.log"
     shell:
         # Concatenate input files because metaphlan can't handle multiple input files
-        "rm -f {output.sgb_report} {params.cat_reads}.bowtie2out.txt; cat {input.r1} {input.r2} > {params.cat_reads} && metaphlan {params.cat_reads} --index {metaphlan_index} --nproc {threads} --input_type fastq --bowtie2db {metaphlan_db_local1} -o {output.sgb_report} &> {log}"
+        "rm -f {output.sgb_report} {params.cat_reads}.bowtie2out.txt; cat {input.r1} {input.r2} > {params.cat_reads} && pixi run --environment metaphlan metaphlan {params.cat_reads} --index {metaphlan_index} --nproc {threads} --input_type fastq --bowtie2db {metaphlan_db_local1} -o {output.sgb_report} &> {log}"
 
 rule metaphlan_convert_profile_to_GTDB:
     input:
@@ -308,6 +310,8 @@ rule kraken_run:
     benchmark:
         benchmark_dir + "/kraken/{sample}-"+str(num_threads)+"threads.benchmark"
     threads: kraken_num_threads
+    resources:
+        mem_mb=512000
     output:
         report=output_dirs_dict['kraken'] + "/kraken/{sample}.kraken",
         done=touch(output_dirs_dict['kraken'] + "/kraken/{sample}.kraken.done")
@@ -582,6 +586,8 @@ rule metabuli_run:
         report=output_dirs_dict['metabuli'] + "/output/{sample}_report.tsv",
         done=touch(output_dirs_dict['metabuli'] + "/output/{sample}.done")
     threads: num_threads
+    resources:
+        mem_mb=256000
     benchmark:
         benchmark_dir + "/metabuli/{sample}-"+str(num_threads)+"threads.benchmark"
     conda:

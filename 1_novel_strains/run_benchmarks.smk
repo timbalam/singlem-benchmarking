@@ -42,16 +42,16 @@ rule all_singlem:
     output:
         touch(output_prefix + "singlem/done")
 
-# rule copy_reads_to_local:
-#     params:
-#         r1=generated_fastq_dir + "/{sample}.1.fq.gz",
-#         r2=generated_fastq_dir + "/{sample}.2.fq.gz",
-#     output:
-#         r1=fastq_dir + "/{sample}.1.fq.gz",
-#         r2=fastq_dir + "/{sample}.2.fq.gz",
-#         done=touch(fastq_dir + "/{sample}.done")
-#     shell:
-#         "cp {params.r1} {output.r1} && cp {params.r2} {output.r2}"
+rule copy_reads_to_local:
+    params:
+        r1=generated_fastq_dir + "/{sample}.1.fq.gz",
+        r2=generated_fastq_dir + "/{sample}.2.fq.gz",
+    output:
+        r1=fastq_dir + "/{sample}.1.fq.gz",
+        r2=fastq_dir + "/{sample}.2.fq.gz",
+        done=touch(fastq_dir + "/{sample}.done")
+    shell:
+        "cp {params.r1} {output.r1} && cp {params.r2} {output.r2}"
 
 def get_condensed_to_biobox_extra_args(tool):
     if tool in tools_with_filled_output_profiles:
@@ -153,8 +153,8 @@ rule cat_reads_for_metaphlan:
     output:
         cat_reads = output_dirs_dict['metaphlan'] + "/metaphlan/{sample}.cat.fq.gz",
         done = touch(output_dirs_dict['metaphlan'] + "/metaphlan/{sample}.cat.done")
-    conda:
-        "envs/metaphlan.yml"
+    #conda:
+    #    "envs/metaphlan.yml"
     shell:
         "cat {input.r1} {input.r2} > {output.cat_reads}"
 
@@ -170,14 +170,16 @@ rule metaphlan_profile:
     output:
         sgb_report=output_dirs_dict['metaphlan'] + "/metaphlan/{sample}.sgb_report",
         done=touch(output_dirs_dict['metaphlan'] + "/metaphlan/{sample}.profile.done")
-    conda:
-        "envs/metaphlan.yml"
+    #conda:
+    #    "envs/metaphlan.yml"
     threads: num_threads
+    resources:
+        mem_mb=256000
     log:
         output_dirs_dict['metaphlan'] + "/logs/metaphlan/{sample}.log"
     shell:
         # Concatenate input files because metaphlan can't handle multiple input files
-        "rm -f {output.sgb_report} {input.cat_reads}.bowtie2out.txt; metaphlan {input.cat_reads} --index {metaphlan_index} --nproc {threads} --input_type fastq --bowtie2db {metaphlan_db_local1} -o {output.sgb_report} &> {log}"
+        "rm -f {output.sgb_report} {input.cat_reads}.bowtie2out.txt; pixi run --environment metaphlan metaphlan {input.cat_reads} --index {metaphlan_index} --nproc {threads} --input_type fastq --bowtie2db {metaphlan_db_local1} -o {output.sgb_report} &> {log}"
 
 rule metaphlan_convert_profile_to_GTDB:
     input:
@@ -270,6 +272,8 @@ rule kraken_run:
     benchmark:
         benchmark_dir + "/kraken/{sample}-"+str(num_threads)+"threads.benchmark"
     threads: kraken_num_threads
+    resources:
+        mem_mb=512000
     output:
         report=output_dirs_dict['kraken'] + "/kraken/{sample}.kraken",
         done=touch(output_dirs_dict['kraken'] + "/kraken/{sample}.kraken.done")
@@ -545,6 +549,8 @@ rule metabuli_run:
         report=output_dirs_dict['metabuli'] + "/output/{sample}_report.tsv",
         done=touch(output_dirs_dict['metabuli'] + "/output/{sample}.done")
     threads: kraken_num_threads
+    resources:
+        mem_mb=256000
     benchmark:
         benchmark_dir + "/metabuli/{sample}-"+str(num_threads)+"threads.benchmark"
     conda:

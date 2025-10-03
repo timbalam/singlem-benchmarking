@@ -8,6 +8,7 @@ from tool_reference_data import *
 
 num_threads = config['benchmarking_threads']
 kraken_num_threads = 999 # never let kraken be parallelised, because otherwise it will exhaust the RAM.
+kraken_num_threads = 1
 if 'kraken_threads' in config:
     kraken_num_threads = config['kraken_threads']
 
@@ -128,8 +129,8 @@ rule truth_condensed_to_biobox:
     output:
         biobox = os.path.join(truth_dir, "known{known_percent}/{sample}.condensed.biobox"),
     conda:
-        #"envs/singlem.yml"
-        'singlem-dev' # Need changes post 0.16
+        "envs/singlem.yml"
+    #    'singlem-dev' # Need changes post 0.16
     resources:
         mem_mb=4000,
         runtime='1h'
@@ -253,8 +254,8 @@ rule metaphlan_profile:
     output:
         sgb_report=output_dirs_dict['metaphlan'] + "/metaphlan/known{known_percent}/{sample}.sgb_report",
         done=touch(output_dirs_dict['metaphlan'] + "/metaphlan/known{known_percent}/{sample}.profile.done")
-    conda:
-        "envs/metaphlan.yml"
+    #conda:
+    #    "envs/metaphlan.yml"
     threads: num_threads
     resources:
         mem_mb=32000,
@@ -265,7 +266,7 @@ rule metaphlan_profile:
         output_dirs_dict['metaphlan'] + "/logs/metaphlan/known{known_percent}/{sample}.log"
     shell:
         # Concatenate input files because metaphlan can't handle multiple input files
-        "rm -f {output.sgb_report} {params.cat_reads}.bowtie2out.txt; cat {input.r1} {input.r2} > {params.cat_reads} && metaphlan {params.cat_reads} --index {metaphlan_index} --nproc {threads} --input_type fastq --bowtie2db {metaphlan_db_local1} -o {output.sgb_report} &> {log}"
+        "rm -f {output.sgb_report} {params.cat_reads}.bowtie2out.txt; cat {input.r1} {input.r2} > {params.cat_reads} && pixi run --environment metaphlan metaphlan {params.cat_reads} --index {metaphlan_index} --nproc {threads} --input_type fastq --bowtie2db {metaphlan_db_local1} -o {output.sgb_report} &> {log}"
 
 rule metaphlan_convert_profile_to_GTDB:
     input:
@@ -437,7 +438,8 @@ rule bracken_to_profile:
     output:
         profile = output_dirs_dict['kraken'] + "/kraken/known{known_percent}/{sample}.profile",
     conda:
-        "singlem-dev"
+        "envs/singlem.yml"
+    #    "singlem-dev"
     resources:
         mem_mb=4000,
         runtime='1h'

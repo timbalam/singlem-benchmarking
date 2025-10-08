@@ -258,7 +258,7 @@ rule metaphlan_profile:
     #    "envs/metaphlan.yml"
     threads: num_threads
     resources:
-        mem_mb=32000,
+        mem_mb=256000,
         runtime='6h'
     params:
         cat_reads = output_dirs_dict['metaphlan'] + "/metaphlan/known{known_percent}/{sample}.cat.fq.gz",

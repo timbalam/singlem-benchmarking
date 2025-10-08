@@ -104,7 +104,7 @@ if __name__ == '__main__':
             taxonomy = 'd__Archaea;p__Methanobacteriota;c__Methanobacteria;o__Methanobacteriales;f__Methanobacteriaceae;g__Methanobrevibacter;s__Methanobrevibacter ruminantium'
             
         print("\t".join([sample_name,
-                         str(fraction/total_coverage) if total_coverage > 0 else "NA",
+                         str(fraction/total_coverage) if total_coverage > 0 else "inf",
                          taxonomy]))
     
     logging.info("Done")

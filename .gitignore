@@ -18,3 +18,5 @@ reference_genomes
 2_phylogenetic_novelty/bench2_genomes.tar.gz
 2_phylogenetic_novelty/reference_genomes-download.done
 2_phylogenetic_novelty/reference_genomes-extract.done
+__pycache__
+**/__pycache__

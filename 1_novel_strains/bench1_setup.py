@@ -54,3 +54,5 @@ kaiju_db_progenomes_names = output_dirs_dict['kaiju'] + '/kaiju/data/names.dmp'
 
 # metabuli_db = '/work/microbiome/db/metabuli/gtdb207'
 metabuli_db_local = output_dirs_dict['metabuli'] + '/metabuli/data/gtdb207'
+
+sylph_db_local = output_dirs_dict['sylph'] + '/sylph/data/gtdb_database.syldb'

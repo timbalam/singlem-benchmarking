@@ -573,3 +573,49 @@ rule metabuli_report_to_condensed:
         "{workflow.basedir}/../bin/metabuli_to_condensed.py --input {input} " \
         "--bacterial-taxonomy ../bac120_taxonomy_r207.tsv " \
         "--archaeal-taxonomy ../ar53_taxonomy_r207.tsv > {output.profile}"
+
+###############################################################################################
+###############################################################################################
+###############################################################################################
+######### sylph
+
+rule sylph_copy_db:
+    input:
+        db=sylph_db,
+    output:
+        db=sylph_db_local,
+        done=touch(output_dirs_dict['sylph'] + "/sylph/data/done")
+    shell:
+        "mkdir -p output.db && cp -r {input.db} {output.db}"
+
+rule sylph_run:
+    input:
+        r1=fastq_dir + "/{sample}.1.fq.gz",
+        r2=fastq_dir + "/{sample}.2.fq.gz",
+        db=sylph_db_local,
+        done=output_dirs_dict['sylph'] + "/sylph/data/done"
+    output:
+        report=output_dirs_dict['sylph'] + "/output/{sample}.tsv",
+        done=touch(output_dirs_dict['sylph'] + "/output/{sample}.done")
+    threads: num_threads
+    resources:
+        mem_mb=32000
+    benchmark:
+        benchmark_dir + "/sylph/{sample}-"+str(num_threads)+"threads.benchmark"
+    log:
+        output_dirs_dict['sylph'] + "/logs/sylph/{sample}.log"
+    shell:
+        "pixi run --environment sylph sylph profile {input.db} -1 {input.r1} -2 {input.r2} -t {threads} > {output.report} 2> {log}"
+
+rule sylph_report_to_condensed:
+    input:
+        report=output_dirs_dict['sylph'] + "/output/{sample}.tsv",
+    output:
+        profile = output_dirs_dict['sylph'] + "/sylph/{sample}.profile",
+    conda:
+        "envs/singlem.yml"
+    shell:
+        "python3 {workflow.basedir}/../bin/sylph_to_condensed.py --sylph-genome {input} " \
+        "--sample {wildcards.sample} " \
+        "--bac-tax ../bac120_taxonomy_r207.tsv " \
+        "--arc-tax ../ar53_taxonomy_r207.tsv > {output.profile}"

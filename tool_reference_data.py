@@ -31,11 +31,13 @@ map2b_db = join(map2b_checkout_dir, 'database/GTDB')
 metabuli_db_dir = '/work/microbiome/db/metabuli/gtdb207'
 # metabuli_db_dir = join(output_directory, 'metabuli') #'metabuli-gtdb207'
 
-tools = ['singlem', 'metaphlan', 'motus', 'kraken', 'sourmash', 'kaiju', 'map2b', 'metabuli']
+sylph_db = join(output_directory, "gtdb_database.syldb")
+
+tools = ['singlem', 'metaphlan', 'motus', 'kraken', 'sourmash', 'kaiju', 'map2b', 'metabuli', 'sylph']
 
 tools_with_filled_output_profiles = ('kraken','sourmash')
 
-r207_tools = ['singlem', 'metaphlan', 'kraken', 'sourmash', 'metabuli']
+r207_tools = ['singlem', 'metaphlan', 'kraken', 'sourmash', 'metabuli', 'sylph']
 
 gtdb_bac_metadata = '../bac120_metadata_r207.tsv'
 gtdb_ar_metadata = '../ar53_metadata_r207.tsv'

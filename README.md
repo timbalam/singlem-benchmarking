@@ -39,6 +39,15 @@ The Metabuli R207 database is downloaded separately. Download the tar.gz file fr
 tar -xvf metabuli.tar.gz
 ```
 
+To generate a GTDB v207 database for sylph
+```bash
+cd tool_reference_data && {
+    find /work/microbiome/db/gtdb/gtdb_release207/genomic_files_reps/gtdb_genomes_reps_r207 | grep .fna > gtdb_all.txt &&
+        pixi run --environment sylph sylph sketch -l gtdb_all.txt -t 50 -o gtdb_database
+    cd ..
+}
+```
+
 Then run the benchmarking, for instance #1
 
 ```bash

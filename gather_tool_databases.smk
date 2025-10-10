@@ -11,6 +11,7 @@ singlem_metapackage = join(output_directory, 'S4.1.0.GTDB_r207.metapackage_20240
 singlem_metapackage_tgz = singlem_metapackage + '.zb.tar.gz'
 
 metaphlan_db = join(output_directory, 'metaphlan_bowtiedb')
+metaphlan42_db = join(output_directory, 'metaphlan42_bowtiedb')
 metaphlan_index = 'mpa_vOct22_CHOCOPhlAnSGB_202212'
 
 motus_db = join(output_directory, 'motus', 'db_mOTU')
@@ -35,7 +36,7 @@ map2b_db = os.path.join(map2b_checkout_dir, 'database/GTDB')
 
 # tools = ['singlem', 'metaphlan', 'motus', 'kraken', 'sourmash', 'kaiju', 'map2b', 'metabuli']
 ## metabuli download is not scripted because it is via sharepoint, which gives an indirect link.
-tools = ['singlem', 'metaphlan', 'motus', 'kraken', 'sourmash', 'kaiju', 'map2b']
+tools = ['singlem', 'metaphlan', 'motus', 'kraken', 'sourmash', 'kaiju', 'map2b', 'metaphlan42']
 
 rule all:
     input:
@@ -56,7 +57,15 @@ rule metaphlan:
         join(output_directory, 'metaphlan.log')
     shell:
         'pixi run --environment metaphlan metaphlan --install --bowtie2db {metaphlan_db} --index {metaphlan_index} &> {log}'
-#        'pixi run --environment metaphlan metaphlan --install --db_dir {metaphlan_db} --index {metaphlan_index} &> {log}' ## metaphlan 4.2.2
+
+rule metaphlan42:
+    output:
+        done=touch(join(output_directory, 'metaphlan42.done')),
+        metaphlan_db=directory(metaphlan42_db)
+    log:
+        join(output_directory, 'metaphlan42.log')
+    shell:
+        'pixi run --environment metaphlan42 metaphlan --install --db_dir {metaphlan42_db} --index {metaphlan_index} &> {log}' ## metaphlan 4.2.2
 
 rule kraken_download:
     output:

@@ -9,6 +9,7 @@ singlem_metapackage = join(output_directory, 'S4.1.0.GTDB_r207.metapackage_20240
 singlem_metapackage_tgz = singlem_metapackage + '.zb.tar.gz'
 
 metaphlan_db = join(output_directory, 'metaphlan_bowtiedb')
+metaphlan42_db = join(output_directory, 'metaphlan42_bowtiedb')
 metaphlan_index = 'mpa_vOct22_CHOCOPhlAnSGB_202212'
 
 motus_db = join(output_directory, 'motus', 'db_mOTU')
@@ -33,11 +34,11 @@ metabuli_db_dir = '/work/microbiome/db/metabuli/gtdb207'
 
 sylph_db = join(output_directory, "gtdb_database.syldb")
 
-tools = ['singlem', 'metaphlan', 'motus', 'kraken', 'sourmash', 'kaiju', 'map2b', 'metabuli', 'sylph']
+tools = ['singlem', 'metaphlan', 'motus', 'kraken', 'sourmash', 'kaiju', 'map2b', 'metabuli', 'sylph', 'metaphlan42']
 
 tools_with_filled_output_profiles = ('kraken','sourmash')
 
-r207_tools = ['singlem', 'metaphlan', 'kraken', 'sourmash', 'metabuli', 'sylph']
+r207_tools = ['singlem', 'metaphlan', 'kraken', 'sourmash', 'metabuli', 'sylph', 'metaphlan']
 
 gtdb_bac_metadata = '../bac120_metadata_r207.tsv'
 gtdb_ar_metadata = '../ar53_metadata_r207.tsv'

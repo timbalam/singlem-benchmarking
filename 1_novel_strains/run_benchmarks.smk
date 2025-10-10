@@ -19,6 +19,7 @@ fastq_dir = os.path.join(workflow.basedir, 'local_reads')
 
 #####################################################################
 
+tools = tools + ["metaphlan42"]
 
 rule all:
     input:
@@ -199,6 +200,85 @@ rule metaphlan_profile_to_condensed:
         report=output_dirs_dict['metaphlan'] + "/metaphlan/{sample}.gtdb_profile"
     output:
         profile = output_dirs_dict['metaphlan'] + "/metaphlan/{sample}.profile",
+    conda:
+        "envs/singlem.yml"
+    shell:
+        "{workflow.basedir}/../bin/metaphlan_to_condensed.py --metaphlan {input} --sample {wildcards.sample} > {output.profile} "
+
+###############################################################################################
+###############################################################################################
+###############################################################################################
+#########
+######### metaphlan42
+
+
+rule metaphlan42_copy_db:
+    # input:
+    # Cannot use the directory as input/output because humann complains when
+    # there's a snakemake hidden file in the dir
+    # db1=directory(metaphlan_db_original1),
+    # db2=directory(metaphlan_db_original2),
+    output:
+        # db1=directory(metaphlan_db_local1),
+        # db2=directory(metaphlan_db_local2),
+        done=touch(output_dirs_dict['metaphlan42'] + "/metaphlan42/data/done")
+    shell:
+        "cp -rvL {metaphlan42_db} {metaphlan42_db_local1}"
+
+rule cat_reads_for_metaphlan42:
+    # Concatenate input files because metaphlan can't handle multiple input files
+    input:
+        r1=fastq_dir + "/{sample}.1.fq.gz",
+        r2=fastq_dir + "/{sample}.2.fq.gz",
+    output:
+        cat_reads = output_dirs_dict['metaphlan42'] + "/metaphlan42/{sample}.cat.fq.gz",
+        done = touch(output_dirs_dict['metaphlan42'] + "/metaphlan42/{sample}.cat.done")
+    #conda:
+    #    "envs/metaphlan.yml"
+    shell:
+        "cat {input.r1} {input.r2} > {output.cat_reads}"
+
+rule metaphlan42_profile:
+    input:
+        r1=fastq_dir + "/{sample}.1.fq.gz",
+        r2=fastq_dir + "/{sample}.2.fq.gz",
+        db_done=output_dirs_dict['metaphlan42'] + "/metaphlan42/data/done",
+        cat_reads = output_dirs_dict['metaphlan42'] + "/metaphlan42/{sample}.cat.fq.gz",
+        cat_done = output_dirs_dict['metaphlan42'] + "/metaphlan42/{sample}.cat.done",
+    benchmark:
+        benchmark_dir + "/metaphlan42/{sample}-"+str(num_threads)+"threads.benchmark"
+    output:
+        sgb_report=output_dirs_dict['metaphlan42'] + "/metaphlan42/{sample}.sgb_report",
+        done=touch(output_dirs_dict['metaphlan42'] + "/metaphlan42/{sample}.profile.done")
+    #conda:
+    #    "envs/metaphlan.yml"
+    threads: num_threads
+    resources:
+        mem_mb=256000
+    log:
+        output_dirs_dict['metaphlan42'] + "/logs/metaphlan42/{sample}.log"
+    shell:
+        # Concatenate input files because metaphlan42 can't handle multiple input files
+        "rm -f {output.sgb_report} {input.cat_reads}.bowtie2out.txt; pixi run --environment metaphlan42 metaphlan {input.cat_reads} --index {metaphlan_index} --nproc {threads} --input_type fastq --db_dir {metaphlan42_db_local1} -o {output.sgb_report} &> {log}"
+
+rule metaphlan42_convert_profile_to_GTDB:
+    input:
+        report=output_dirs_dict['metaphlan42'] + "/metaphlan42/{sample}.sgb_report"
+    output:
+        gtdb_report=output_dirs_dict['metaphlan42'] + "/metaphlan42/{sample}.gtdb_profile",
+        done=touch(output_dirs_dict['metaphlan42'] + "/metaphlan42/{sample}.gtdb_report.done")
+    conda:
+        "envs/metaphlan.yml"
+    log:
+        output_dirs_dict['metaphlan42'] + "/logs/metaphlan42/{sample}-convert.log"
+    shell:
+        "sgb_to_gtdb_profile.py -i {input.report} -o {output.gtdb_report} -d {metaphlan42_db_local1}/mpa_vOct22_CHOCOPhlAnSGB_202212.pkl &> {log}"
+
+rule metaphlan42_profile_to_condensed:
+    input:
+        report=output_dirs_dict['metaphlan42'] + "/metaphlan42/{sample}.gtdb_profile"
+    output:
+        profile = output_dirs_dict['metaphlan42'] + "/metaphlan42/{sample}.profile",
     conda:
         "envs/singlem.yml"
     shell:

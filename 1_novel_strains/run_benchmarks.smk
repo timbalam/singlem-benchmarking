@@ -259,7 +259,7 @@ rule metaphlan42_profile:
         output_dirs_dict['metaphlan42'] + "/logs/metaphlan42/{sample}.log"
     shell:
         # Concatenate input files because metaphlan42 can't handle multiple input files
-        "rm -f {output.sgb_report} {input.cat_reads}.bowtie2out.txt; pixi run --environment metaphlan42 metaphlan {input.cat_reads} --index {metaphlan_index} --nproc {threads} --input_type fastq --db_dir {metaphlan42_db_local1} -o {output.sgb_report} &> {log}"
+        "rm -f {output.sgb_report} {input.cat_reads}.mapout.txt; pixi run --environment metaphlan42 metaphlan {input.cat_reads} --index {metaphlan_index} --nproc {threads} --input_type fastq --db_dir {metaphlan42_db_local1} --mapout {input.cat_reads}.mapout.txt -o {output.sgb_report} &> {log}"
 
 rule metaphlan42_convert_profile_to_GTDB:
     input:

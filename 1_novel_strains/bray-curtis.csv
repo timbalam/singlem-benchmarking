@@ -41,6 +41,13 @@ sylph	marine0	order	Bray-Curtis distance	0.00796693522673081	sylph
 sylph	marine0	family	Bray-Curtis distance	0.010043956297596	sylph
 sylph	marine0	genus	Bray-Curtis distance	0.0121846199039564	sylph
 sylph	marine0	species	Bray-Curtis distance	0.0174218880028847	sylph
+metaphlan42	marine0	kingdom	Bray-Curtis distance	0.00042936799932577	MetaPhlAn v4.2
+metaphlan42	marine0	phylum	Bray-Curtis distance	0.0535449804335363	MetaPhlAn v4.2
+metaphlan42	marine0	class	Bray-Curtis distance	0.0658889447041676	MetaPhlAn v4.2
+metaphlan42	marine0	order	Bray-Curtis distance	0.0774585649154624	MetaPhlAn v4.2
+metaphlan42	marine0	family	Bray-Curtis distance	0.093318427992122	MetaPhlAn v4.2
+metaphlan42	marine0	genus	Bray-Curtis distance	0.105007045954073	MetaPhlAn v4.2
+metaphlan42	marine0	species	Bray-Curtis distance	0.144855409763737	MetaPhlAn v4.2
 singlem	marine1	kingdom	Bray-Curtis distance	0.00201394122770139	SingleM
 singlem	marine1	phylum	Bray-Curtis distance	0.0205020211902344	SingleM
 singlem	marine1	class	Bray-Curtis distance	0.0221671992077258	SingleM
@@ -83,6 +90,13 @@ sylph	marine1	order	Bray-Curtis distance	0.00871624226212253	sylph
 sylph	marine1	family	Bray-Curtis distance	0.0113239827072422	sylph
 sylph	marine1	genus	Bray-Curtis distance	0.0144584503482864	sylph
 sylph	marine1	species	Bray-Curtis distance	0.0197570938434248	sylph
+metaphlan42	marine1	kingdom	Bray-Curtis distance	0.00062027951498205	MetaPhlAn v4.2
+metaphlan42	marine1	phylum	Bray-Curtis distance	0.0579469440107051	MetaPhlAn v4.2
+metaphlan42	marine1	class	Bray-Curtis distance	0.0715044639756608	MetaPhlAn v4.2
+metaphlan42	marine1	order	Bray-Curtis distance	0.0871441413194621	MetaPhlAn v4.2
+metaphlan42	marine1	family	Bray-Curtis distance	0.105103310594106	MetaPhlAn v4.2
+metaphlan42	marine1	genus	Bray-Curtis distance	0.132140539241826	MetaPhlAn v4.2
+metaphlan42	marine1	species	Bray-Curtis distance	0.198738858800321	MetaPhlAn v4.2
 singlem	marine2	kingdom	Bray-Curtis distance	0.00231783252992035	SingleM
 singlem	marine2	phylum	Bray-Curtis distance	0.0109246205225583	SingleM
 singlem	marine2	class	Bray-Curtis distance	0.0135611891377228	SingleM
@@ -125,6 +139,13 @@ sylph	marine2	order	Bray-Curtis distance	0.0133018034458062	sylph
 sylph	marine2	family	Bray-Curtis distance	0.0151447612688181	sylph
 sylph	marine2	genus	Bray-Curtis distance	0.0173751684661694	sylph
 sylph	marine2	species	Bray-Curtis distance	0.0245768192814116	sylph
+metaphlan42	marine2	kingdom	Bray-Curtis distance	0.00073488857431247	MetaPhlAn v4.2
+metaphlan42	marine2	phylum	Bray-Curtis distance	0.0412041373504776	MetaPhlAn v4.2
+metaphlan42	marine2	class	Bray-Curtis distance	0.0924615759963423	MetaPhlAn v4.2
+metaphlan42	marine2	order	Bray-Curtis distance	0.11561433458073	MetaPhlAn v4.2
+metaphlan42	marine2	family	Bray-Curtis distance	0.139206892770247	MetaPhlAn v4.2
+metaphlan42	marine2	genus	Bray-Curtis distance	0.16284865813286	MetaPhlAn v4.2
+metaphlan42	marine2	species	Bray-Curtis distance	0.231008142110317	MetaPhlAn v4.2
 singlem	marine3	kingdom	Bray-Curtis distance	0.00196914576197959	SingleM
 singlem	marine3	phylum	Bray-Curtis distance	0.0111524913810414	SingleM
 singlem	marine3	class	Bray-Curtis distance	0.0139905946221138	SingleM
@@ -167,6 +188,13 @@ sylph	marine3	order	Bray-Curtis distance	0.00959105960155136	sylph
 sylph	marine3	family	Bray-Curtis distance	0.012183594976698	sylph
 sylph	marine3	genus	Bray-Curtis distance	0.016493340075992	sylph
 sylph	marine3	species	Bray-Curtis distance	0.024872095192571	sylph
+metaphlan42	marine3	kingdom	Bray-Curtis distance	0.000562621009492983	MetaPhlAn v4.2
+metaphlan42	marine3	phylum	Bray-Curtis distance	0.0515992653433305	MetaPhlAn v4.2
+metaphlan42	marine3	class	Bray-Curtis distance	0.0735772551390922	MetaPhlAn v4.2
+metaphlan42	marine3	order	Bray-Curtis distance	0.0814115649062268	MetaPhlAn v4.2
+metaphlan42	marine3	family	Bray-Curtis distance	0.100464218079584	MetaPhlAn v4.2
+metaphlan42	marine3	genus	Bray-Curtis distance	0.118611545566001	MetaPhlAn v4.2
+metaphlan42	marine3	species	Bray-Curtis distance	0.182490643585762	MetaPhlAn v4.2
 singlem	marine4	kingdom	Bray-Curtis distance	0.00238908902524369	SingleM
 singlem	marine4	phylum	Bray-Curtis distance	0.0168084648004516	SingleM
 singlem	marine4	class	Bray-Curtis distance	0.0166844539086466	SingleM
@@ -209,6 +237,13 @@ sylph	marine4	order	Bray-Curtis distance	0.0302261866392379	sylph
 sylph	marine4	family	Bray-Curtis distance	0.0310696445992848	sylph
 sylph	marine4	genus	Bray-Curtis distance	0.0342893076404425	sylph
 sylph	marine4	species	Bray-Curtis distance	0.0407522469088703	sylph
+metaphlan42	marine4	kingdom	Bray-Curtis distance	0.00130588663442326	MetaPhlAn v4.2
+metaphlan42	marine4	phylum	Bray-Curtis distance	0.0774623723120774	MetaPhlAn v4.2
+metaphlan42	marine4	class	Bray-Curtis distance	0.0832632376007483	MetaPhlAn v4.2
+metaphlan42	marine4	order	Bray-Curtis distance	0.0990051354332845	MetaPhlAn v4.2
+metaphlan42	marine4	family	Bray-Curtis distance	0.114715357710322	MetaPhlAn v4.2
+metaphlan42	marine4	genus	Bray-Curtis distance	0.17688571130551	MetaPhlAn v4.2
+metaphlan42	marine4	species	Bray-Curtis distance	0.225712101733216	MetaPhlAn v4.2
 singlem	marine5	kingdom	Bray-Curtis distance	0.00233517734603584	SingleM
 singlem	marine5	phylum	Bray-Curtis distance	0.0192003134671685	SingleM
 singlem	marine5	class	Bray-Curtis distance	0.0208747680756899	SingleM
@@ -251,6 +286,13 @@ sylph	marine5	order	Bray-Curtis distance	0.0073651564498998	sylph
 sylph	marine5	family	Bray-Curtis distance	0.00920790525628921	sylph
 sylph	marine5	genus	Bray-Curtis distance	0.0125260052868151	sylph
 sylph	marine5	species	Bray-Curtis distance	0.0229042460943641	sylph
+metaphlan42	marine5	kingdom	Bray-Curtis distance	0.0015764384529051	MetaPhlAn v4.2
+metaphlan42	marine5	phylum	Bray-Curtis distance	0.0704295848090859	MetaPhlAn v4.2
+metaphlan42	marine5	class	Bray-Curtis distance	0.0786225607946678	MetaPhlAn v4.2
+metaphlan42	marine5	order	Bray-Curtis distance	0.107278391951054	MetaPhlAn v4.2
+metaphlan42	marine5	family	Bray-Curtis distance	0.120242776373504	MetaPhlAn v4.2
+metaphlan42	marine5	genus	Bray-Curtis distance	0.13867756388555	MetaPhlAn v4.2
+metaphlan42	marine5	species	Bray-Curtis distance	0.246584322803052	MetaPhlAn v4.2
 singlem	marine6	kingdom	Bray-Curtis distance	0.00363736692627533	SingleM
 singlem	marine6	phylum	Bray-Curtis distance	0.0102602441225279	SingleM
 singlem	marine6	class	Bray-Curtis distance	0.0121659942504114	SingleM
@@ -293,6 +335,13 @@ sylph	marine6	order	Bray-Curtis distance	0.0076224917707207	sylph
 sylph	marine6	family	Bray-Curtis distance	0.00937002539837989	sylph
 sylph	marine6	genus	Bray-Curtis distance	0.0127203466475592	sylph
 sylph	marine6	species	Bray-Curtis distance	0.0183721024435873	sylph
+metaphlan42	marine6	kingdom	Bray-Curtis distance	0.00241584930535398	MetaPhlAn v4.2
+metaphlan42	marine6	phylum	Bray-Curtis distance	0.0662381501764622	MetaPhlAn v4.2
+metaphlan42	marine6	class	Bray-Curtis distance	0.0954739367638747	MetaPhlAn v4.2
+metaphlan42	marine6	order	Bray-Curtis distance	0.113042100368767	MetaPhlAn v4.2
+metaphlan42	marine6	family	Bray-Curtis distance	0.125988060487583	MetaPhlAn v4.2
+metaphlan42	marine6	genus	Bray-Curtis distance	0.151498879950616	MetaPhlAn v4.2
+metaphlan42	marine6	species	Bray-Curtis distance	0.238359639996377	MetaPhlAn v4.2
 singlem	marine7	kingdom	Bray-Curtis distance	0.00169595460126274	SingleM
 singlem	marine7	phylum	Bray-Curtis distance	0.0480720956581721	SingleM
 singlem	marine7	class	Bray-Curtis distance	0.0500677893957604	SingleM
@@ -335,6 +384,13 @@ sylph	marine7	order	Bray-Curtis distance	0.011474130117029	sylph
 sylph	marine7	family	Bray-Curtis distance	0.0128113431108423	sylph
 sylph	marine7	genus	Bray-Curtis distance	0.0150032911325296	sylph
 sylph	marine7	species	Bray-Curtis distance	0.0241195647140133	sylph
+metaphlan42	marine7	kingdom	Bray-Curtis distance	0.00378293882619842	MetaPhlAn v4.2
+metaphlan42	marine7	phylum	Bray-Curtis distance	0.109211346086166	MetaPhlAn v4.2
+metaphlan42	marine7	class	Bray-Curtis distance	0.127527649547181	MetaPhlAn v4.2
+metaphlan42	marine7	order	Bray-Curtis distance	0.189124721713438	MetaPhlAn v4.2
+metaphlan42	marine7	family	Bray-Curtis distance	0.209447138730605	MetaPhlAn v4.2
+metaphlan42	marine7	genus	Bray-Curtis distance	0.268210395264411	MetaPhlAn v4.2
+metaphlan42	marine7	species	Bray-Curtis distance	0.332524956473922	MetaPhlAn v4.2
 singlem	marine8	kingdom	Bray-Curtis distance	0.00244427239157361	SingleM
 singlem	marine8	phylum	Bray-Curtis distance	0.0124707610660082	SingleM
 singlem	marine8	class	Bray-Curtis distance	0.0136070283951521	SingleM
@@ -377,6 +433,13 @@ sylph	marine8	order	Bray-Curtis distance	0.00853940981576305	sylph
 sylph	marine8	family	Bray-Curtis distance	0.010540922669842	sylph
 sylph	marine8	genus	Bray-Curtis distance	0.0136790376095405	sylph
 sylph	marine8	species	Bray-Curtis distance	0.0180799846596341	sylph
+metaphlan42	marine8	kingdom	Bray-Curtis distance	0.00313591780884328	MetaPhlAn v4.2
+metaphlan42	marine8	phylum	Bray-Curtis distance	0.0327441503407947	MetaPhlAn v4.2
+metaphlan42	marine8	class	Bray-Curtis distance	0.0525205471636399	MetaPhlAn v4.2
+metaphlan42	marine8	order	Bray-Curtis distance	0.0712452214474714	MetaPhlAn v4.2
+metaphlan42	marine8	family	Bray-Curtis distance	0.0786688237963294	MetaPhlAn v4.2
+metaphlan42	marine8	genus	Bray-Curtis distance	0.0967419309784436	MetaPhlAn v4.2
+metaphlan42	marine8	species	Bray-Curtis distance	0.140347254086807	MetaPhlAn v4.2
 singlem	marine9	kingdom	Bray-Curtis distance	0.00280457497431486	SingleM
 singlem	marine9	phylum	Bray-Curtis distance	0.0274307779960349	SingleM
 singlem	marine9	class	Bray-Curtis distance	0.028311891460816	SingleM
@@ -419,3 +482,10 @@ sylph	marine9	order	Bray-Curtis distance	0.00541477055013126	sylph
 sylph	marine9	family	Bray-Curtis distance	0.0069524349429426	sylph
 sylph	marine9	genus	Bray-Curtis distance	0.0099237949308968	sylph
 sylph	marine9	species	Bray-Curtis distance	0.0356046228008557	sylph
+metaphlan42	marine9	kingdom	Bray-Curtis distance	0.0058977968873862	MetaPhlAn v4.2
+metaphlan42	marine9	phylum	Bray-Curtis distance	0.103328435708399	MetaPhlAn v4.2
+metaphlan42	marine9	class	Bray-Curtis distance	0.108120009676345	MetaPhlAn v4.2
+metaphlan42	marine9	order	Bray-Curtis distance	0.142477269081277	MetaPhlAn v4.2
+metaphlan42	marine9	family	Bray-Curtis distance	0.155966256719549	MetaPhlAn v4.2
+metaphlan42	marine9	genus	Bray-Curtis distance	0.181148958618172	MetaPhlAn v4.2
+metaphlan42	marine9	species	Bray-Curtis distance	0.255759153518258	MetaPhlAn v4.2

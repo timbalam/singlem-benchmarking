@@ -545,6 +545,97 @@ sylph,marine0,order,Taxon counts,93
 sylph,marine0,family,Taxon counts,152
 sylph,marine0,genus,Taxon counts,269
 sylph,marine0,species,Taxon counts,375
+metaphlan42,marine0,kingdom,Bray-Curtis distance,0.00042936799932577
+metaphlan42,marine0,phylum,Bray-Curtis distance,0.0535449804335363
+metaphlan42,marine0,class,Bray-Curtis distance,0.0658889447041676
+metaphlan42,marine0,order,Bray-Curtis distance,0.0774585649154624
+metaphlan42,marine0,family,Bray-Curtis distance,0.093318427992122
+metaphlan42,marine0,genus,Bray-Curtis distance,0.105007045954073
+metaphlan42,marine0,species,Bray-Curtis distance,0.144855409763737
+metaphlan42,marine0,phylum,Shannon diversity,2.03714505684999
+metaphlan42,marine0,phylum,Shannon equitability,0.598949378190582
+metaphlan42,marine0,class,Shannon diversity,2.41940548941526
+metaphlan42,marine0,class,Shannon equitability,0.647303195975476
+metaphlan42,marine0,order,Shannon diversity,3.28692255740859
+metaphlan42,marine0,order,Shannon equitability,0.747971461659476
+metaphlan42,marine0,family,Shannon diversity,3.7714108647862
+metaphlan42,marine0,family,Shannon equitability,0.772386618294056
+metaphlan42,marine0,genus,Shannon diversity,4.37811407201
+metaphlan42,marine0,genus,Shannon equitability,0.799441835135719
+metaphlan42,marine0,species,Shannon diversity,4.70245595132179
+metaphlan42,marine0,species,Shannon equitability,0.808383374841945
+metaphlan42,marine0,kingdom,True positives,2
+metaphlan42,marine0,kingdom,False negatives,0
+metaphlan42,marine0,kingdom,False positives,0
+metaphlan42,marine0,kingdom,Completeness,1
+metaphlan42,marine0,kingdom,Purity,1
+metaphlan42,marine0,kingdom,F1 score,1
+metaphlan42,marine0,kingdom,Jaccard index,1
+metaphlan42,marine0,phylum,True positives,30
+metaphlan42,marine0,phylum,False negatives,5
+metaphlan42,marine0,phylum,False positives,0
+metaphlan42,marine0,phylum,Completeness,0.857142857142857
+metaphlan42,marine0,phylum,Purity,1
+metaphlan42,marine0,phylum,F1 score,0.923076923076923
+metaphlan42,marine0,phylum,Jaccard index,0.857142857142857
+metaphlan42,marine0,class,True positives,42
+metaphlan42,marine0,class,False negatives,9
+metaphlan42,marine0,class,False positives,0
+metaphlan42,marine0,class,Completeness,0.823529411764706
+metaphlan42,marine0,class,Purity,1
+metaphlan42,marine0,class,F1 score,0.903225806451613
+metaphlan42,marine0,class,Jaccard index,0.823529411764706
+metaphlan42,marine0,order,True positives,81
+metaphlan42,marine0,order,False negatives,12
+metaphlan42,marine0,order,False positives,0
+metaphlan42,marine0,order,Completeness,0.870967741935484
+metaphlan42,marine0,order,Purity,1
+metaphlan42,marine0,order,F1 score,0.931034482758621
+metaphlan42,marine0,order,Jaccard index,0.870967741935484
+metaphlan42,marine0,family,True positives,132
+metaphlan42,marine0,family,False negatives,20
+metaphlan42,marine0,family,False positives,0
+metaphlan42,marine0,family,Completeness,0.868421052631579
+metaphlan42,marine0,family,Purity,1
+metaphlan42,marine0,family,F1 score,0.929577464788732
+metaphlan42,marine0,family,Jaccard index,0.868421052631579
+metaphlan42,marine0,genus,True positives,239
+metaphlan42,marine0,genus,False negatives,30
+metaphlan42,marine0,genus,False positives,0
+metaphlan42,marine0,genus,Completeness,0.888475836431227
+metaphlan42,marine0,genus,Purity,1
+metaphlan42,marine0,genus,F1 score,0.940944881889764
+metaphlan42,marine0,genus,Jaccard index,0.888475836431227
+metaphlan42,marine0,species,True positives,302
+metaphlan42,marine0,species,False negatives,76
+metaphlan42,marine0,species,False positives,34
+metaphlan42,marine0,species,Completeness,0.798941798941799
+metaphlan42,marine0,species,Purity,0.898809523809524
+metaphlan42,marine0,species,F1 score,0.84593837535014
+metaphlan42,marine0,species,Jaccard index,0.733009708737864
+metaphlan42,marine0,kingdom,L1 norm error,0.000858735998651541
+metaphlan42,marine0,phylum,L1 norm error,0.107089960867073
+metaphlan42,marine0,class,L1 norm error,0.131777889408335
+metaphlan42,marine0,order,L1 norm error,0.154917129830925
+metaphlan42,marine0,family,L1 norm error,0.186636855984244
+metaphlan42,marine0,genus,L1 norm error,0.210014091908145
+metaphlan42,marine0,species,L1 norm error,0.289710819527475
+metaphlan42,marine0,na,Weighted UniFrac error,0.00877715796323566
+metaphlan42,marine0,na,Unweighted UniFrac error,0.126122162741366
+metaphlan42,marine0,na,Weighted UniFrac (CAMI),1.08100548352484
+metaphlan42,marine0,na,Unweighted UniFrac (CAMI),431
+metaphlan42,marine0,phylum,Sum of abundances,1
+metaphlan42,marine0,class,Sum of abundances,1
+metaphlan42,marine0,order,Sum of abundances,1
+metaphlan42,marine0,family,Sum of abundances,1
+metaphlan42,marine0,genus,Sum of abundances,1
+metaphlan42,marine0,species,Sum of abundances,1
+metaphlan42,marine0,phylum,Taxon counts,30
+metaphlan42,marine0,class,Taxon counts,42
+metaphlan42,marine0,order,Taxon counts,81
+metaphlan42,marine0,family,Taxon counts,132
+metaphlan42,marine0,genus,Taxon counts,239
+metaphlan42,marine0,species,Taxon counts,336
 singlem,marine1,kingdom,Bray-Curtis distance,0.00201394122770139
 singlem,marine1,phylum,Bray-Curtis distance,0.0205020211902344
 singlem,marine1,class,Bray-Curtis distance,0.0221671992077258
@@ -1091,6 +1182,97 @@ sylph,marine1,order,Taxon counts,98
 sylph,marine1,family,Taxon counts,163
 sylph,marine1,genus,Taxon counts,300
 sylph,marine1,species,Taxon counts,436
+metaphlan42,marine1,kingdom,Bray-Curtis distance,0.00062027951498205
+metaphlan42,marine1,phylum,Bray-Curtis distance,0.0579469440107051
+metaphlan42,marine1,class,Bray-Curtis distance,0.0715044639756608
+metaphlan42,marine1,order,Bray-Curtis distance,0.0871441413194621
+metaphlan42,marine1,family,Bray-Curtis distance,0.105103310594106
+metaphlan42,marine1,genus,Bray-Curtis distance,0.132140539241826
+metaphlan42,marine1,species,Bray-Curtis distance,0.198738858800321
+metaphlan42,marine1,phylum,Shannon diversity,1.95916996376773
+metaphlan42,marine1,phylum,Shannon equitability,0.576023601079654
+metaphlan42,marine1,class,Shannon diversity,2.29308729289313
+metaphlan42,marine1,class,Shannon equitability,0.609669047739644
+metaphlan42,marine1,order,Shannon diversity,3.32357502010407
+metaphlan42,marine1,order,Shannon equitability,0.746141869741384
+metaphlan42,marine1,family,Shannon diversity,3.9301040765392
+metaphlan42,marine1,family,Shannon equitability,0.794159378025285
+metaphlan42,marine1,genus,Shannon diversity,4.68976914241424
+metaphlan42,marine1,genus,Shannon equitability,0.841643844612338
+metaphlan42,marine1,species,Shannon diversity,5.09247290812458
+metaphlan42,marine1,species,Shannon equitability,0.855411516407268
+metaphlan42,marine1,kingdom,True positives,2
+metaphlan42,marine1,kingdom,False negatives,0
+metaphlan42,marine1,kingdom,False positives,0
+metaphlan42,marine1,kingdom,Completeness,1
+metaphlan42,marine1,kingdom,Purity,1
+metaphlan42,marine1,kingdom,F1 score,1
+metaphlan42,marine1,kingdom,Jaccard index,1
+metaphlan42,marine1,phylum,True positives,30
+metaphlan42,marine1,phylum,False negatives,5
+metaphlan42,marine1,phylum,False positives,0
+metaphlan42,marine1,phylum,Completeness,0.857142857142857
+metaphlan42,marine1,phylum,Purity,1
+metaphlan42,marine1,phylum,F1 score,0.923076923076923
+metaphlan42,marine1,phylum,Jaccard index,0.857142857142857
+metaphlan42,marine1,class,True positives,43
+metaphlan42,marine1,class,False negatives,8
+metaphlan42,marine1,class,False positives,0
+metaphlan42,marine1,class,Completeness,0.843137254901961
+metaphlan42,marine1,class,Purity,1
+metaphlan42,marine1,class,F1 score,0.914893617021277
+metaphlan42,marine1,class,Jaccard index,0.843137254901961
+metaphlan42,marine1,order,True positives,86
+metaphlan42,marine1,order,False negatives,12
+metaphlan42,marine1,order,False positives,0
+metaphlan42,marine1,order,Completeness,0.877551020408163
+metaphlan42,marine1,order,Purity,1
+metaphlan42,marine1,order,F1 score,0.934782608695652
+metaphlan42,marine1,order,Jaccard index,0.877551020408163
+metaphlan42,marine1,family,True positives,141
+metaphlan42,marine1,family,False negatives,22
+metaphlan42,marine1,family,False positives,0
+metaphlan42,marine1,family,Completeness,0.865030674846626
+metaphlan42,marine1,family,Purity,1
+metaphlan42,marine1,family,F1 score,0.927631578947368
+metaphlan42,marine1,family,Jaccard index,0.865030674846626
+metaphlan42,marine1,genus,True positives,263
+metaphlan42,marine1,genus,False negatives,37
+metaphlan42,marine1,genus,False positives,0
+metaphlan42,marine1,genus,Completeness,0.876666666666667
+metaphlan42,marine1,genus,Purity,1
+metaphlan42,marine1,genus,F1 score,0.934280639431616
+metaphlan42,marine1,genus,Jaccard index,0.876666666666667
+metaphlan42,marine1,species,True positives,346
+metaphlan42,marine1,species,False negatives,92
+metaphlan42,marine1,species,False positives,39
+metaphlan42,marine1,species,Completeness,0.789954337899543
+metaphlan42,marine1,species,Purity,0.898701298701299
+metaphlan42,marine1,species,F1 score,0.840826245443499
+metaphlan42,marine1,species,Jaccard index,0.725366876310273
+metaphlan42,marine1,kingdom,L1 norm error,0.0012405590299641
+metaphlan42,marine1,phylum,L1 norm error,0.11589388802141
+metaphlan42,marine1,class,L1 norm error,0.143008927951322
+metaphlan42,marine1,order,L1 norm error,0.174288282638924
+metaphlan42,marine1,family,L1 norm error,0.210206621188211
+metaphlan42,marine1,genus,L1 norm error,0.264281078483652
+metaphlan42,marine1,species,L1 norm error,0.397477717600642
+metaphlan42,marine1,na,Weighted UniFrac error,0.0102654971330881
+metaphlan42,marine1,na,Unweighted UniFrac error,0.132385619692492
+metaphlan42,marine1,na,Weighted UniFrac (CAMI),1.30639707491413
+metaphlan42,marine1,na,Unweighted UniFrac (CAMI),530
+metaphlan42,marine1,phylum,Sum of abundances,1
+metaphlan42,marine1,class,Sum of abundances,1
+metaphlan42,marine1,order,Sum of abundances,1
+metaphlan42,marine1,family,Sum of abundances,1
+metaphlan42,marine1,genus,Sum of abundances,1
+metaphlan42,marine1,species,Sum of abundances,1
+metaphlan42,marine1,phylum,Taxon counts,30
+metaphlan42,marine1,class,Taxon counts,43
+metaphlan42,marine1,order,Taxon counts,86
+metaphlan42,marine1,family,Taxon counts,141
+metaphlan42,marine1,genus,Taxon counts,263
+metaphlan42,marine1,species,Taxon counts,385
 singlem,marine2,kingdom,Bray-Curtis distance,0.00231783252992035
 singlem,marine2,phylum,Bray-Curtis distance,0.0109246205225583
 singlem,marine2,class,Bray-Curtis distance,0.0135611891377228
@@ -1637,6 +1819,97 @@ sylph,marine2,order,Taxon counts,98
 sylph,marine2,family,Taxon counts,162
 sylph,marine2,genus,Taxon counts,292
 sylph,marine2,species,Taxon counts,414
+metaphlan42,marine2,kingdom,Bray-Curtis distance,0.00073488857431247
+metaphlan42,marine2,phylum,Bray-Curtis distance,0.0412041373504776
+metaphlan42,marine2,class,Bray-Curtis distance,0.0924615759963423
+metaphlan42,marine2,order,Bray-Curtis distance,0.11561433458073
+metaphlan42,marine2,family,Bray-Curtis distance,0.139206892770247
+metaphlan42,marine2,genus,Bray-Curtis distance,0.16284865813286
+metaphlan42,marine2,species,Bray-Curtis distance,0.231008142110317
+metaphlan42,marine2,phylum,Shannon diversity,1.78305439873466
+metaphlan42,marine2,phylum,Shannon equitability,0.52424314106207
+metaphlan42,marine2,class,Shannon diversity,2.24042934420654
+metaphlan42,marine2,class,Shannon equitability,0.595668742766005
+metaphlan42,marine2,order,Shannon diversity,3.29066723075903
+metaphlan42,marine2,order,Shannon equitability,0.740698974728584
+metaphlan42,marine2,family,Shannon diversity,3.901625292622
+metaphlan42,marine2,family,Shannon equitability,0.789540189061647
+metaphlan42,marine2,genus,Shannon diversity,4.60878760759299
+metaphlan42,marine2,genus,Shannon equitability,0.830550444269141
+metaphlan42,marine2,species,Shannon diversity,4.95079944626789
+metaphlan42,marine2,species,Shannon equitability,0.838356661903597
+metaphlan42,marine2,kingdom,True positives,2
+metaphlan42,marine2,kingdom,False negatives,0
+metaphlan42,marine2,kingdom,False positives,0
+metaphlan42,marine2,kingdom,Completeness,1
+metaphlan42,marine2,kingdom,Purity,1
+metaphlan42,marine2,kingdom,F1 score,1
+metaphlan42,marine2,kingdom,Jaccard index,1
+metaphlan42,marine2,phylum,True positives,30
+metaphlan42,marine2,phylum,False negatives,5
+metaphlan42,marine2,phylum,False positives,0
+metaphlan42,marine2,phylum,Completeness,0.857142857142857
+metaphlan42,marine2,phylum,Purity,1
+metaphlan42,marine2,phylum,F1 score,0.923076923076923
+metaphlan42,marine2,phylum,Jaccard index,0.857142857142857
+metaphlan42,marine2,class,True positives,43
+metaphlan42,marine2,class,False negatives,8
+metaphlan42,marine2,class,False positives,0
+metaphlan42,marine2,class,Completeness,0.843137254901961
+metaphlan42,marine2,class,Purity,1
+metaphlan42,marine2,class,F1 score,0.914893617021277
+metaphlan42,marine2,class,Jaccard index,0.843137254901961
+metaphlan42,marine2,order,True positives,85
+metaphlan42,marine2,order,False negatives,13
+metaphlan42,marine2,order,False positives,0
+metaphlan42,marine2,order,Completeness,0.86734693877551
+metaphlan42,marine2,order,Purity,1
+metaphlan42,marine2,order,F1 score,0.92896174863388
+metaphlan42,marine2,order,Jaccard index,0.86734693877551
+metaphlan42,marine2,family,True positives,140
+metaphlan42,marine2,family,False negatives,22
+metaphlan42,marine2,family,False positives,0
+metaphlan42,marine2,family,Completeness,0.864197530864198
+metaphlan42,marine2,family,Purity,1
+metaphlan42,marine2,family,F1 score,0.927152317880795
+metaphlan42,marine2,family,Jaccard index,0.864197530864198
+metaphlan42,marine2,genus,True positives,257
+metaphlan42,marine2,genus,False negatives,35
+metaphlan42,marine2,genus,False positives,0
+metaphlan42,marine2,genus,Completeness,0.88013698630137
+metaphlan42,marine2,genus,Purity,1
+metaphlan42,marine2,genus,F1 score,0.936247723132969
+metaphlan42,marine2,genus,Jaccard index,0.88013698630137
+metaphlan42,marine2,species,True positives,330
+metaphlan42,marine2,species,False negatives,87
+metaphlan42,marine2,species,False positives,37
+metaphlan42,marine2,species,Completeness,0.79136690647482
+metaphlan42,marine2,species,Purity,0.899182561307902
+metaphlan42,marine2,species,F1 score,0.841836734693878
+metaphlan42,marine2,species,Jaccard index,0.726872246696035
+metaphlan42,marine2,kingdom,L1 norm error,0.00146977714862494
+metaphlan42,marine2,phylum,L1 norm error,0.0824082747009552
+metaphlan42,marine2,class,L1 norm error,0.184923151992685
+metaphlan42,marine2,order,L1 norm error,0.23122866916146
+metaphlan42,marine2,family,L1 norm error,0.278413785540493
+metaphlan42,marine2,genus,L1 norm error,0.32569731626572
+metaphlan42,marine2,species,L1 norm error,0.462016284220635
+metaphlan42,marine2,na,Weighted UniFrac error,0.011833153567316
+metaphlan42,marine2,na,Unweighted UniFrac error,0.139160856909138
+metaphlan42,marine2,na,Weighted UniFrac (CAMI),1.56615725903057
+metaphlan42,marine2,na,Unweighted UniFrac (CAMI),519
+metaphlan42,marine2,phylum,Sum of abundances,1
+metaphlan42,marine2,class,Sum of abundances,1
+metaphlan42,marine2,order,Sum of abundances,1
+metaphlan42,marine2,family,Sum of abundances,1
+metaphlan42,marine2,genus,Sum of abundances,1
+metaphlan42,marine2,species,Sum of abundances,1
+metaphlan42,marine2,phylum,Taxon counts,30
+metaphlan42,marine2,class,Taxon counts,43
+metaphlan42,marine2,order,Taxon counts,85
+metaphlan42,marine2,family,Taxon counts,140
+metaphlan42,marine2,genus,Taxon counts,257
+metaphlan42,marine2,species,Taxon counts,367
 singlem,marine3,kingdom,Bray-Curtis distance,0.00196914576197959
 singlem,marine3,phylum,Bray-Curtis distance,0.0111524913810414
 singlem,marine3,class,Bray-Curtis distance,0.0139905946221138
@@ -2183,6 +2456,97 @@ sylph,marine3,order,Taxon counts,115
 sylph,marine3,family,Taxon counts,201
 sylph,marine3,genus,Taxon counts,382
 sylph,marine3,species,Taxon counts,575
+metaphlan42,marine3,kingdom,Bray-Curtis distance,0.000562621009492983
+metaphlan42,marine3,phylum,Bray-Curtis distance,0.0515992653433305
+metaphlan42,marine3,class,Bray-Curtis distance,0.0735772551390922
+metaphlan42,marine3,order,Bray-Curtis distance,0.0814115649062268
+metaphlan42,marine3,family,Bray-Curtis distance,0.100464218079584
+metaphlan42,marine3,genus,Bray-Curtis distance,0.118611545566001
+metaphlan42,marine3,species,Bray-Curtis distance,0.182490643585762
+metaphlan42,marine3,phylum,Shannon diversity,2.08736285257763
+metaphlan42,marine3,phylum,Shannon equitability,0.596985081794635
+metaphlan42,marine3,class,Shannon diversity,2.44616929818189
+metaphlan42,marine3,class,Shannon equitability,0.625295223158887
+metaphlan42,marine3,order,Shannon diversity,3.50970439480267
+metaphlan42,marine3,order,Shannon equitability,0.762122625887195
+metaphlan42,marine3,family,Shannon diversity,4.17506849586898
+metaphlan42,marine3,family,Shannon equitability,0.80837202489096
+metaphlan42,marine3,genus,Shannon diversity,4.9181785931943
+metaphlan42,marine3,genus,Shannon equitability,0.846773060695152
+metaphlan42,marine3,species,Shannon diversity,5.33652131081278
+metaphlan42,marine3,species,Shannon equitability,0.858706007892541
+metaphlan42,marine3,kingdom,True positives,2
+metaphlan42,marine3,kingdom,False negatives,0
+metaphlan42,marine3,kingdom,False positives,0
+metaphlan42,marine3,kingdom,Completeness,1
+metaphlan42,marine3,kingdom,Purity,1
+metaphlan42,marine3,kingdom,F1 score,1
+metaphlan42,marine3,kingdom,Jaccard index,1
+metaphlan42,marine3,phylum,True positives,33
+metaphlan42,marine3,phylum,False negatives,6
+metaphlan42,marine3,phylum,False positives,0
+metaphlan42,marine3,phylum,Completeness,0.846153846153846
+metaphlan42,marine3,phylum,Purity,1
+metaphlan42,marine3,phylum,F1 score,0.916666666666667
+metaphlan42,marine3,phylum,Jaccard index,0.846153846153846
+metaphlan42,marine3,class,True positives,50
+metaphlan42,marine3,class,False negatives,8
+metaphlan42,marine3,class,False positives,0
+metaphlan42,marine3,class,Completeness,0.862068965517241
+metaphlan42,marine3,class,Purity,1
+metaphlan42,marine3,class,F1 score,0.925925925925926
+metaphlan42,marine3,class,Jaccard index,0.862068965517241
+metaphlan42,marine3,order,True positives,100
+metaphlan42,marine3,order,False negatives,15
+metaphlan42,marine3,order,False positives,0
+metaphlan42,marine3,order,Completeness,0.869565217391304
+metaphlan42,marine3,order,Purity,1
+metaphlan42,marine3,order,F1 score,0.930232558139535
+metaphlan42,marine3,order,Jaccard index,0.869565217391304
+metaphlan42,marine3,family,True positives,175
+metaphlan42,marine3,family,False negatives,26
+metaphlan42,marine3,family,False positives,0
+metaphlan42,marine3,family,Completeness,0.870646766169154
+metaphlan42,marine3,family,Purity,1
+metaphlan42,marine3,family,F1 score,0.930851063829787
+metaphlan42,marine3,family,Jaccard index,0.870646766169154
+metaphlan42,marine3,genus,True positives,333
+metaphlan42,marine3,genus,False negatives,49
+metaphlan42,marine3,genus,False positives,0
+metaphlan42,marine3,genus,Completeness,0.871727748691099
+metaphlan42,marine3,genus,Purity,1
+metaphlan42,marine3,genus,F1 score,0.931468531468532
+metaphlan42,marine3,genus,Jaccard index,0.871727748691099
+metaphlan42,marine3,species,True positives,455
+metaphlan42,marine3,species,False negatives,126
+metaphlan42,marine3,species,False positives,45
+metaphlan42,marine3,species,Completeness,0.783132530120482
+metaphlan42,marine3,species,Purity,0.91
+metaphlan42,marine3,species,F1 score,0.841813135985199
+metaphlan42,marine3,species,Jaccard index,0.726837060702875
+metaphlan42,marine3,kingdom,L1 norm error,0.00112524201898597
+metaphlan42,marine3,phylum,L1 norm error,0.103198530686661
+metaphlan42,marine3,class,L1 norm error,0.147154510278185
+metaphlan42,marine3,order,L1 norm error,0.162823129812453
+metaphlan42,marine3,family,L1 norm error,0.200928436159168
+metaphlan42,marine3,genus,L1 norm error,0.237223091132002
+metaphlan42,marine3,species,L1 norm error,0.364981287171523
+metaphlan42,marine3,na,Weighted UniFrac error,0.00960206961736067
+metaphlan42,marine3,na,Unweighted UniFrac error,0.154600613911108
+metaphlan42,marine3,na,Weighted UniFrac (CAMI),1.21743422725898
+metaphlan42,marine3,na,Unweighted UniFrac (CAMI),794
+metaphlan42,marine3,phylum,Sum of abundances,1
+metaphlan42,marine3,class,Sum of abundances,1
+metaphlan42,marine3,order,Sum of abundances,1
+metaphlan42,marine3,family,Sum of abundances,1
+metaphlan42,marine3,genus,Sum of abundances,1
+metaphlan42,marine3,species,Sum of abundances,1
+metaphlan42,marine3,phylum,Taxon counts,33
+metaphlan42,marine3,class,Taxon counts,50
+metaphlan42,marine3,order,Taxon counts,100
+metaphlan42,marine3,family,Taxon counts,175
+metaphlan42,marine3,genus,Taxon counts,333
+metaphlan42,marine3,species,Taxon counts,500
 singlem,marine4,kingdom,Bray-Curtis distance,0.00238908902524369
 singlem,marine4,phylum,Bray-Curtis distance,0.0168084648004516
 singlem,marine4,class,Bray-Curtis distance,0.0166844539086466
@@ -2729,6 +3093,97 @@ sylph,marine4,order,Taxon counts,98
 sylph,marine4,family,Taxon counts,162
 sylph,marine4,genus,Taxon counts,291
 sylph,marine4,species,Taxon counts,414
+metaphlan42,marine4,kingdom,Bray-Curtis distance,0.00130588663442326
+metaphlan42,marine4,phylum,Bray-Curtis distance,0.0774623723120774
+metaphlan42,marine4,class,Bray-Curtis distance,0.0832632376007483
+metaphlan42,marine4,order,Bray-Curtis distance,0.0990051354332845
+metaphlan42,marine4,family,Bray-Curtis distance,0.114715357710322
+metaphlan42,marine4,genus,Bray-Curtis distance,0.17688571130551
+metaphlan42,marine4,species,Bray-Curtis distance,0.225712101733216
+metaphlan42,marine4,phylum,Shannon diversity,1.88974366464486
+metaphlan42,marine4,phylum,Shannon equitability,0.555611289963228
+metaphlan42,marine4,class,Shannon diversity,2.24011568812178
+metaphlan42,marine4,class,Shannon equitability,0.595585350211738
+metaphlan42,marine4,order,Shannon diversity,3.33581544770802
+metaphlan42,marine4,order,Shannon equitability,0.750861423757872
+metaphlan42,marine4,family,Shannon diversity,3.86287317118184
+metaphlan42,marine4,family,Shannon equitability,0.781698237312393
+metaphlan42,marine4,genus,Shannon diversity,4.66379290361608
+metaphlan42,marine4,genus,Shannon equitability,0.841053861722507
+metaphlan42,marine4,species,Shannon diversity,4.97546139384992
+metaphlan42,marine4,species,Shannon equitability,0.842922321753439
+metaphlan42,marine4,kingdom,True positives,2
+metaphlan42,marine4,kingdom,False negatives,0
+metaphlan42,marine4,kingdom,False positives,0
+metaphlan42,marine4,kingdom,Completeness,1
+metaphlan42,marine4,kingdom,Purity,1
+metaphlan42,marine4,kingdom,F1 score,1
+metaphlan42,marine4,kingdom,Jaccard index,1
+metaphlan42,marine4,phylum,True positives,30
+metaphlan42,marine4,phylum,False negatives,5
+metaphlan42,marine4,phylum,False positives,0
+metaphlan42,marine4,phylum,Completeness,0.857142857142857
+metaphlan42,marine4,phylum,Purity,1
+metaphlan42,marine4,phylum,F1 score,0.923076923076923
+metaphlan42,marine4,phylum,Jaccard index,0.857142857142857
+metaphlan42,marine4,class,True positives,43
+metaphlan42,marine4,class,False negatives,8
+metaphlan42,marine4,class,False positives,0
+metaphlan42,marine4,class,Completeness,0.843137254901961
+metaphlan42,marine4,class,Purity,1
+metaphlan42,marine4,class,F1 score,0.914893617021277
+metaphlan42,marine4,class,Jaccard index,0.843137254901961
+metaphlan42,marine4,order,True positives,85
+metaphlan42,marine4,order,False negatives,13
+metaphlan42,marine4,order,False positives,0
+metaphlan42,marine4,order,Completeness,0.86734693877551
+metaphlan42,marine4,order,Purity,1
+metaphlan42,marine4,order,F1 score,0.92896174863388
+metaphlan42,marine4,order,Jaccard index,0.86734693877551
+metaphlan42,marine4,family,True positives,140
+metaphlan42,marine4,family,False negatives,22
+metaphlan42,marine4,family,False positives,0
+metaphlan42,marine4,family,Completeness,0.864197530864198
+metaphlan42,marine4,family,Purity,1
+metaphlan42,marine4,family,F1 score,0.927152317880795
+metaphlan42,marine4,family,Jaccard index,0.864197530864198
+metaphlan42,marine4,genus,True positives,256
+metaphlan42,marine4,genus,False negatives,35
+metaphlan42,marine4,genus,False positives,0
+metaphlan42,marine4,genus,Completeness,0.879725085910653
+metaphlan42,marine4,genus,Purity,1
+metaphlan42,marine4,genus,F1 score,0.936014625228519
+metaphlan42,marine4,genus,Jaccard index,0.879725085910653
+metaphlan42,marine4,species,True positives,329
+metaphlan42,marine4,species,False negatives,87
+metaphlan42,marine4,species,False positives,37
+metaphlan42,marine4,species,Completeness,0.790865384615385
+metaphlan42,marine4,species,Purity,0.898907103825137
+metaphlan42,marine4,species,F1 score,0.841432225063939
+metaphlan42,marine4,species,Jaccard index,0.726269315673289
+metaphlan42,marine4,kingdom,L1 norm error,0.00261177326884653
+metaphlan42,marine4,phylum,L1 norm error,0.154924744624155
+metaphlan42,marine4,class,L1 norm error,0.166526475201497
+metaphlan42,marine4,order,L1 norm error,0.198010270866569
+metaphlan42,marine4,family,L1 norm error,0.229430715420645
+metaphlan42,marine4,genus,L1 norm error,0.35377142261102
+metaphlan42,marine4,species,L1 norm error,0.451424203466433
+metaphlan42,marine4,na,Weighted UniFrac error,0.0124047964999399
+metaphlan42,marine4,na,Unweighted UniFrac error,0.140160648076513
+metaphlan42,marine4,na,Weighted UniFrac (CAMI),1.55669960545917
+metaphlan42,marine4,na,Unweighted UniFrac (CAMI),526
+metaphlan42,marine4,phylum,Sum of abundances,1
+metaphlan42,marine4,class,Sum of abundances,1
+metaphlan42,marine4,order,Sum of abundances,1
+metaphlan42,marine4,family,Sum of abundances,1
+metaphlan42,marine4,genus,Sum of abundances,1
+metaphlan42,marine4,species,Sum of abundances,1
+metaphlan42,marine4,phylum,Taxon counts,30
+metaphlan42,marine4,class,Taxon counts,43
+metaphlan42,marine4,order,Taxon counts,85
+metaphlan42,marine4,family,Taxon counts,140
+metaphlan42,marine4,genus,Taxon counts,256
+metaphlan42,marine4,species,Taxon counts,366
 singlem,marine5,kingdom,Bray-Curtis distance,0.00233517734603584
 singlem,marine5,phylum,Bray-Curtis distance,0.0192003134671685
 singlem,marine5,class,Bray-Curtis distance,0.0208747680756899
@@ -3275,6 +3730,97 @@ sylph,marine5,order,Taxon counts,105
 sylph,marine5,family,Taxon counts,175
 sylph,marine5,genus,Taxon counts,329
 sylph,marine5,species,Taxon counts,487
+metaphlan42,marine5,kingdom,Bray-Curtis distance,0.0015764384529051
+metaphlan42,marine5,phylum,Bray-Curtis distance,0.0704295848090859
+metaphlan42,marine5,class,Bray-Curtis distance,0.0786225607946678
+metaphlan42,marine5,order,Bray-Curtis distance,0.107278391951054
+metaphlan42,marine5,family,Bray-Curtis distance,0.120242776373504
+metaphlan42,marine5,genus,Bray-Curtis distance,0.13867756388555
+metaphlan42,marine5,species,Bray-Curtis distance,0.246584322803052
+metaphlan42,marine5,phylum,Shannon diversity,1.93062436383155
+metaphlan42,marine5,phylum,Shannon equitability,0.567630792097124
+metaphlan42,marine5,class,Shannon diversity,2.24304158547288
+metaphlan42,marine5,class,Shannon equitability,0.589240992995996
+metaphlan42,marine5,order,Shannon diversity,3.25407372170279
+metaphlan42,marine5,order,Shannon equitability,0.719643049703669
+metaphlan42,marine5,family,Shannon diversity,3.9320894272059
+metaphlan42,marine5,family,Shannon equitability,0.783709411293685
+metaphlan42,marine5,genus,Shannon diversity,4.65844640773892
+metaphlan42,marine5,genus,Shannon equitability,0.822616796299289
+metaphlan42,marine5,species,Shannon diversity,5.06365129681351
+metaphlan42,marine5,species,Shannon equitability,0.836353460198363
+metaphlan42,marine5,kingdom,True positives,2
+metaphlan42,marine5,kingdom,False negatives,0
+metaphlan42,marine5,kingdom,False positives,0
+metaphlan42,marine5,kingdom,Completeness,1
+metaphlan42,marine5,kingdom,Purity,1
+metaphlan42,marine5,kingdom,F1 score,1
+metaphlan42,marine5,kingdom,Jaccard index,1
+metaphlan42,marine5,phylum,True positives,30
+metaphlan42,marine5,phylum,False negatives,5
+metaphlan42,marine5,phylum,False positives,0
+metaphlan42,marine5,phylum,Completeness,0.857142857142857
+metaphlan42,marine5,phylum,Purity,1
+metaphlan42,marine5,phylum,F1 score,0.923076923076923
+metaphlan42,marine5,phylum,Jaccard index,0.857142857142857
+metaphlan42,marine5,class,True positives,45
+metaphlan42,marine5,class,False negatives,8
+metaphlan42,marine5,class,False positives,0
+metaphlan42,marine5,class,Completeness,0.849056603773585
+metaphlan42,marine5,class,Purity,1
+metaphlan42,marine5,class,F1 score,0.918367346938776
+metaphlan42,marine5,class,Jaccard index,0.849056603773585
+metaphlan42,marine5,order,True positives,92
+metaphlan42,marine5,order,False negatives,13
+metaphlan42,marine5,order,False positives,0
+metaphlan42,marine5,order,Completeness,0.876190476190476
+metaphlan42,marine5,order,Purity,1
+metaphlan42,marine5,order,F1 score,0.934010152284264
+metaphlan42,marine5,order,Jaccard index,0.876190476190476
+metaphlan42,marine5,family,True positives,151
+metaphlan42,marine5,family,False negatives,24
+metaphlan42,marine5,family,False positives,0
+metaphlan42,marine5,family,Completeness,0.862857142857143
+metaphlan42,marine5,family,Purity,1
+metaphlan42,marine5,family,F1 score,0.92638036809816
+metaphlan42,marine5,family,Jaccard index,0.862857142857143
+metaphlan42,marine5,genus,True positives,288
+metaphlan42,marine5,genus,False negatives,41
+metaphlan42,marine5,genus,False positives,0
+metaphlan42,marine5,genus,Completeness,0.875379939209726
+metaphlan42,marine5,genus,Purity,1
+metaphlan42,marine5,genus,F1 score,0.93354943273906
+metaphlan42,marine5,genus,Jaccard index,0.875379939209726
+metaphlan42,marine5,species,True positives,383
+metaphlan42,marine5,species,False negatives,107
+metaphlan42,marine5,species,False positives,43
+metaphlan42,marine5,species,Completeness,0.781632653061225
+metaphlan42,marine5,species,Purity,0.89906103286385
+metaphlan42,marine5,species,F1 score,0.836244541484716
+metaphlan42,marine5,species,Jaccard index,0.718574108818011
+metaphlan42,marine5,kingdom,L1 norm error,0.00315287690581019
+metaphlan42,marine5,phylum,L1 norm error,0.140859169618172
+metaphlan42,marine5,class,L1 norm error,0.157245121589336
+metaphlan42,marine5,order,L1 norm error,0.214556783902108
+metaphlan42,marine5,family,L1 norm error,0.240485552747008
+metaphlan42,marine5,genus,L1 norm error,0.277355127771099
+metaphlan42,marine5,species,L1 norm error,0.493168645606104
+metaphlan42,marine5,na,Weighted UniFrac error,0.0120544314469647
+metaphlan42,marine5,na,Unweighted UniFrac error,0.169282745394106
+metaphlan42,marine5,na,Weighted UniFrac (CAMI),1.52682327813963
+metaphlan42,marine5,na,Unweighted UniFrac (CAMI),708
+metaphlan42,marine5,phylum,Sum of abundances,1
+metaphlan42,marine5,class,Sum of abundances,1
+metaphlan42,marine5,order,Sum of abundances,1
+metaphlan42,marine5,family,Sum of abundances,1
+metaphlan42,marine5,genus,Sum of abundances,1
+metaphlan42,marine5,species,Sum of abundances,1
+metaphlan42,marine5,phylum,Taxon counts,30
+metaphlan42,marine5,class,Taxon counts,45
+metaphlan42,marine5,order,Taxon counts,92
+metaphlan42,marine5,family,Taxon counts,151
+metaphlan42,marine5,genus,Taxon counts,288
+metaphlan42,marine5,species,Taxon counts,426
 singlem,marine6,kingdom,Bray-Curtis distance,0.00363736692627533
 singlem,marine6,phylum,Bray-Curtis distance,0.0102602441225279
 singlem,marine6,class,Bray-Curtis distance,0.0121659942504114
@@ -3821,6 +4367,97 @@ sylph,marine6,order,Taxon counts,107
 sylph,marine6,family,Taxon counts,178
 sylph,marine6,genus,Taxon counts,334
 sylph,marine6,species,Taxon counts,491
+metaphlan42,marine6,kingdom,Bray-Curtis distance,0.00241584930535398
+metaphlan42,marine6,phylum,Bray-Curtis distance,0.0662381501764622
+metaphlan42,marine6,class,Bray-Curtis distance,0.0954739367638747
+metaphlan42,marine6,order,Bray-Curtis distance,0.113042100368767
+metaphlan42,marine6,family,Bray-Curtis distance,0.125988060487583
+metaphlan42,marine6,genus,Bray-Curtis distance,0.151498879950616
+metaphlan42,marine6,species,Bray-Curtis distance,0.238359639996377
+metaphlan42,marine6,phylum,Shannon diversity,2.05088131177871
+metaphlan42,marine6,phylum,Shannon equitability,0.597230330124715
+metaphlan42,marine6,class,Shannon diversity,2.39297019213824
+metaphlan42,marine6,class,Shannon equitability,0.625018105464934
+metaphlan42,marine6,order,Shannon diversity,3.52727805697009
+metaphlan42,marine6,order,Shannon equitability,0.776370063139009
+metaphlan42,marine6,family,Shannon diversity,4.01257813396214
+metaphlan42,marine6,family,Shannon equitability,0.796628130278489
+metaphlan42,marine6,genus,Shannon diversity,4.69844740229902
+metaphlan42,marine6,genus,Shannon equitability,0.827166307383054
+metaphlan42,marine6,species,Shannon diversity,5.13892338210209
+metaphlan42,marine6,species,Shannon equitability,0.846829759609696
+metaphlan42,marine6,kingdom,True positives,2
+metaphlan42,marine6,kingdom,False negatives,0
+metaphlan42,marine6,kingdom,False positives,0
+metaphlan42,marine6,kingdom,Completeness,1
+metaphlan42,marine6,kingdom,Purity,1
+metaphlan42,marine6,kingdom,F1 score,1
+metaphlan42,marine6,kingdom,Jaccard index,1
+metaphlan42,marine6,phylum,True positives,31
+metaphlan42,marine6,phylum,False negatives,5
+metaphlan42,marine6,phylum,False positives,0
+metaphlan42,marine6,phylum,Completeness,0.861111111111111
+metaphlan42,marine6,phylum,Purity,1
+metaphlan42,marine6,phylum,F1 score,0.925373134328358
+metaphlan42,marine6,phylum,Jaccard index,0.861111111111111
+metaphlan42,marine6,class,True positives,46
+metaphlan42,marine6,class,False negatives,8
+metaphlan42,marine6,class,False positives,0
+metaphlan42,marine6,class,Completeness,0.851851851851852
+metaphlan42,marine6,class,Purity,1
+metaphlan42,marine6,class,F1 score,0.92
+metaphlan42,marine6,class,Jaccard index,0.851851851851852
+metaphlan42,marine6,order,True positives,94
+metaphlan42,marine6,order,False negatives,13
+metaphlan42,marine6,order,False positives,0
+metaphlan42,marine6,order,Completeness,0.878504672897196
+metaphlan42,marine6,order,Purity,1
+metaphlan42,marine6,order,F1 score,0.935323383084577
+metaphlan42,marine6,order,Jaccard index,0.878504672897196
+metaphlan42,marine6,family,True positives,154
+metaphlan42,marine6,family,False negatives,24
+metaphlan42,marine6,family,False positives,0
+metaphlan42,marine6,family,Completeness,0.865168539325843
+metaphlan42,marine6,family,Purity,1
+metaphlan42,marine6,family,F1 score,0.927710843373494
+metaphlan42,marine6,family,Jaccard index,0.865168539325843
+metaphlan42,marine6,genus,True positives,293
+metaphlan42,marine6,genus,False negatives,41
+metaphlan42,marine6,genus,False positives,0
+metaphlan42,marine6,genus,Completeness,0.877245508982036
+metaphlan42,marine6,genus,Purity,1
+metaphlan42,marine6,genus,F1 score,0.934609250398724
+metaphlan42,marine6,genus,Jaccard index,0.877245508982036
+metaphlan42,marine6,species,True positives,389
+metaphlan42,marine6,species,False negatives,107
+metaphlan42,marine6,species,False positives,43
+metaphlan42,marine6,species,Completeness,0.784274193548387
+metaphlan42,marine6,species,Purity,0.900462962962963
+metaphlan42,marine6,species,F1 score,0.838362068965517
+metaphlan42,marine6,species,Jaccard index,0.721706864564007
+metaphlan42,marine6,kingdom,L1 norm error,0.00483169861070796
+metaphlan42,marine6,phylum,L1 norm error,0.132476300352924
+metaphlan42,marine6,class,L1 norm error,0.190947873527749
+metaphlan42,marine6,order,L1 norm error,0.226084200737533
+metaphlan42,marine6,family,L1 norm error,0.251976120975166
+metaphlan42,marine6,genus,L1 norm error,0.302997759901233
+metaphlan42,marine6,species,L1 norm error,0.476719279992754
+metaphlan42,marine6,na,Weighted UniFrac error,0.0126083228347086
+metaphlan42,marine6,na,Unweighted UniFrac error,0.161925143146254
+metaphlan42,marine6,na,Weighted UniFrac (CAMI),1.58603323409807
+metaphlan42,marine6,na,Unweighted UniFrac (CAMI),689
+metaphlan42,marine6,phylum,Sum of abundances,1
+metaphlan42,marine6,class,Sum of abundances,1
+metaphlan42,marine6,order,Sum of abundances,1
+metaphlan42,marine6,family,Sum of abundances,1
+metaphlan42,marine6,genus,Sum of abundances,1
+metaphlan42,marine6,species,Sum of abundances,1
+metaphlan42,marine6,phylum,Taxon counts,31
+metaphlan42,marine6,class,Taxon counts,46
+metaphlan42,marine6,order,Taxon counts,94
+metaphlan42,marine6,family,Taxon counts,154
+metaphlan42,marine6,genus,Taxon counts,293
+metaphlan42,marine6,species,Taxon counts,432
 singlem,marine7,kingdom,Bray-Curtis distance,0.00169595460126274
 singlem,marine7,phylum,Bray-Curtis distance,0.0480720956581721
 singlem,marine7,class,Bray-Curtis distance,0.0500677893957604
@@ -4367,6 +5004,97 @@ sylph,marine7,order,Taxon counts,98
 sylph,marine7,family,Taxon counts,162
 sylph,marine7,genus,Taxon counts,294
 sylph,marine7,species,Taxon counts,419
+metaphlan42,marine7,kingdom,Bray-Curtis distance,0.00378293882619842
+metaphlan42,marine7,phylum,Bray-Curtis distance,0.109211346086166
+metaphlan42,marine7,class,Bray-Curtis distance,0.127527649547181
+metaphlan42,marine7,order,Bray-Curtis distance,0.189124721713438
+metaphlan42,marine7,family,Bray-Curtis distance,0.209447138730605
+metaphlan42,marine7,genus,Bray-Curtis distance,0.268210395264411
+metaphlan42,marine7,species,Bray-Curtis distance,0.332524956473922
+metaphlan42,marine7,phylum,Shannon diversity,2.13828023115103
+metaphlan42,marine7,phylum,Shannon equitability,0.628684545824875
+metaphlan42,marine7,class,Shannon diversity,2.42192738716318
+metaphlan42,marine7,class,Shannon equitability,0.643924096741813
+metaphlan42,marine7,order,Shannon diversity,3.38194859039145
+metaphlan42,marine7,order,Shannon equitability,0.761245570525197
+metaphlan42,marine7,family,Shannon diversity,3.91810771415632
+metaphlan42,marine7,family,Shannon equitability,0.792875602700422
+metaphlan42,marine7,genus,Shannon diversity,4.70905070910204
+metaphlan42,marine7,genus,Shannon equitability,0.847435021709452
+metaphlan42,marine7,species,Shannon diversity,5.0802320260714
+metaphlan42,marine7,species,Shannon equitability,0.858698193927542
+metaphlan42,marine7,kingdom,True positives,2
+metaphlan42,marine7,kingdom,False negatives,0
+metaphlan42,marine7,kingdom,False positives,0
+metaphlan42,marine7,kingdom,Completeness,1
+metaphlan42,marine7,kingdom,Purity,1
+metaphlan42,marine7,kingdom,F1 score,1
+metaphlan42,marine7,kingdom,Jaccard index,1
+metaphlan42,marine7,phylum,True positives,30
+metaphlan42,marine7,phylum,False negatives,5
+metaphlan42,marine7,phylum,False positives,0
+metaphlan42,marine7,phylum,Completeness,0.857142857142857
+metaphlan42,marine7,phylum,Purity,1
+metaphlan42,marine7,phylum,F1 score,0.923076923076923
+metaphlan42,marine7,phylum,Jaccard index,0.857142857142857
+metaphlan42,marine7,class,True positives,43
+metaphlan42,marine7,class,False negatives,8
+metaphlan42,marine7,class,False positives,0
+metaphlan42,marine7,class,Completeness,0.843137254901961
+metaphlan42,marine7,class,Purity,1
+metaphlan42,marine7,class,F1 score,0.914893617021277
+metaphlan42,marine7,class,Jaccard index,0.843137254901961
+metaphlan42,marine7,order,True positives,85
+metaphlan42,marine7,order,False negatives,13
+metaphlan42,marine7,order,False positives,0
+metaphlan42,marine7,order,Completeness,0.86734693877551
+metaphlan42,marine7,order,Purity,1
+metaphlan42,marine7,order,F1 score,0.92896174863388
+metaphlan42,marine7,order,Jaccard index,0.86734693877551
+metaphlan42,marine7,family,True positives,140
+metaphlan42,marine7,family,False negatives,22
+metaphlan42,marine7,family,False positives,0
+metaphlan42,marine7,family,Completeness,0.864197530864198
+metaphlan42,marine7,family,Purity,1
+metaphlan42,marine7,family,F1 score,0.927152317880795
+metaphlan42,marine7,family,Jaccard index,0.864197530864198
+metaphlan42,marine7,genus,True positives,259
+metaphlan42,marine7,genus,False negatives,35
+metaphlan42,marine7,genus,False positives,0
+metaphlan42,marine7,genus,Completeness,0.880952380952381
+metaphlan42,marine7,genus,Purity,1
+metaphlan42,marine7,genus,F1 score,0.936708860759494
+metaphlan42,marine7,genus,Jaccard index,0.880952380952381
+metaphlan42,marine7,species,True positives,335
+metaphlan42,marine7,species,False negatives,86
+metaphlan42,marine7,species,False positives,36
+metaphlan42,marine7,species,Completeness,0.795724465558195
+metaphlan42,marine7,species,Purity,0.902964959568733
+metaphlan42,marine7,species,F1 score,0.845959595959596
+metaphlan42,marine7,species,Jaccard index,0.733041575492341
+metaphlan42,marine7,kingdom,L1 norm error,0.00756587765239683
+metaphlan42,marine7,phylum,L1 norm error,0.218422692172331
+metaphlan42,marine7,class,L1 norm error,0.255055299094362
+metaphlan42,marine7,order,L1 norm error,0.378249443426876
+metaphlan42,marine7,family,L1 norm error,0.418894277461211
+metaphlan42,marine7,genus,L1 norm error,0.536420790528823
+metaphlan42,marine7,species,L1 norm error,0.665049912947844
+metaphlan42,marine7,na,Weighted UniFrac error,0.0197591614019882
+metaphlan42,marine7,na,Unweighted UniFrac error,0.148629364226512
+metaphlan42,marine7,na,Weighted UniFrac (CAMI),2.47965829328385
+metaphlan42,marine7,na,Unweighted UniFrac (CAMI),556
+metaphlan42,marine7,phylum,Sum of abundances,1
+metaphlan42,marine7,class,Sum of abundances,1
+metaphlan42,marine7,order,Sum of abundances,1
+metaphlan42,marine7,family,Sum of abundances,1
+metaphlan42,marine7,genus,Sum of abundances,1
+metaphlan42,marine7,species,Sum of abundances,1
+metaphlan42,marine7,phylum,Taxon counts,30
+metaphlan42,marine7,class,Taxon counts,43
+metaphlan42,marine7,order,Taxon counts,85
+metaphlan42,marine7,family,Taxon counts,140
+metaphlan42,marine7,genus,Taxon counts,259
+metaphlan42,marine7,species,Taxon counts,371
 singlem,marine8,kingdom,Bray-Curtis distance,0.00244427239157361
 singlem,marine8,phylum,Bray-Curtis distance,0.0124707610660082
 singlem,marine8,class,Bray-Curtis distance,0.0136070283951521
@@ -4913,6 +5641,97 @@ sylph,marine8,order,Taxon counts,110
 sylph,marine8,family,Taxon counts,184
 sylph,marine8,genus,Taxon counts,345
 sylph,marine8,species,Taxon counts,510
+metaphlan42,marine8,kingdom,Bray-Curtis distance,0.00313591780884328
+metaphlan42,marine8,phylum,Bray-Curtis distance,0.0327441503407947
+metaphlan42,marine8,class,Bray-Curtis distance,0.0525205471636399
+metaphlan42,marine8,order,Bray-Curtis distance,0.0712452214474714
+metaphlan42,marine8,family,Bray-Curtis distance,0.0786688237963294
+metaphlan42,marine8,genus,Bray-Curtis distance,0.0967419309784436
+metaphlan42,marine8,species,Bray-Curtis distance,0.140347254086807
+metaphlan42,marine8,phylum,Shannon diversity,1.83874795295673
+metaphlan42,marine8,phylum,Shannon equitability,0.530550510635082
+metaphlan42,marine8,class,Shannon diversity,2.24268296567042
+metaphlan42,marine8,class,Shannon equitability,0.582492724350183
+metaphlan42,marine8,order,Shannon diversity,3.33521537786857
+metaphlan42,marine8,order,Shannon equitability,0.7307101119286
+metaphlan42,marine8,family,Shannon diversity,3.88107485333832
+metaphlan42,marine8,family,Shannon equitability,0.765663484355922
+metaphlan42,marine8,genus,Shannon diversity,4.58446971501356
+metaphlan42,marine8,genus,Shannon equitability,0.802824324882289
+metaphlan42,marine8,species,Shannon diversity,4.99053237725072
+metaphlan42,marine8,species,Shannon equitability,0.817477707639989
+metaphlan42,marine8,kingdom,True positives,2
+metaphlan42,marine8,kingdom,False negatives,0
+metaphlan42,marine8,kingdom,False positives,0
+metaphlan42,marine8,kingdom,Completeness,1
+metaphlan42,marine8,kingdom,Purity,1
+metaphlan42,marine8,kingdom,F1 score,1
+metaphlan42,marine8,kingdom,Jaccard index,1
+metaphlan42,marine8,phylum,True positives,32
+metaphlan42,marine8,phylum,False negatives,5
+metaphlan42,marine8,phylum,False positives,0
+metaphlan42,marine8,phylum,Completeness,0.864864864864865
+metaphlan42,marine8,phylum,Purity,1
+metaphlan42,marine8,phylum,F1 score,0.927536231884058
+metaphlan42,marine8,phylum,Jaccard index,0.864864864864865
+metaphlan42,marine8,class,True positives,47
+metaphlan42,marine8,class,False negatives,8
+metaphlan42,marine8,class,False positives,0
+metaphlan42,marine8,class,Completeness,0.854545454545455
+metaphlan42,marine8,class,Purity,1
+metaphlan42,marine8,class,F1 score,0.92156862745098
+metaphlan42,marine8,class,Jaccard index,0.854545454545455
+metaphlan42,marine8,order,True positives,96
+metaphlan42,marine8,order,False negatives,14
+metaphlan42,marine8,order,False positives,0
+metaphlan42,marine8,order,Completeness,0.872727272727273
+metaphlan42,marine8,order,Purity,1
+metaphlan42,marine8,order,F1 score,0.932038834951456
+metaphlan42,marine8,order,Jaccard index,0.872727272727273
+metaphlan42,marine8,family,True positives,159
+metaphlan42,marine8,family,False negatives,25
+metaphlan42,marine8,family,False positives,0
+metaphlan42,marine8,family,Completeness,0.864130434782609
+metaphlan42,marine8,family,Purity,1
+metaphlan42,marine8,family,F1 score,0.927113702623907
+metaphlan42,marine8,family,Jaccard index,0.864130434782609
+metaphlan42,marine8,genus,True positives,302
+metaphlan42,marine8,genus,False negatives,43
+metaphlan42,marine8,genus,False positives,0
+metaphlan42,marine8,genus,Completeness,0.87536231884058
+metaphlan42,marine8,genus,Purity,1
+metaphlan42,marine8,genus,F1 score,0.933539412673879
+metaphlan42,marine8,genus,Jaccard index,0.87536231884058
+metaphlan42,marine8,species,True positives,406
+metaphlan42,marine8,species,False negatives,110
+metaphlan42,marine8,species,False positives,42
+metaphlan42,marine8,species,Completeness,0.786821705426357
+metaphlan42,marine8,species,Purity,0.90625
+metaphlan42,marine8,species,F1 score,0.842323651452282
+metaphlan42,marine8,species,Jaccard index,0.727598566308244
+metaphlan42,marine8,kingdom,L1 norm error,0.00627183561768656
+metaphlan42,marine8,phylum,L1 norm error,0.0654883006815894
+metaphlan42,marine8,class,L1 norm error,0.10504109432728
+metaphlan42,marine8,order,L1 norm error,0.142490442894943
+metaphlan42,marine8,family,L1 norm error,0.157337647592659
+metaphlan42,marine8,genus,L1 norm error,0.193483861956887
+metaphlan42,marine8,species,L1 norm error,0.280694508173614
+metaphlan42,marine8,na,Weighted UniFrac error,0.00747132225312773
+metaphlan42,marine8,na,Unweighted UniFrac error,0.154062736145847
+metaphlan42,marine8,na,Weighted UniFrac (CAMI),0.950807691244657
+metaphlan42,marine8,na,Unweighted UniFrac (CAMI),697
+metaphlan42,marine8,phylum,Sum of abundances,1
+metaphlan42,marine8,class,Sum of abundances,1
+metaphlan42,marine8,order,Sum of abundances,1
+metaphlan42,marine8,family,Sum of abundances,1
+metaphlan42,marine8,genus,Sum of abundances,1
+metaphlan42,marine8,species,Sum of abundances,1
+metaphlan42,marine8,phylum,Taxon counts,32
+metaphlan42,marine8,class,Taxon counts,47
+metaphlan42,marine8,order,Taxon counts,96
+metaphlan42,marine8,family,Taxon counts,159
+metaphlan42,marine8,genus,Taxon counts,302
+metaphlan42,marine8,species,Taxon counts,448
 singlem,marine9,kingdom,Bray-Curtis distance,0.00280457497431486
 singlem,marine9,phylum,Bray-Curtis distance,0.0274307779960349
 singlem,marine9,class,Bray-Curtis distance,0.028311891460816
@@ -5459,3 +6278,94 @@ sylph,marine9,order,Taxon counts,94
 sylph,marine9,family,Taxon counts,158
 sylph,marine9,genus,Taxon counts,284
 sylph,marine9,species,Taxon counts,401
+metaphlan42,marine9,kingdom,Bray-Curtis distance,0.0058977968873862
+metaphlan42,marine9,phylum,Bray-Curtis distance,0.103328435708399
+metaphlan42,marine9,class,Bray-Curtis distance,0.108120009676345
+metaphlan42,marine9,order,Bray-Curtis distance,0.142477269081277
+metaphlan42,marine9,family,Bray-Curtis distance,0.155966256719549
+metaphlan42,marine9,genus,Bray-Curtis distance,0.181148958618172
+metaphlan42,marine9,species,Bray-Curtis distance,0.255759153518258
+metaphlan42,marine9,phylum,Shannon diversity,2.17198902517204
+metaphlan42,marine9,phylum,Shannon equitability,0.638595406688979
+metaphlan42,marine9,class,Shannon diversity,2.44271671523092
+metaphlan42,marine9,class,Shannon equitability,0.653540030205455
+metaphlan42,marine9,order,Shannon diversity,3.40402395357033
+metaphlan42,marine9,order,Shannon equitability,0.770343231562657
+metaphlan42,marine9,family,Shannon diversity,4.00128952109577
+metaphlan42,marine9,family,Shannon equitability,0.812072967371095
+metaphlan42,marine9,genus,Shannon diversity,4.69146829746952
+metaphlan42,marine9,genus,Shannon equitability,0.848454374442654
+metaphlan42,marine9,species,Shannon diversity,5.08947136163969
+metaphlan42,marine9,species,Shannon equitability,0.865889783174078
+metaphlan42,marine9,kingdom,True positives,2
+metaphlan42,marine9,kingdom,False negatives,0
+metaphlan42,marine9,kingdom,False positives,0
+metaphlan42,marine9,kingdom,Completeness,1
+metaphlan42,marine9,kingdom,Purity,1
+metaphlan42,marine9,kingdom,F1 score,1
+metaphlan42,marine9,kingdom,Jaccard index,1
+metaphlan42,marine9,phylum,True positives,30
+metaphlan42,marine9,phylum,False negatives,5
+metaphlan42,marine9,phylum,False positives,0
+metaphlan42,marine9,phylum,Completeness,0.857142857142857
+metaphlan42,marine9,phylum,Purity,1
+metaphlan42,marine9,phylum,F1 score,0.923076923076923
+metaphlan42,marine9,phylum,Jaccard index,0.857142857142857
+metaphlan42,marine9,class,True positives,42
+metaphlan42,marine9,class,False negatives,9
+metaphlan42,marine9,class,False positives,0
+metaphlan42,marine9,class,Completeness,0.823529411764706
+metaphlan42,marine9,class,Purity,1
+metaphlan42,marine9,class,F1 score,0.903225806451613
+metaphlan42,marine9,class,Jaccard index,0.823529411764706
+metaphlan42,marine9,order,True positives,83
+metaphlan42,marine9,order,False negatives,11
+metaphlan42,marine9,order,False positives,0
+metaphlan42,marine9,order,Completeness,0.882978723404255
+metaphlan42,marine9,order,Purity,1
+metaphlan42,marine9,order,F1 score,0.937853107344633
+metaphlan42,marine9,order,Jaccard index,0.882978723404255
+metaphlan42,marine9,family,True positives,138
+metaphlan42,marine9,family,False negatives,20
+metaphlan42,marine9,family,False positives,0
+metaphlan42,marine9,family,Completeness,0.873417721518987
+metaphlan42,marine9,family,Purity,1
+metaphlan42,marine9,family,F1 score,0.932432432432432
+metaphlan42,marine9,family,Jaccard index,0.873417721518987
+metaphlan42,marine9,genus,True positives,252
+metaphlan42,marine9,genus,False negatives,32
+metaphlan42,marine9,genus,False positives,0
+metaphlan42,marine9,genus,Completeness,0.887323943661972
+metaphlan42,marine9,genus,Purity,1
+metaphlan42,marine9,genus,F1 score,0.940298507462687
+metaphlan42,marine9,genus,Jaccard index,0.887323943661972
+metaphlan42,marine9,species,True positives,321
+metaphlan42,marine9,species,False negatives,82
+metaphlan42,marine9,species,False positives,36
+metaphlan42,marine9,species,Completeness,0.796526054590571
+metaphlan42,marine9,species,Purity,0.899159663865546
+metaphlan42,marine9,species,F1 score,0.844736842105263
+metaphlan42,marine9,species,Jaccard index,0.73120728929385
+metaphlan42,marine9,kingdom,L1 norm error,0.0117955937747724
+metaphlan42,marine9,phylum,L1 norm error,0.206656871416797
+metaphlan42,marine9,class,L1 norm error,0.216240019352689
+metaphlan42,marine9,order,L1 norm error,0.284954538162554
+metaphlan42,marine9,family,L1 norm error,0.311932513439098
+metaphlan42,marine9,genus,L1 norm error,0.362297917236343
+metaphlan42,marine9,species,L1 norm error,0.511518307036515
+metaphlan42,marine9,na,Weighted UniFrac error,0.015900017113083
+metaphlan42,marine9,na,Unweighted UniFrac error,0.137337690800593
+metaphlan42,marine9,na,Weighted UniFrac (CAMI),1.90539576041877
+metaphlan42,marine9,na,Unweighted UniFrac (CAMI),498
+metaphlan42,marine9,phylum,Sum of abundances,1
+metaphlan42,marine9,class,Sum of abundances,1
+metaphlan42,marine9,order,Sum of abundances,1
+metaphlan42,marine9,family,Sum of abundances,1
+metaphlan42,marine9,genus,Sum of abundances,1
+metaphlan42,marine9,species,Sum of abundances,1
+metaphlan42,marine9,phylum,Taxon counts,30
+metaphlan42,marine9,class,Taxon counts,42
+metaphlan42,marine9,order,Taxon counts,83
+metaphlan42,marine9,family,Taxon counts,138
+metaphlan42,marine9,genus,Taxon counts,252
+metaphlan42,marine9,species,Taxon counts,357

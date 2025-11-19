@@ -42,10 +42,17 @@ rule all:
     input:
         [join(output_directory, f'{tool}.done') for tool in tools],
         join(output_directory, 'gtdb.done'),
+        join(output_directory, 'gtdb-ar.done'),
         join(output_directory, 'shadow-genomes.done'),
         ["3_cami2_marine/split_reads/marine{sample_number}.done".format(sample_number=sample_number) for sample_number in range(10)],
         "2_phylogenetic_novelty/genomes",
         "2_phylogenetic_novelty/genome_pairs",
+
+rule dev:
+    input:
+        [join(output_directory, f'{tool}.done') for tool in ['singlem', 'sylph']],
+        join(output_directory, 'gtdb.done'),
+        join(output_directory, 'gtdb-ar.done'),
 
 rule metaphlan:
     output:

@@ -7,6 +7,9 @@ map2b = ["map2b"]
 metaphlan = ["metaphlan"]
 metaphlan42 = ["metaphlan42"]
 sylph = ["sylph"]
+opal = ["opal"]
+art = ["art"]
+singlem_deps = ["singlem_deps"]
 
 [feature.map2b.dependencies]
 perl="5.*"
@@ -26,3 +29,55 @@ metaphlan = "==4.2.2"
 
 [feature.sylph.dependencies]
 sylph = "==0.8.1"
+
+[feature.opal.dependencies]
+cami-opal = "==1.0.11"
+
+[feature.art.dependencies]
+python = ">=3.10"
+art = "*"
+pandas = "*"
+extern = "*"
+polars = "*"
+pyarrow = "*"
+
+[feature.singlem_deps.dependencies]
+python = ">=3.7"
+coreutils = "*" # So sort --parallel works
+bash = "*"
+diamond = ">=2.1.7,<2.1.11"  # 2.1.11 segfaults (on some non-test data)
+biopython = "*"
+hmmer = "*"
+orfm = "*"
+mfqe = "*"
+extern = "*"
+graftm = "*"
+krona = "*"
+pplacer = "*"
+sra-tools = "*"
+ncbi-ngs-sdk = "*"
+sqlite = "*"
+squarify = "*"
+mafft = "*"
+seqmagick = "*"
+expressbetadiversity = "*"
+cd-hit = "*"
+fasttree = "*"
+fastalite = "*"
+jinja2 = "*"
+pip = "*"
+sqlalchemy = "*"
+pandas = "*"
+bird_tool_utils_python = ">=0.4.1"
+smafa = "*"
+pyranges = "*"
+polars = "*"
+prodigal = "*"
+tqdm = "*"
+pyarrow = "*"
+galah = ">=0.4.0"
+sqlparse = "*"  # Required indirectly (e.g. taxtastic)
+zenodo_backpack = ">=0.3.0"
+# Optional (commented out)
+# python-annoy = "*"
+# nmslib = "*"

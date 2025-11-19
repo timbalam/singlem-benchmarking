@@ -9,10 +9,13 @@ The benchmarks are:
 3. `3_cami2_marine` - benchmark profilers on CAMI2 marine datasets, after converting the taxonomy to GTDB R207-based taxonomy.
 4. `4_complex_and_novel` - benchmark profilers on a complex community (defined by the CAMI2 marine coverages), where 0-100% of the community is new in GTDB R214 compared to R207.
 
+There is an additional testing benchmark:
+5. `5_novelty` - benchmark using a simulated community with a novel lineage.
+
 To get this repository, git clone with recursive option to get the submodules:
 
 ```bash
-git clone --recursive https://github.com/wwood/singlem-benchmarking
+git clone --recursive https://github.com/timbalam/singlem-benchmarking
 ```
 
 To run a benchmark, first create a conda env
@@ -51,33 +54,14 @@ cd tool_reference_data && {
 Then run the benchmarking, for instance #1
 
 ```bash
-
-Then run a benchmarking, for instance #1
-
-```bash
 cd 1_novel_strains
 ./run_benchmark.sh
 ```
 
 Results can be viewed by rerunning the `plot.ipynb` in each benchmark directory, and then the `plot_overall.ipynb` notebook in the base directory.
 
-## Download genomes for benchmark #2
-
-Using NCBI datasets CLI (on conda as `ncbi-datasets-cli=14.29.0`)
+To run the test benchmark 5 use
 
 ```bash
-cd 2_phylogenetic_novelty
-cd genomes
-datasets download genome accession --inputfile ../genome_accessions.txt
-unzip ncbi_dataset.zip
-
-# Rename files to simple names (e.g. GCA_000508305.1_genomic.fna)
-parallel --col-sep "\t" cp {1} {2} :::: ../genome_ncbi_names.tsv
-
-cd ../genome_pairs
-datasets download genome accession --inputfile ../genome_pairs_accessions.txt
-unzip ncbi_dataset.zip
-
-# Rename files to simple names (e.g. GCA_000508305.1_genomic.fna)
-parallel --col-sep "\t" cp {1} {2} :::: ../genome_pairs_ncbi_names.tsv
+snakemake --snakemake run_benchmarks.smk -c 8 bench_5
 ```

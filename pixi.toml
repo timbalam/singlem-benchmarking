@@ -9,7 +9,9 @@ metaphlan42 = ["metaphlan42"]
 sylph = ["sylph"]
 opal = ["opal"]
 art = ["art"]
-singlem_deps = ["singlem_deps"]
+singlem-dev = ["singlem-dev"]
+singlem = ["singlem"]
+start = ["start"]
 
 [feature.map2b.dependencies]
 perl="5.*"
@@ -34,14 +36,14 @@ sylph = "==0.8.1"
 cami-opal = "==1.0.11"
 
 [feature.art.dependencies]
-python = ">=3.10"
+python = ">=3.10,<3.14"
 art = "*"
 pandas = "*"
 extern = "*"
 polars = "*"
 pyarrow = "*"
 
-[feature.singlem_deps.dependencies]
+[feature.singlem-dev.dependencies]
 python = ">=3.7"
 coreutils = "*" # So sort --parallel works
 bash = "*"
@@ -81,3 +83,30 @@ zenodo_backpack = ">=0.3.0"
 # Optional (commented out)
 # python-annoy = "*"
 # nmslib = "*"
+
+[feature.singlem.pypi-dependencies]
+singlem = {path = ".", editable = true}
+
+[feature.singlem.dependencies]
+singlem = "==0.18.0"
+
+[feature.start.dependencies]
+python = ">=3.10,<3.14"
+snakemake = "*"
+polars = "*"
+extern = "*"
+jupyterlab = "*"
+nbconvert = "*"
+r = "*"
+r-irkernel = "*"
+"r-data.table" = "*"
+r-ggplot2 = "*"
+r-ggbeeswarm = "*"
+ncbi-datasets-cli = "*"
+bird_tool_utils_python = "*"
+tqdm = "*"
+scipy = "*"
+r-ggpubr = "*"
+r-patchwork = "*"
+r-svglite = "*"
+pyarrow = "*"

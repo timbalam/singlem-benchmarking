@@ -1,13 +1,13 @@
 from os.path import join
 
 tools = ['singlem', 'sylph']
-datasets = [f'marine{i}' for i in range(10)]
+datasets = [f'marine{i}' for i in range(1)]
 benchmark_dirs = ['5_novelty']
 num_threads = config['benchmarking_threads']
 
-singlem_bin = "singlem"
+singlem_bin = "singlem/singlem"
 singlem_metapackage = "tool_reference_data/S4.1.0.GTDB_r207.metapackage_20240502.smpkg"
-sylph_db = "tool_reference_data/gtdb_database.syldb"
+sylph_package = "tool_reference_data/gtdb_database.syldb"
 
 #####################################################################
 
@@ -16,42 +16,50 @@ rule all:
         expand("{bench_dir}/output_{tool}/opal/{sample}.opal_report",
                bench_dir = benchmark_dirs, sample = datasets, tool = tools)
 
-rule generate_communities_5:
+rule generate_communities_bench5:
     input:
         "5_novelty/generate_communities.done"
 
 rule generate_communities:
     input:
-        [join("{bench_dir}", f'truth/marine{i}.finished') for i in range(10)],
-        [join("{bench_dir}", f'reads/marine{i}.finished') for i in range(10)],
-        [join("{bench_dir}", f'truth/marine{i}.condensed.biobox') for i in range(10)],
+        [join("{bench_dir}", f'truth/{sample}.finished') for sample in dataset],
+        [join("{bench_dir}", f'reads/marine{sample}.finished') for sample in dataset],
+        [join("{bench_dir}", f'truth/marine{sample}.condensed.biobox') for sample in dataset],
     output:
         done=touch("{bench_dir}/generate_communities.done")
 
-rule generate_5_community_and_reads:
+rule generate_community_and_reads_bench5:
     input:
-        gtdb_bac_metadata = './bac120_metadata_r207.tsv'
-        gtdb_ar_metadata = './ar53_metadata_r207.tsv'
+        gtdb_bac_metadata = 'bac120_metadata_r207.tsv'
+        gtdb_ar_metadata = 'ar53_metadata_r207.tsv'
+	known_genome_list = '1_novel_strains/shadow_genome_paths.csv',
+	novel_genomes_gtdbtk_output_directory = '4_complex_and_novel/gtdbtk_batchfile.random1000.gtdbtk_r207',
+	novel_genome_list = '4_complex_and_novel/gtdbtk_batchfile.random1000.csv',
     output:
         r1="5_novelty/reads/{sample}.1.fq.gz",
         r2="5_novelty/reads/{sample}.2.fq.gz",
         condensed = "5_novelty/truth/{sample}.condensed",
-        genomewise = "5_novelty/truth/{sample}.genomewise.csv",
+        #genomewise = "5_novelty/truth/{sample}.genomewise.csv",
         done = touch("5_novelty/truth/{sample}.finished"),
         done2 = touch("5_novelty/reads/{sample}.finished"),
     params:
         coverage_number = lambda wildcards: wildcards.sample.replace('marine', ''),
-    threads: num_threads
+    log: "{bench_dir}/reads/{sample}.log"
+    threads: 8
     shell:
         "mkdir -p 5_novelty/truth 5_novelty/reads && " \
-        "pixi run -e art python3 " \
-        "5_novelty/generate_community.py --art art_illumina --threads {threads} " \
+        "pixi run -e art " \
+        "python3 5_novelty/generate_community.py --art art_illumina --threads {threads} " \
         "--coverage-file 5_novelty/coverage_definitions/coverage{params.coverage_number}.tsv " \
-        "--gtdb-bac-metadata {input.gtdb_bac_metadata} --gtdb-ar-metadata {input.gtdb_ar_metadata} " \
-        "--genome-list 5_novelty/shadow_genome_paths.csv --output-condensed {output.condensed} " \
+        "--gtdb-bac-metadata {input.gtdb_bac_metadata} " \
+	"--gtdb-ar-metadata {input.gtdb_ar_metadata} " \
+        "--known-genome-list {input.known_genome_list} " \
+        "--novel-genome-gtdbtk-output {input.novel_genomes_gtdbtk_output_directory} " \
+        "--novel-genome-list {input.novel_genome_list} " \
+	"--output-condensed {output.condensed} " \
         "-1 5_novelty/reads/{wildcards.sample}.1.fq.gz " \
         "-2 5_novelty/reads/{wildcards.sample}.2.fq.gz " \
-        "--output-genomewise-coverage {output.genomewise}"
+        "2> {log}"
 
 rule truth_condensed_to_biobox:
     input:
@@ -59,8 +67,8 @@ rule truth_condensed_to_biobox:
     output:
         biobox = "{bench_dir}/truth/{sample}.condensed.biobox"
     shell:
-        "pixi run -e singlem_deps python3 " \
-        "bin/condensed_profile_to_biobox.py --input-condensed-table {input.condensed} " \
+        "pixi run -e singlem " \
+        "python3 bin/condensed_profile_to_biobox.py --input-condensed-table {input.condensed} " \
         "--output-biobox {output.biobox}"
 
 rule tool_condensed_to_biobox:
@@ -70,8 +78,8 @@ rule tool_condensed_to_biobox:
     output:
         biobox = "{bench_dir}/output_{tool}/biobox/{sample}.biobox"
     shell:
-        "pixi run -e singlem_deps python3 " \
-        "bin/condensed_profile_to_biobox.py --input-condensed-table {input.profile} " \
+        "pixi run -e singlem " \
+	"python3 bin/condensed_profile_to_biobox.py --input-condensed-table {input.profile} " \
         "--output-biobox {output.biobox} --template-biobox {input.truth} "
 
 rule opal:
@@ -108,8 +116,8 @@ rule singlem_run_pipe:
     log:
         "{bench_dir}/output_singlem/logs/singlem/{sample}.log"
     shell:
-        "pixi run -e singlem_deps" \
-        "{singlem_bin} pipe --threads {threads} -1 {input.r1} -2 {input.r2} " \
+        "pixi run -e singlem " \
+        "singlem pipe --threads {threads} -1 {input.r1} -2 {input.r2} " \
         "--archive-otu-table {output.report} --metapackage {input.db} &> {log}"
 
 rule singlem_run_condense:
@@ -123,7 +131,22 @@ rule singlem_run_condense:
     log:
         "{bench_dir}/output_singlem/logs/singlem/{sample}.log"
     shell:
-        "pixi run -e singlem_deps " \
+        "pixi run -e singlem " \
+        "singlem condense --input-archive-otu-table {input.report} " \
+        "-p {output.profile} --metapackage {input.db} &> {log}"
+
+rule singlem_dev_run_condense:
+    input:
+        report="{bench_dir}/output_singlem/singlem/{sample}.sma",
+        done="{bench_dir}/output_singlem/singlem/{sample}.sma.done",
+        db=singlem_metapackage
+    output:
+        profile="{bench_dir}/output_singlem_dev/singlem_dev/{sample}.profile",
+        done=touch("{bench_dir}/output_singlem_dev/singlem_dev/{sample}.profile.done")
+    log:
+        "{bench_dir}/output_singlem_dev/logs/singlem_dev/{sample}.log"
+    shell:
+        "pixi run -e singlem-dev " \
         "{singlem_bin} condense --input-archive-otu-table {input.report} " \
         "-p {output.profile} --metapackage {input.db} &> {log}"
 
@@ -154,14 +177,14 @@ rule sylph_run:
 rule sylph_report_to_condensed:
     input:
         report = "{bench_dir}/output_sylph/sylph/{sample}.tsv",
-        gtdb_bac_tax = "./bac120_taxonomy_r207.tsv",
-        gtdb_ar_tax = "./ar53_taxonomy_r207.tsv",
+        gtdb_bac_tax = "bac120_taxonomy_r207.tsv",
+        gtdb_ar_tax = "ar53_taxonomy_r207.tsv",
     output:
         profile = "{bench_dir}/output_sylph/sylph/{sample}.profile"
         done=touch("{bench_dir}/output_sylph/sylph/{sample}.profile.done")
     shell:
-        "pixi shell -e singlem_deps python3 " \
-        "bin/sylph_to_condensed.py --sylph-genome {input.report} " \
+        "pixi shell -e singlem " \
+        "python3 bin/sylph_to_condensed.py --sylph-genome {input.report} " \
         "--sample {wildcards.sample} " \
         "--bac-tax {input.gtdb_bac_tax} " \
         "--arc-tax {input.gtdb_ar_tax} > {output.profile}"

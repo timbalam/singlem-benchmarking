@@ -48,7 +48,7 @@ python = ">=3.7"
 coreutils = "*" # So sort --parallel works
 bash = "*"
 diamond = ">=2.1.7,<2.1.11"  # 2.1.11 segfaults (on some non-test data)
-biopython = "*"
+biopython = "==1.85"
 hmmer = "*"
 orfm = "*"
 mfqe = "*"
@@ -67,25 +67,25 @@ cd-hit = "*"
 fasttree = "*"
 fastalite = "*"
 jinja2 = "*"
-pip = "*"
-sqlalchemy = "*"
-pandas = "*"
+pip = "==25.0.1"
+sqlalchemy = "==2.0.40"
+pandas = "==2.2.3"
 bird_tool_utils_python = ">=0.4.1"
 smafa = "*"
 pyranges = "*"
-polars = "*"
+polars = "==1.27.1"
 prodigal = "*"
 tqdm = "*"
-pyarrow = "*"
+pyarrow = "==16.1.0"
 galah = ">=0.4.0"
 sqlparse = "*"  # Required indirectly (e.g. taxtastic)
-zenodo_backpack = ">=0.3.0"
+zenodo_backpack = ">=0.3.0,<0.4.0"
 # Optional (commented out)
 # python-annoy = "*"
 # nmslib = "*"
 
-[feature.singlem.pypi-dependencies]
-singlem = {path = ".", editable = true}
+[feature.singlem-dev.pypi-dependencies]
+singlem = {path = "singlem", editable = true}
 
 [feature.singlem.dependencies]
 singlem = "==0.18.0"

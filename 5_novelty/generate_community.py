@@ -104,7 +104,7 @@ if __name__ == '__main__':
 
     # Read coverages
     coverages = pl.read_csv(args.coverage_file,
-                            separator = '\t', has_header = FALSE,
+                            separator = '\t', has_header = False,
                             new_columns = ['otu', 'coverage'])
     coverages = coverages.filter(pl.col('coverage') > 0)
     logging.info(f"Read {len(coverages)} coverages > 0.")
@@ -125,11 +125,11 @@ if __name__ == '__main__':
             .with_columns(
                 # Make paths relative to input file
                 pl.col('path').map_elements(
-                    lambda x: os.path.normpath(
+                    lambda x: os.path.normpath(os.path.join(
                         os.getcwd(),
                         os.path.dirname(args.known_genome_list),
                         x
-                    ),
+                    )),
                     return_dtype = pl.String()
                 )
             )
@@ -175,11 +175,11 @@ if __name__ == '__main__':
             .with_columns(
                 # Make paths relative to input file
                 pl.col('path').map_elements(
-                    lambda x: os.path.normpath(
+                    lambda x: os.path.normpath(os.path.join(
                         os.getcwd(),
                         os.path.dirname(args.novel_genome_list),
                         x
-                    ),
+                    )),
                     return_dtype = pl.String()
                 )
             )

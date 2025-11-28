@@ -161,7 +161,10 @@ if __name__ == '__main__':
     # Shuffle genomes order so we get randomness
 #    metadata = metadata.sample(fraction=1)
 
-    known_info = genomes.join(metadata, on='genome', how='inner').select('path','genome',pl.col('gtdb_taxonomy').alias('taxonomy'))
+    known_info = (
+        genomes.join(metadata, on = 'genome', how = 'inner')
+            .select('path', 'genome', pl.col('gtdb_taxonomy').alias('taxonomy'))
+    )
 
     r207_taxonomy = read_gtdbtk(args.novel_genome_gtdbtk_output, remove_empty_ranks=True)
 

@@ -1915,6 +1915,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-patchwork-1.3.2-r45hc72bb7e_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/r-pbdzmq-0.3_14-r45hded8526_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-pbkrtest-0.5.5-r45hc72bb7e_1.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/r-permute-0.9_8-r45hc72bb7e_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-pillar-1.11.1-r45hc72bb7e_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-pkgconfig-2.0.3-r45hc72bb7e_5.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/r-plyr-1.8.9-r45h3697838_3.conda
@@ -1962,6 +1963,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/r-utf8-1.2.6-r45h54b55ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/r-uuid-1.2_1-r45h54b55ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/r-vctrs-0.6.5-r45h3697838_2.conda
+      - conda: https://conda.anaconda.org/conda-forge/linux-64/r-vegan-2.7_2-r45h11cdb10_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-vipor-0.4.7-r45hc72bb7e_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-viridislite-0.4.2-r45hc72bb7e_3.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-withr-3.0.2-r45hc72bb7e_1.conda
@@ -13694,6 +13696,15 @@ packages:
   license_family: GPL2
   size: 233405
   timestamp: 1757491070347
+- conda: https://conda.anaconda.org/conda-forge/noarch/r-permute-0.9_8-r45hc72bb7e_1.conda
+  sha256: 6fb100ca1a17bb97dd3af1bfae1c92d90f9d204eb4144397973dc4c2070b1e7b
+  md5: 544899e5f5790a8fc3efe2b31bb86827
+  depends:
+  - r-base >=4.5,<4.6.0a0
+  license: GPL-2.0-only
+  license_family: GPL2
+  size: 234465
+  timestamp: 1757491063880
 - conda: https://conda.anaconda.org/conda-forge/noarch/r-pillar-1.11.1-r44hc72bb7e_0.conda
   sha256: 10739851530bc98feff7bf68acd2285dfddc7a8587b33c51a495f014744a3f33
   md5: 89635525b35ad6b443343237b65526ae
@@ -15560,6 +15571,26 @@ packages:
   license_family: GPL2
   size: 3056980
   timestamp: 1759939541103
+- conda: https://conda.anaconda.org/conda-forge/linux-64/r-vegan-2.7_2-r45h11cdb10_0.conda
+  sha256: 429225bf5fe516350f564eec1673b92a72ab8dd3d4b4b8a2e94b449bb7d92f96
+  md5: 58214eece94069a929259a70d15485d5
+  depends:
+  - __glibc >=2.17,<3.0.a0
+  - libblas >=3.9.0,<4.0a0
+  - libgcc >=14
+  - libgfortran
+  - libgfortran5 >=14.3.0
+  - liblapack >=3.9.0,<4.0a0
+  - r-base >=4.5,<4.6.0a0
+  - r-cluster
+  - r-lattice
+  - r-mass
+  - r-mgcv
+  - r-permute >=0.9_0
+  license: GPL-2.0-only
+  license_family: GPL2
+  size: 3056146
+  timestamp: 1759939469281
 - conda: https://conda.anaconda.org/conda-forge/noarch/r-vipor-0.4.7-r44hc72bb7e_2.conda
   sha256: a98106ba543b8fb899e5f066083bf08b7bcf2dce08892f613e56d1df5573d33a
   md5: a28fce9aa8a809c5703889ab21a4532d

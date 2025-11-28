@@ -103,8 +103,8 @@ rule opal:
 
 rule singlem_run_pipe:
     input:
-        r1="{bench_dir}/local_reads/{sample}_1.fastq.gz",
-        r2="{bench_dir}/local_reads/{sample}_2.fastq.gz",
+        r1="{bench_dir}/local_reads/{sample}.1.fq.gz",
+        r2="{bench_dir}/local_reads/{sample}.2.fq.gz",
         db=singlem_metapackage,
     output:
         report="{bench_dir}/output_singlem/singlem/{sample}.sma",
@@ -156,8 +156,8 @@ rule singlem_dev_run_condense:
 
 rule sylph_run:
     input:
-        r1 = "{bench_dir}/local_reads/{sample}_1.fastq.gz",
-        r2 = "{bench_dir}/local_reads/{sample}_2.fastq.gz",
+        r1 = "{bench_dir}/local_reads/{sample}.1.fq.gz",
+        r2 = "{bench_dir}/local_reads/{sample}.2.fq.gz",
         db = sylph_package
     output:
         report="{bench_dir}/output_sylph/sylph/{sample}.tsv",

@@ -55,8 +55,8 @@ r226_tools = ['singlem', 'sylph']
 rule all:
     input:
         [join(output_directory, f'{tool}.done') for tool in tools],
-        join(output_directory, 'gtdb.done'),
-        join(output_directory, 'gtdb-ar.done'),
+#        join(output_directory, 'gtdb.done'),
+#        join(output_directory, 'gtdb-ar.done'),
         join(output_directory, 'shadow-genomes.done'),
         ["3_cami2_marine/split_reads/marine{sample_number}.done".format(sample_number=sample_number) for sample_number in range(10)],
         "2_phylogenetic_novelty/genomes",
@@ -64,7 +64,7 @@ rule all:
 
 rule all_r226:
     input:
-        [join(output_directory, f'{tool}-r226.done') for tool in r266_tools],
+        [join(output_directory, f'{tool}-r226.done') for tool in r226_tools],
         join(output_directory, 'gtdb-r226-bac-tax.done'),
         join(output_directory, 'gtdb-r226-ar-tax.done')
 
@@ -291,7 +291,7 @@ rule singlem_r226_extract:
     log:
         abspath(join(output_directory, 'singlem-r226-extract.log'))
     params:
-        singlem_metapackage_basename = basename(singlem_r226_metapackage)
+        singlem_metapackage_basename = os.path.basename(singlem_r226_metapackage)
     shell:
         "bash -c 'cd {output_directory} && tar -xzf {params.singlem_metapackage_basename}.zb.tar.gz && mv -v {params.singlem_metapackage_basename}.zb/payload_directory ../{output.singlem_metapackage}' &> {log}"
 

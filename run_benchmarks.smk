@@ -12,7 +12,9 @@ sylph_r226_package = 'tool_reference_data/gtdb-r226-c200-dbv1.syldb'
 gtdb_r226_bac120_tax = 'tool_reference_data/bac120_taxonomy_r226.tsv'
 gtdb_r226_ar53_tax = 'tool_reference_data/ar53_taxonomy_r226.tsv'
 
-datasets = ['SRR606249']
+datasets_bench6 = ['SRR22388335', 'SRR9650389', 'SRR16352837', 'SRR16352839', 'SRR17498764',
+                   'SRR22870123', 'SRR23961386', 'SRR24982124', 'SRR6201989', 'SRR5264410',
+                   'SRR6869034', 'SRR5264435']
 
 #####################################################################
 
@@ -20,6 +22,11 @@ rule all:
     input:
         expand("{bench_dir}/output_{tool}/opal/{sample}.opal_report",
                bench_dir = benchmark_dirs, sample = datasets, tool = tools)
+
+rule all_bench6:
+    input:
+        expand("{bench_dir}/output_{tool}/opal/{sample}.opal_report",
+               bench_dir = ['6_host_assocs'], sample = datasets_bench6, tool = ['singlem', 'sylph'])
 
 rule generate_communities_bench5:
     input:

@@ -7,6 +7,13 @@ benchmark_dirs = ['5_novelty']
 singlem_metapackage = "tool_reference_data/S4.1.0.GTDB_r207.metapackage_20240502.smpkg"
 sylph_package = "tool_reference_data/gtdb_database.syldb"
 
+singlem_r226_metapackage = 'tool_reference_data/S5.4.0.GTDB_r226.metapackage_20250331.smpkg'
+sylph_r226_package = 'tool_reference_data/gtdb-r226-c200-dbv1.syldb'
+gtdb_r226_bac120_tax = 'tool_reference_data/bac120_taxonomy_r226.tsv'
+gtdb_r226_ar53_tax = 'tool_reference_data/ar53_taxonomy_r226.tsv'
+
+datasets = ['SRR606249']
+
 #####################################################################
 
 rule all:
@@ -93,6 +100,22 @@ rule opal:
     shell:
         "pixi run -e opal " \
         "opal.py -g {params.truth} -o {params.output_opal_dir} {input.biobox} || echo 'expected opal non-zero exit status'; mv {params.output_opal_dir}/results.tsv {output.report} && rm -rf {params.output_opal_dir}"
+
+rule download_bench6:
+    input:
+        expand("{bench_dir}/local_reads/{sample}_1.fastq.gz", bench_dir=join(output_directory, "6_host_assocs"), sample=datasets_bench6),
+        expand("{bench_dir}/local_reads/{sample}_2.fastq.gz", bench_dir=join(output_directory, "6_host_assocs"), sample=datasets_bench6),
+
+rule download_fastq:
+    output:
+        r1="{bench_dir}/local_reads/{sample}_1.fastq.gz",
+        r2="{bench_dir}/local_reads/{sample}_2.fastq.gz",
+        done=touch("{bench_dir}/local_reads/{sample}.done")
+    shell:
+        "pixi run -e kingfisher " \
+        "kingfisher get -r {wildcards.sample} " \
+        "--output_directory {bench_dir}/local_reads " \
+        "-m ena-ftp prefetch "
 
 
 ###############################################################################################

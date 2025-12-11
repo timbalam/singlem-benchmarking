@@ -34,9 +34,23 @@ map2b_db = os.path.join(map2b_checkout_dir, 'database/GTDB')
 # metabuli_db_dir = join(output_directory, 'metabuli')
 # metabuli_db = join(metabuli_db_dir, 'gtdb')
 
+# https://zenodo.org/records/15232972/files/S5.4.0.GTDB_r226.metapackage_20250331.smpkg.zb.tar.gz?download=1
+singlem_r226_metapackage = join(output_directory, 'S5.4.0.GTDB_r226.metapackage_20250331.smpkg')
+singlem_r226_metapackage_tgz = singlem_r226_metapackage + '.zb.tar.gz'
+
+sylph_r226_package = join(output_directory, 'gtdb-r226-c200-dbv1.syldb')
+
+gtdb_r226_bac120_tax=join(output_directory, 'bac120_taxonomy_r226.tsv')
+gtdb_r226_bac120_tax_gz = gtdb_r226_bac120_tax + '.gz'
+
+gtdb_r226_ar53_tax = join(output_directory, 'ar53_taxonomy_r226.tsv')
+gtdb_r226_ar53_tax_gz = gtdb_r226_ar53_tax + '.gz'
+
 # tools = ['singlem', 'metaphlan', 'motus', 'kraken', 'sourmash', 'kaiju', 'map2b', 'metabuli']
 ## metabuli download is not scripted because it is via sharepoint, which gives an indirect link.
 tools = ['singlem', 'metaphlan', 'motus', 'kraken', 'sourmash', 'kaiju', 'map2b', 'metaphlan42']
+
+r226_tools = ['singlem', 'sylph']
 
 rule all:
     input:
@@ -47,6 +61,12 @@ rule all:
         ["3_cami2_marine/split_reads/marine{sample_number}.done".format(sample_number=sample_number) for sample_number in range(10)],
         "2_phylogenetic_novelty/genomes",
         "2_phylogenetic_novelty/genome_pairs",
+
+rule all_r226:
+    input:
+        [join(output_directory, f'{tool}-r226.done') for tool in r266_tools],
+        join(output_directory, 'gtdb-r226-bac-tax.done'),
+        join(output_directory, 'gtdb-r226-ar-tax.done')
 
 rule dev:
     input:
@@ -252,45 +272,117 @@ rule singlem_extract:
     shell:
         "bash -c 'cd {output_directory} && tar -xzf {params.singlem_metapackage_basename}.zb.tar.gz && mv -v {params.singlem_metapackage_basename}.zb/payload_directory ../{output.singlem_metapackage}' &> {log}"
 
-rule gtdb_download_bac120:
+rule singlem_r226_download:
     output:
-        done=touch(join(output_directory, 'gtdb_download.done')),
-        tar = 'bac120_metadata_r207.tar.gz'
+        done=touch(join(output_directory, 'singlem-r226-download.done')),
+        singlem_metapackage_tgz=singlem_r226_metapackage_tgz
     log:
-        join(output_directory, 'gtdb.log')
+        join(output_directory, 'singlem-r226-download.log')
     shell:
-        'wget https://data.gtdb.ecogenomic.org/releases/release207/207.0/bac120_metadata_r207.tar.gz -O {output.tar} &> {log}'
+        "wget 'https://zenodo.org/records/15232972/files/S5.4.0.GTDB_r226.metapackage_20250331.smpkg.zb.tar.gz?download=1' -O {output.singlem_metapackage_tgz} &> {log}"
 
-rule gtdb_extract_bac120:
+rule singlem_r226_extract:
     input:
-        done=join(output_directory, 'gtdb_download.done'),
-        tar = 'bac120_metadata_r207.tar.gz'
+        done=join(output_directory, 'singlem-r226-download.done'),
+        singlem_metapackage_tgz=singlem_r226_metapackage_tgz,
     output:
-        done=touch(join(output_directory, 'gtdb.done')),
+        done=touch(join(output_directory, 'singlem-r226.done')),
+        singlem_metapackage=directory(singlem_r226_metapackage)
     log:
-        join(output_directory, 'gtdb-extract.log')
+        abspath(join(output_directory, 'singlem-r226-extract.log'))
+    params:
+        singlem_metapackage_basename = basename(singlem_r226_metapackage)
     shell:
-        'tar -xzf {input.tar} &> {log}'
+        "bash -c 'cd {output_directory} && tar -xzf {params.singlem_metapackage_basename}.zb.tar.gz && mv -v {params.singlem_metapackage_basename}.zb/payload_directory ../{output.singlem_metapackage}' &> {log}"
 
-rule gtdb_download_ar53:
+rule sylph_r226_download:
     output:
-        done=touch(join(output_directory, 'gtdb_download_ar53.done')),
-        tar = 'ar53_metadata_r207.tar.gz'
+        done=touch(join(output_directory, 'sylph-r226.done')),
+        sylph_package=sylph_r226_package
     log:
-        join(output_directory, 'gtdb.log')
+        join(output_directory, 'sylph-r226-download.log')
     shell:
-        'wget https://data.gtdb.ecogenomic.org/releases/release207/207.0/ar53_metadata_r207.tar.gz -O {output.tar} &> {log}'
+        "wget 'http://faust.compbio.cs.cmu.edu/sylph-stuff/gtdb-r226-c200-dbv1.syldb' -O {output.sylph_package} &> {log}"
 
-rule gtdb_extract_ar53:
+#rule gtdb_download_bac120:
+#    output:
+#        done=touch(join(output_directory, 'gtdb-download-bac.done')),
+#        tar = 'bac120_metadata_r207.tar.gz'
+#    log:
+#        join(output_directory, 'gtdb-bac.log')
+#    shell:
+#        'wget https://data.gtdb.ecogenomic.org/releases/release207/207.0/bac120_metadata_r207.tar.gz -O {output.tar} &> {log}'
+
+#rule gtdb_extract_bac120:
+#    input:
+#        done=join(output_directory, 'gtdb-download-bac.done'),
+#        tar = 'bac120_metadata_r207.tar.gz'
+#    output:
+#        done=touch(join(output_directory, 'gtdb-bac.done')),
+#    log:
+#        join(output_directory, 'gtdb-extract.log')
+#    shell:
+#        'tar -xzf {input.tar} &> {log}'
+
+rule gtdb_r226_download_bac120_tax:
+    output:
+        done=touch(join(output_directory, 'gtdb-r226-download-bac-tax.done')),
+        tsv = gtdb_r226_bac120_tax_gz
+    log:
+        join(output_directory, 'gtdb-r226-bac-tax.log')
+    shell:
+        'wget https://data.gtdb.ecogenomic.org/releases/release226/226.0/bac120_taxonomy_r226.tsv.gz -O {output.tsv} &> {log}'
+
+rule gtdb_r226_extract_bac120_tax:
     input:
-        done=join(output_directory, 'gtdb_download_ar53.done'),
-        tar = 'ar53_metadata_r207.tar.gz'
+        done=join(output_directory, 'gtdb-r226-download-bac-tax.done'),
+        tsv = gtdb_r226_bac120_tax_gz
     output:
-        done=touch(join(output_directory, 'gtdb-ar.done')),
+        done=touch(join(output_directory, 'gtdb-r226-bac-tax.done')),
     log:
-        join(output_directory, 'gtdb-extract.log')
+        join(output_directory, 'gtdb-r226-extract-bac-tax.log')
     shell:
-        'tar -xzf {input.tar} &> {log}'
+        'gzip -kd {input.tsv} &> {log}'
+
+#rule gtdb_download_ar53:
+#    output:
+#        done=touch(join(output_directory, 'gtdb-download-ar.done')),
+#        tar = 'ar53_metadata_r207.tar.gz'
+#    log:
+#        join(output_directory, 'gtdb-ar.log')
+#    shell:
+#        'wget https://data.gtdb.ecogenomic.org/releases/release207/207.0/ar53_metadata_r207.tar.gz -O {output.tar} &> {log}'
+
+#rule gtdb_extract_ar53:
+#    input:
+#        done=join(output_directory, 'gtdb-download-ar.done'),
+#        tar = 'ar53_metadata_r207.tar.gz'
+#    output:
+#        done=touch(join(output_directory, 'gtdb-ar.done')),
+#    log:
+#        join(output_directory, 'gtdb-extract-ar.log')
+#    shell:
+#        'tar -xzf {input.tar} &> {log}'
+
+rule gtdb_r226_download_ar53_tax:
+    output:
+        done=touch(join(output_directory, 'gtdb-r226-download-ar-tax.done')),
+        tsv = gtdb_r226_ar53_tax_gz
+    log:
+        join(output_directory, 'gtdb-r226-ar-tax.log')
+    shell:
+        'wget https://data.gtdb.ecogenomic.org/releases/release226/226.0/ar53_taxonomy_r226.tsv.gz -O {output.tsv} &> {log}'
+
+rule gtdb_r226_extract_ar53_tax:
+    input:
+        done=join(output_directory, 'gtdb-r226-download-ar-tax.done'),
+        tsv = gtdb_r226_ar53_tax_gz
+    output:
+        done=touch(join(output_directory, 'gtdb-r226-ar.done')),
+    log:
+        join(output_directory, 'gtdb-r226-extract-ar.log')
+    shell:
+        'gzip -kd {input.tsv} &> {log}'
 
 rule shadow_genomes_download:
     output:

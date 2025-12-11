@@ -1,44 +1,43 @@
 from os.path import join
 
-tools = ['singlem', 'sylph', 'singlem_dev']
-datasets = [f'marine{i}' for i in range(1)]
-benchmark_dirs = ['5_novelty']
+datasets_bench5 = [f'marine{i}' for i in range(1)]
 
 singlem_metapackage = "tool_reference_data/S4.1.0.GTDB_r207.metapackage_20240502.smpkg"
 sylph_package = "tool_reference_data/gtdb_database.syldb"
+
+datasets_bench6 = ['SRR22388335', 'SRR9650389', 'SRR16352837', 'SRR16352839', 'SRR17498764',
+                   'SRR22870123', 'SRR23961386', 'SRR24982124', 'SRR6201989', 'SRR5264410',
+                   'SRR6869034', 'SRR5264435']
 
 singlem_r226_metapackage = 'tool_reference_data/S5.4.0.GTDB_r226.metapackage_20250331.smpkg'
 sylph_r226_package = 'tool_reference_data/gtdb-r226-c200-dbv1.syldb'
 gtdb_r226_bac120_tax = 'tool_reference_data/bac120_taxonomy_r226.tsv'
 gtdb_r226_ar53_tax = 'tool_reference_data/ar53_taxonomy_r226.tsv'
 
-datasets_bench6 = ['SRR22388335', 'SRR9650389', 'SRR16352837', 'SRR16352839', 'SRR17498764',
-                   'SRR22870123', 'SRR23961386', 'SRR24982124', 'SRR6201989', 'SRR5264410',
-                   'SRR6869034', 'SRR5264435']
-
 #####################################################################
 
-rule all:
+rule all_bench5:
     input:
-        expand("{bench_dir}/output_{tool}/opal/{sample}.opal_report",
-               bench_dir = benchmark_dirs, sample = datasets, tool = tools)
+        expand("5_novelty/output_{tool}/opal/{sample}.opal_report",
+               sample = datasets_bench5, tool = ['singlem', 'sylph', 'singlem_dev'])
 
 rule all_bench6:
     input:
-        expand("{bench_dir}/output_{tool}/opal/{sample}.opal_report",
-               bench_dir = ['6_host_assocs'], sample = datasets_bench6, tool = ['singlem', 'sylph'])
+        expand("6_host_assocs/output_{tool}/opal/{sample}.opal_report",
+               sample = datasets_bench6, tool = ['singlem_r266', 'sylph_r266'])
 
 rule generate_communities_bench5:
     input:
-        "5_novelty/generate_communities.done"
-
-rule generate_communities:
-    input:
-        [join("{bench_dir}", f'truths/{sample}.finished') for sample in datasets],
-        [join("{bench_dir}", f'local_reads/marine{sample}.finished') for sample in datasets],
-        [join("{bench_dir}", f'truths/marine{sample}.condensed.biobox') for sample in datasets],
+        [f'5_novelty/truths/{sample}.finished' for sample in datasets_bench5],
+        [f'5_novelty/local_reads/marine{sample}.finished' for sample in datasets_bench5],
+        [f'5_novelty/truths/marine{sample}.condensed.biobox' for sample in datasets_bench5],
     output:
-        done=touch("{bench_dir}/generate_communities.done")
+        done=touch("5_novelty/generate_communities.done")
+
+rule download_bench6:
+    input:
+        [f'6_host_assocs/local_reads/{sample}_1.fastq.gz' for sample in datasets_bench6],
+        [f'6_host_assocs/local_reads/{sample}_2.fastq.gz' for sample in  datasets_bench6]
 
 rule generate_community_and_reads_bench5:
     input:
@@ -107,11 +106,6 @@ rule opal:
     shell:
         "pixi run -e opal " \
         "opal.py -g {params.truth} -o {params.output_opal_dir} {input.biobox} || echo 'expected opal non-zero exit status'; mv {params.output_opal_dir}/results.tsv {output.report} && rm -rf {params.output_opal_dir}"
-
-rule download_bench6:
-    input:
-        expand("{bench_dir}/local_reads/{sample}_1.fastq.gz", bench_dir=join(output_directory, "6_host_assocs"), sample=datasets_bench6),
-        expand("{bench_dir}/local_reads/{sample}_2.fastq.gz", bench_dir=join(output_directory, "6_host_assocs"), sample=datasets_bench6),
 
 rule download_fastq:
     output:

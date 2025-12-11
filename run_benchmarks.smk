@@ -35,11 +35,6 @@ rule generate_communities_bench5:
         done=touch("5_novelty/generate_communities.done")
 
 rule download_bench6:
-    input:
-        [f'6_host_assocs/local_reads/{sample}_1.fastq.gz' for sample in datasets_bench6],
-        [f'6_host_assocs/local_reads/{sample}_2.fastq.gz' for sample in  datasets_bench6]
-
-rule download_fastq:
     output:
         [f'6_host_assocs/local_reads/{sample}_1.fastq.gz' for sample in datasets_bench6],
         [f'6_host_assocs/local_reads/{sample}_2.fastq.gz' for sample in datasets_bench6]

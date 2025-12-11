@@ -43,7 +43,7 @@ rule download_bench6:
         "pixi run -e kingfisher " \
         "kingfisher get -r {' '.join(datasets_bench6)} " \
         "--output_directory 6_host_assocs/local_reads " \
-        "-m ena-ftp prefetch "
+        "-m ena-ftp prefetch --check-md5sums"
 
 
 rule generate_community_and_reads_bench5:

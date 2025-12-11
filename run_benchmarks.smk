@@ -115,7 +115,7 @@ rule download_fastq:
     shell:
         "pixi run -e kingfisher " \
         "kingfisher get -r {wildcards.sample} " \
-        "--output_directory {bench_dir}/local_reads " \
+        "--output_directory {wildcards.bench_dir}/local_reads " \
         "-m ena-ftp prefetch "
 
 

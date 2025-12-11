@@ -12,6 +12,7 @@ art = ["art"]
 singlem-dev = ["singlem-dev"]
 singlem = ["singlem"]
 start = ["start"]
+kingfisher = ["kingfisher"]
 
 [feature.map2b.dependencies]
 perl="5.*"
@@ -112,3 +113,7 @@ r-svglite = "*"
 r-jsonlite = "*"
 pyarrow = "*"
 r-vegan = "*"
+
+[feature.kingfisher.dependencies]
+kingfisher = "*"
+

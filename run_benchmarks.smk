@@ -39,6 +39,18 @@ rule download_bench6:
         [f'6_host_assocs/local_reads/{sample}_1.fastq.gz' for sample in datasets_bench6],
         [f'6_host_assocs/local_reads/{sample}_2.fastq.gz' for sample in  datasets_bench6]
 
+rule download_fastq:
+    output:
+        [f'6_host_assocs/local_reads/{sample}_1.fastq.gz' for sample in datasets_bench6],
+        [f'6_host_assocs/local_reads/{sample}_2.fastq.gz' for sample in datasets_bench6]
+        done=[touch(f'6_host_assocs/local_reads/{sample}.done') for sample in datasets_bench6]
+    shell:
+        "pixi run -e kingfisher " \
+        "kingfisher get -r {' '.join(datasets_bench6)} " \
+        "--output_directory 6_host_assocs/local_reads " \
+        "-m ena-ftp prefetch "
+
+
 rule generate_community_and_reads_bench5:
     input:
         gtdb_bac_metadata = 'bac120_metadata_r207.tsv',
@@ -106,17 +118,6 @@ rule opal:
     shell:
         "pixi run -e opal " \
         "opal.py -g {params.truth} -o {params.output_opal_dir} {input.biobox} || echo 'expected opal non-zero exit status'; mv {params.output_opal_dir}/results.tsv {output.report} && rm -rf {params.output_opal_dir}"
-
-rule download_fastq:
-    output:
-        r1="{bench_dir}/local_reads/{sample}_1.fastq.gz",
-        r2="{bench_dir}/local_reads/{sample}_2.fastq.gz",
-        done=touch("{bench_dir}/local_reads/{sample}.done")
-    shell:
-        "pixi run -e kingfisher " \
-        "kingfisher get -r {wildcards.sample} " \
-        "--output_directory {bench_dir}/local_reads " \
-        "-m ena-ftp prefetch "
 
 
 ###############################################################################################

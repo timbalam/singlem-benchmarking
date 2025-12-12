@@ -120,7 +120,7 @@ rule download_fastq:
         "pixi run -e kingfisher " \
         "kingfisher get -r {wildcards.sample} " \
         "--output_directory {wildcards.bench_dir}/local_reads " \
-        "-m ena-ftp prefetch " \
+        "-m ena-ftp prefetch -f fastq.gz " \
         "&> {log}"
 
 

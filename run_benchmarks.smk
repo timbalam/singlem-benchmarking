@@ -23,8 +23,8 @@ rule all_bench5:
 
 rule all_bench6:
     input:
-        expand("6_host_assocs/output_{tool}/opal/{sample}.opal_report",
-               sample = datasets_bench6, tool = ['singlem_r266', 'sylph_r266'])
+        expand("6_host_assocs/output_{tool}/{tool}/{sample}.profile",
+               sample = datasets_bench6, tool = ['singlem_r226', 'sylph_r226'])
 
 rule generate_communities_bench5:
     input:
@@ -36,8 +36,8 @@ rule generate_communities_bench5:
 
 rule download_bench6:
     input:
-        [f'6_host_assocs/local_reads/{sample}_1.fastq.gz' for sample in datasets_bench6],
-        [f'6_host_assocs/local_reads/{sample}_2.fastq.gz' for sample in  datasets_bench6]
+        [f'6_host_assocs/local_reads/{sample}.1.fq.gz' for sample in datasets_bench6],
+        [f'6_host_assocs/local_reads/{sample}.2.fq.gz' for sample in  datasets_bench6]
 
 rule generate_community_and_reads_bench5:
     input:
@@ -109,8 +109,8 @@ rule opal:
 
 rule download_fastq:
     output:
-        r1="{bench_dir}/local_reads/{sample}_1.fastq.gz",
-        r2="{bench_dir}/local_reads/{sample}_2.fastq.gz",
+        r1="{bench_dir}/local_reads/{sample}.1.fq.gz",
+        r2="{bench_dir}/local_reads/{sample}.2.fq.gz",
         done=touch("{bench_dir}/local_reads/{sample}.done")
     log:
         "{bench_dir}/local_reads/{sample}.log"
@@ -121,7 +121,10 @@ rule download_fastq:
         "kingfisher get -r {wildcards.sample} " \
         "--output_directory {wildcards.bench_dir}/local_reads " \
         "-m ena-ftp prefetch -f fastq.gz " \
+	"&& mv {wildcards.bench_dir}/local_reads/{wildcards.sample}_1.fastq.gz {output.r1} " \
+        "&& mv {wildcards.bench_dir}/local_reads/{wildcards.sample}_2.fastq.gz {output.r2} " \
         "&> {log}"
+
 
 
 ###############################################################################################

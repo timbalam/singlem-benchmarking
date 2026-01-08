@@ -6,6 +6,7 @@ channels = ["conda-forge", "bioconda"]
 metaphlan=["metaphlan"]
 metaphlan42=["metaphlan42"]
 sylph=["sylph"]
+metakssd=["metakssd"]
 
 [feature.metaphlan.dependencies]
 metaphlan = "==4.0.6"
@@ -16,3 +17,8 @@ metaphlan = "==4.2.2"
 
 [feature.sylph.dependencies]
 sylph = "==0.8.1"
+
+[feature.metakssd]
+dependencies = {metakssd = "==2.24"}
+channels = ["https://conda.anaconda.org/luxiaoxin2"]
+

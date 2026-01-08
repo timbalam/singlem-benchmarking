@@ -19,7 +19,7 @@ fastq_dir = os.path.join(workflow.basedir, 'local_reads')
 
 #####################################################################
 
-tools = tools + ["metaphlan42"]
+tools = tools + ["metaphlan42", "metakssd"]
 
 rule all:
     input:
@@ -40,6 +40,12 @@ rule all_metaphlan:
 rule all_singlem:
     input:
         expand(output_prefix+"{tool}/opal/{sample}.opal_report", sample=datasets, tool=['singlem'])
+    output:
+        touch(output_prefix + "singlem/done")
+
+rule all_metakssd:
+    input:
+        expand(output_prefix+"{tool}/opal/{sample}.opal_report", sample=datasets, tool=['metakssd'])
     output:
         touch(output_prefix + "singlem/done")
 
@@ -696,6 +702,73 @@ rule sylph_report_to_condensed:
         "envs/singlem.yml"
     shell:
         "python3 {workflow.basedir}/../bin/sylph_to_condensed.py --sylph-genome {input} " \
+        "--sample {wildcards.sample} " \
+        "--bac-tax ../bac120_taxonomy_r207.tsv " \
+        "--arc-tax ../ar53_taxonomy_r207.tsv > {output.profile}"
+
+###############################################################################################
+###############################################################################################
+###############################################################################################
+######### metakssd
+
+rule metakssd_copy_db:
+    input:
+        db=metakssd_markerdb,
+    output:
+        db=directory(metakssd_markerdb_local),
+        done=touch(output_dirs_dict['metakssd'] + "/metakssd/data/done")
+    shell:
+        "mkdir -p output.db && cp -r {input.db} {output.db}"
+
+rule cat_reads_for_metakssd:
+    # Concatenate input files because metakssd can't handle multiple input files
+    input:
+        r1=fastq_dir + "/{sample}.1.fq.gz",
+        r2=fastq_dir + "/{sample}.2.fq.gz",
+    output:
+        cat_reads = output_dirs_dict['metakssd'] + "/metakssd/{sample}.cat.fq.gz",
+        done = touch(output_dirs_dict['metakssd'] + "/metakssd/{sample}.cat.done")
+    shell:
+        "cat {input.r1} {input.r2} > {output.cat_reads}"
+
+rule metakssd_run:
+    input:
+        r1=fastq_dir + "/{sample}.1.fq.gz",
+        r2=fastq_dir + "/{sample}.2.fq.gz",
+        db=metakssd_markerdb_local,
+        done=output_dirs_dict['metakssd'] + "/metakssd/data/done",
+        cat_reads = output_dirs_dict['metakssd'] + "/metakssd/{sample}.cat.fq.gz",
+        cat_done = output_dirs_dict['metakssd'] + "/metakssd/{sample}.cat.done",
+    output:
+        sketch=directory(output_dirs_dict['metakssd'] + "/output/{sample}_K3K11_sketch"),
+        coverage=output_dirs_dict['metakssd'] + "/output/{sample}_species_coverage.tsv",
+        report=output_dirs_dict['metakssd'] + "/output/{sample}_profile.tsv",
+        done=touch(output_dirs_dict['metakssd'] + "/output/{sample}.done")
+    threads: num_threads
+    resources:
+        mem_mb=32000
+    benchmark:
+        benchmark_dir + "/metakssd/{sample}-"+str(num_threads)+"threads.benchmark"
+    log:
+        output_dirs_dict['metakssd'] + "/logs/metakssd/{sample}.log"
+    shell:
+        "pixi run --environment metakssd metakssd dist " \
+        "-L {metakssd_checkout_dir}/shuf_files/L3K11.shuf -A " \
+        "-o {output.sketch} {input.cat_reads} && " \
+        "pixi run --environment metakssd metakssd composite " \
+        "-r {metakssd_markerdb_local} -q {output.sketch} > {output.coverage} && " \
+        "pixi run --environment metakssd perl {metakssd_checkout_dir}/scripts/possion.kssd2out.pl " \
+        "{output.coverage} 18 > {output.report}"
+
+rule metakssd_report_to_condensed:
+    input:
+        report=output_dirs_dict['metakssd'] + "/output/{sample}_profile.tsv",
+    output:
+        profile = output_dirs_dict['metakssd'] + "/metakssd/{sample}.profile",
+    conda:
+        "envs/singlem.yml"
+    shell:
+        "python3 {workflow.basedir}/../bin/metakssd_to_condensed.py --metakssd-genome {input} " \
         "--sample {wildcards.sample} " \
         "--bac-tax ../bac120_taxonomy_r207.tsv " \
         "--arc-tax ../ar53_taxonomy_r207.tsv > {output.profile}"

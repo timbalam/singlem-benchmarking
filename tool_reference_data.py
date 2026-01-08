@@ -34,7 +34,10 @@ metabuli_db_dir = '/work/microbiome/db/metabuli/gtdb207'
 
 sylph_db = join(output_directory, "gtdb_database.syldb")
 
-tools = ['singlem', 'metaphlan', 'motus', 'kraken', 'sourmash', 'kaiju', 'map2b', 'metabuli', 'sylph', 'metaphlan42']
+metakssd_checkout_dir = join(output_directory, 'MetaKSSD-checkout')
+metakssd_markerdb = join(output_directory, "GTDBr207_genomes_L3K11_sketch_markerdb")
+
+tools = ['singlem', 'metaphlan', 'motus', 'kraken', 'sourmash', 'kaiju', 'map2b', 'metabuli', 'sylph', 'metaphlan42', 'metakssd']
 
 tools_with_filled_output_profiles = ('kraken','sourmash')
 

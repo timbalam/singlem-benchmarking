@@ -42,13 +42,54 @@ The Metabuli R207 database is downloaded separately. Download the tar.gz file fr
 tar -xvf metabuli.tar.gz
 ```
 
-To generate a GTDB v207 database for sylph
+To generate a GTDB v207 database for sylph you will need a folder with all the GTDB v207 genomes (here ALL_GTDBR207_GENOMES_DIR)
 ```bash
+#ALL_GTDBR207_GENOMES_DIR=/work/microbiome/db/gtdb/gtdb_release207/genomic_files_reps/gtdb_genomes_reps_r207
 cd tool_reference_data && {
-    find /work/microbiome/db/gtdb/gtdb_release207/genomic_files_reps/gtdb_genomes_reps_r207 | grep .fna > gtdb_all.txt &&
+    find $ALL_GTDBR207_GENOMES_DIR | grep .fna > gtdb_all.txt &&
         pixi run --environment sylph sylph sketch -l gtdb_all.txt -t 50 -o gtdb_database
     cd ..
 }
+```
+
+For MetaKSSD clone the repository to obtain shuf files:
+```bash
+git clone --branch v2.24 https://github.com/yhg926/MetaKSSD.git tool_reference_data/MetaKSSD-checkout
+```
+
+Generate database
+```bash
+pixi run --environment metakssd metakssd dist \
+    -L tool_reference_data/MetaKSSD-checkout/shuf_files/L3K11.shuf \
+    -o tool_reference_data/GTDBr207_genomes_L3K11_sketch \
+    -l tool_reference_data/gtdb_all.txt
+cd tool_reference_data && {
+        pixi run --environment metakssd metakssd set \
+        -P GTDBr207_genomes_L3K11_sketch > metakssdr207_genome_name.txt &&
+        cat ../*_taxonomy_r207.tsv > metakssdr207_genome2taxonomy.tsv &&
+        pixi run --environment metakssd perl MetaKSSD-checkout/scripts/genome_species_labeling.pl \
+        metakssdr207_genome_name.txt metakssdr207_genome2taxonomy.tsv > metakssdr207_group_name.txt &&
+        pixi run --environment metakssd metakssd set \
+        -g metakssdr207_group_name.txt -o GTDBr207_genomes_L3K11_sketch_pan \
+        GTDBr207_genomes_L3K11_sketch &&
+        pixi run --environment metakssd metakssd set -q \
+        -o GTDBr207_genomes_L3K11_sketch_pan_union_sp \
+        GTDBr207_genomes_L3K11_sketch_pan &&
+        pixi run --environment metakssd metakssd set \
+        -i GTDBr207_genomes_L3K11_sketch_pan_union_sp \
+        -o GTDBr207_genomes_L3K11_sketch_markerdb \
+        GTDBr207_genomes_L3K11_sketch_pan
+    cd ..
+}
+```
+
+Generate id to taxonomy mapping
+```bash
+pixi run --environment metakssd perl \
+    tool_reference_data/MetaKSSD-checkout/scripts/gtdb_psid_species2krona_taxonomy.pl \
+        tool_reference_data/metakssdr207_group_name.txt \
+        tool_reference_data/metakssdr207_genome2taxonomy.tsv \
+        > tool_reference_data/gtdbr207_psid2krona_taxonomy.tsv
 ```
 
 Then run the benchmarking, for instance #1

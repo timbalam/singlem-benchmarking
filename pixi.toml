@@ -13,6 +13,7 @@ singlem-dev = ["singlem-dev"]
 singlem = ["singlem"]
 start = ["start"]
 kingfisher = ["kingfisher"]
+metakssd = ["metakssd"]
 
 [feature.map2b.dependencies]
 perl="5.*"
@@ -116,4 +117,8 @@ r-vegan = "*"
 
 [feature.kingfisher.dependencies]
 kingfisher = "*"
+
+[feature.metakssd]
+dependencies = {metakssd = "==2.24"}
+channels = ["https://conda.anaconda.org/luxiaoxin2"]
 

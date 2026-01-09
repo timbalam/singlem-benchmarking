@@ -14,6 +14,7 @@ singlem = ["singlem"]
 start = ["start"]
 kingfisher = ["kingfisher"]
 metakssd = ["metakssd"]
+meteor2 = ["meteor2"]
 
 [feature.map2b.dependencies]
 perl="5.*"
@@ -122,3 +123,5 @@ kingfisher = "*"
 dependencies = {metakssd = "==2.24"}
 channels = ["https://conda.anaconda.org/luxiaoxin2"]
 
+[feature.meteor2.dependencies]
+meteor = "2.0.22"

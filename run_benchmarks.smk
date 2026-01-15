@@ -37,7 +37,7 @@ rule generate_communities_bench5:
 rule download_bench6:
     input:
         [f'6_host_assocs/local_reads/{sample}.1.fq.gz' for sample in datasets_bench6],
-        [f'6_host_assocs/local_reads/{sample}.2.fq.gz' for sample in  datasets_bench6]
+        [f'6_host_assocs/local_reads/{sample}.2.fq.gz' for sample in datasets_bench6]
 
 rule generate_community_and_reads_bench5:
     input:
@@ -116,6 +116,8 @@ rule download_fastq:
         "{bench_dir}/local_reads/{sample}.log"
     threads:
         1
+    wildcard_constraints:
+        bench_dir="^6_.+"
     shell:
         "pixi run -e kingfisher " \
         "kingfisher get -r {wildcards.sample} " \
@@ -178,7 +180,7 @@ rule singlem_dev_run_condense:
     shell:
         "pixi run -e singlem-dev " \
         "singlem condense --input-archive-otu-table {input.report} " \
-        "-p {output.profile} --metapackage {input.db} &> {log}"
+        "-p {output.profile} --em-tim --metapackage {input.db} &> {log}"
 
 rule singlem_r226_run_pipe:
     input:

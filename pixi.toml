@@ -124,4 +124,4 @@ dependencies = {metakssd = "==2.24"}
 channels = ["https://conda.anaconda.org/luxiaoxin2"]
 
 [feature.meteor2.dependencies]
-meteor = "2.0.22"
+meteor = "==2.0.22"

@@ -1,4 +1,5 @@
 {
     "r.rpath.linux": "${workspaceFolder}/.pixi/envs/start/lib/R/bin/R",
-    "r.rterm.linux": "${workspaceFolder}/.pixi/envs/start/lib/R/bin/R"
+    "r.rterm.linux": "${workspaceFolder}/.pixi/envs/start/lib/R/bin/R",
+    "r.lsp.promptToInstall": false
 }

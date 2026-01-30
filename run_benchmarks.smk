@@ -167,10 +167,26 @@ rule singlem_run_condense:
         "singlem condense --input-archive-otu-table {input.report} " \
         "-p {output.profile} --metapackage {input.db} &> {log}"
 
-rule singlem_dev_run_condense:
+rule singlem_dev_run_renew:
     input:
         report="{bench_dir}/output_singlem/singlem/{sample}.sma",
-        done="{bench_dir}/output_singlem/singlem/{sample}.sma.done",
+        db=singlem_metapackage
+    output:
+        report="{bench_dir}/output_singlem_dev/singlem_dev/{sample}.sma",
+        done=touch("{bench_dir}/output_singlem_dev/singlem_dev/{sample}.sma.done")
+    threads:
+        8
+    log:
+        "{bench_dir}/output_singlem_dev/logs/singlem_dev/{sample}.log"
+    shell:
+        "pixi run -e singlem-dev " \
+        "singlem renew --threads {threads} --input-archive-otu-table {input.report} " \
+        "--archive-otu-table {output.report} --metapackage {input.db} &> {log}"
+
+rule singlem_dev_run_condense:
+    input:
+        report="{bench_dir}/output_singlem_dev/singlem_dev/{sample}.sma",
+        done="{bench_dir}/output_singlem_dev/singlem_dev/{sample}.sma.done",
         db=singlem_metapackage
     output:
         profile="{bench_dir}/output_singlem_dev/singlem_dev/{sample}.profile",

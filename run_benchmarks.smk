@@ -5,26 +5,12 @@ datasets_bench5 = [f'marine{i}' for i in range(1)]
 singlem_metapackage = "tool_reference_data/S4.1.0.GTDB_r207.metapackage_20240502.smpkg"
 sylph_package = "tool_reference_data/gtdb_database.syldb"
 
-datasets_bench6 = ['SRR22388335', 'SRR9650389', 'SRR16352837', 'SRR16352839', 'SRR17498764',
-                   'SRR22870123', 'SRR23961386', 'SRR24982124', 'SRR6201989', 'SRR5264410',
-                   'SRR6869034', 'SRR5264435']
-
-singlem_r226_metapackage = 'tool_reference_data/S5.4.0.GTDB_r226.metapackage_20250331.smpkg'
-sylph_r226_package = 'tool_reference_data/gtdb-r226-c200-dbv1.syldb'
-gtdb_r226_bac120_tax = 'tool_reference_data/bac120_taxonomy_r226.tsv'
-gtdb_r226_ar53_tax = 'tool_reference_data/ar53_taxonomy_r226.tsv'
-
 #####################################################################
 
 rule all_bench5:
     input:
         expand("5_novelty/output_{tool}/opal/{sample}.opal_report",
                sample = datasets_bench5, tool = ['singlem', 'sylph', 'singlem_dev'])
-
-rule all_bench6:
-    input:
-        expand("6_host_assocs/output_{tool}/{tool}/{sample}.profile",
-               sample = datasets_bench6, tool = ['singlem_r226', 'sylph_r226'])
 
 rule generate_communities_bench5:
     input:
@@ -33,11 +19,6 @@ rule generate_communities_bench5:
         [f'5_novelty/truths/marine{sample}.condensed.biobox' for sample in datasets_bench5],
     output:
         done=touch("5_novelty/generate_communities.done")
-
-rule download_bench6:
-    input:
-        [f'6_host_assocs/local_reads/{sample}.1.fq.gz' for sample in datasets_bench6],
-        [f'6_host_assocs/local_reads/{sample}.2.fq.gz' for sample in datasets_bench6]
 
 rule generate_community_and_reads_bench5:
     input:
@@ -198,39 +179,6 @@ rule singlem_dev_run_condense:
         "singlem condense --input-archive-otu-table {input.report} " \
         "-p {output.profile} --em-tim --metapackage {input.db} &> {log}"
 
-rule singlem_r226_run_pipe:
-    input:
-        r1="{bench_dir}/local_reads/{sample}.1.fq.gz",
-        r2="{bench_dir}/local_reads/{sample}.2.fq.gz",
-        db=singlem_r226_metapackage,
-    output:
-        report="{bench_dir}/output_singlem_r226/singlem_r226/{sample}.sma",
-        done=touch("{bench_dir}/output_singlem_r226/singlem_r226/{sample}.sma.done")
-    threads:
-        8
-    log:
-        "{bench_dir}/output_singlem_r226/logs/singlem_r226/{sample}.log"
-    shell:
-        "pixi run -e singlem " \
-        "singlem pipe --threads {threads} -1 {input.r1} -2 {input.r2} " \
-        "--archive-otu-table {output.report} --metapackage {input.db} &> {log}"
-
-rule singlem_r226_run_condense:
-    input:
-        report="{bench_dir}/output_singlem_r226/singlem_r226/{sample}.sma",
-        done="{bench_dir}/output_singlem_r226/singlem_r226/{sample}.sma.done",
-        db=singlem_r226_metapackage
-    output:
-        profile="{bench_dir}/output_singlem_r226/singlem_r226/{sample}.profile",
-        done=touch("{bench_dir}/output_singlem_r226/singlem_r226/{sample}.profile.done")
-    log:
-        "{bench_dir}/output_singlem_r226/logs/singlem_r226/{sample}.log"
-    shell:
-        "pixi run -e singlem " \
-        "singlem condense --input-archive-otu-table {input.report} " \
-        "-p {output.profile} --metapackage {input.db} &> {log}"
-
-
 ###############################################################################################
 ###############################################################################################
 ###############################################################################################
@@ -268,37 +216,3 @@ rule sylph_report_to_condensed:
         "--sample {wildcards.sample} " \
         "--bac-tax {input.gtdb_bac_tax} " \
         "--arc-tax {input.gtdb_ar_tax} > {output.profile}"
-
-rule sylph_r226_run:
-    input:
-        r1 = "{bench_dir}/local_reads/{sample}.1.fq.gz",
-        r2 = "{bench_dir}/local_reads/{sample}.2.fq.gz",
-        db = sylph_r226_package
-    output:
-        report="{bench_dir}/output_sylph_r226/sylph_r226/{sample}.tsv",
-        done=touch("{bench_dir}/output_sylph_r226/sylph_r226/{sample}.done")
-    threads: 8
-    resources:
-        mem_mb=32000
-    log:
-        "{bench_dir}/output_sylph_r226/logs/sylph_r226/{sample}.log"
-    shell:
-        "pixi run -e sylph " \
-        "sylph profile {input.db} -1 {input.r1} -2 {input.r2} -t {threads} " \
-        "> {output.report} 2> {log}"
-
-rule sylph_r226_report_to_condensed:
-    input:
-        report = "{bench_dir}/output_sylph_r226/sylph_r226/{sample}.tsv",
-        gtdb_bac_tax = gtdb_r226_bac120_tax,
-        gtdb_ar_tax = gtdb_r226_ar53_tax,
-    output:
-        profile = "{bench_dir}/output_sylph_r226/sylph_r226/{sample}.profile",
-        done=touch("{bench_dir}/output_sylph_r226/sylph_r226/{sample}.profile.done")
-    shell:
-        "pixi run -e singlem " \
-        "python3 bin/sylph_to_condensed.py --sylph-genome {input.report} " \
-        "--sample {wildcards.sample} " \
-        "--bac-tax {input.gtdb_bac_tax} " \
-        "--arc-tax {input.gtdb_ar_tax} > {output.profile}"
-

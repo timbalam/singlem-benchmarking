@@ -96,6 +96,7 @@ singlem = "==0.18.0"
 [feature.start.dependencies]
 python = ">=3.10,<3.14"
 snakemake = "*"
+snakemake-executor-plugin-cluster-generic = "*"
 polars = "*"
 extern = "*"
 jupyterlab = "*"

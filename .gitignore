@@ -20,3 +20,4 @@ reference_genomes
 2_phylogenetic_novelty/reference_genomes-extract.done
 __pycache__
 **/__pycache__
+5_novelty/debug

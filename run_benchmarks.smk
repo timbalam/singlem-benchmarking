@@ -2,12 +2,14 @@ from os.path import join
 
 datasets_bench5 = [f'marine{i}' for i in range(1)]
 
+datasets_bench7 = ['SRR8648366']
+
 singlem_metapackage = "tool_reference_data/S4.1.0.GTDB_r207.metapackage_20240502.smpkg"
 sylph_package = "tool_reference_data/gtdb_database.syldb"
 
 #####################################################################
 
-rule all_bench5:
+rule bench5:
     input:
         expand("5_novelty/output_{tool}/opal/{sample}.opal_report",
                sample = datasets_bench5, tool = ['singlem', 'sylph', 'singlem_dev'])
@@ -52,6 +54,17 @@ rule generate_community_and_reads_bench5:
         "-1 5_novelty/local_reads/{wildcards.sample}.1.fq.gz " \
         "-2 5_novelty/local_reads/{wildcards.sample}.2.fq.gz " \
         "2> {log}"
+        
+rule bench7:
+    input:
+        expand("7_sra_mostly_novel/output_{tool}/{tool}/{sample}.profile",
+               sample = datasets_bench7,
+               tool = ['singlem', 'sylph'])
+
+rule download_bench7:
+    input:
+        [f'7_sra_mostly_novel/local_reads/{sample}.1.fq.gz' for sample in datasets_bench7],
+        [f'7_sra_mostly_novel/local_reads/{sample}.2.fq.gz' for sample in datasets_bench7]
 
 rule truth_condensed_to_biobox:
     input:
@@ -98,7 +111,7 @@ rule download_fastq:
     threads:
         1
     wildcard_constraints:
-        bench_dir="^6_.+"
+        bench_dir="^7_.+"
     shell:
         "pixi run -e kingfisher " \
         "kingfisher get -r {wildcards.sample} " \

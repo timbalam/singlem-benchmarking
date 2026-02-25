@@ -104,5 +104,17 @@ Results can be viewed by rerunning the `plot.ipynb` in each benchmark directory,
 To run the test benchmark 5 use
 
 ```bash
-snakemake --snakemake run_benchmarks.smk -c 8 bench_5
+snakemake --snakemake run_benchmarks.smk -c 8 bench5
+```
+
+To run the test benchmark 7 use
+
+```bash
+snakemake --snakemake run_benchmarks.smk -c 8 bench7
+```
+
+or just download with
+
+```bash
+snakemake --snakemake run_benchmarks.smk -c 8 download_bench7
 ```

@@ -190,7 +190,8 @@ rule singlem_dev_run_condense:
     shell:
         "pixi run -e singlem-dev " \
         "singlem condense --input-archive-otu-table {input.report} " \
-        "-p {output.profile} --em-tim --metapackage {input.db} &> {log}"
+        "-p {output.profile} --apply-nonneg-matrix-factorisation " \
+        " --metapackage {input.db} &> {log}"
 
 ###############################################################################################
 ###############################################################################################

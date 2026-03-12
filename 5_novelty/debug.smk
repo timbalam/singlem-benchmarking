@@ -7,6 +7,10 @@ rule all:
                div = [2, 3, 4, 6, 8], top = [2, 5, 10],
                sample = ["marine0"])
 
+rule one_test:
+    input:
+        "5_novelty/debug/div2top2/marine0_hits.tsv"
+
 rule singlem_renew:
     input:
         archive_otu_table = "5_novelty/output_singlem_dev/singlem_dev/{sample}.sma",

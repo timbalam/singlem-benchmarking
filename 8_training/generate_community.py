@@ -197,7 +197,10 @@ if __name__ == '__main__':
     novel_info = novel_genome_list.with_columns(
         pl.col('genome').replace(r207_taxonomy).alias('taxonomy')
     ).with_columns(
-        pl.col('taxonomy').str.extract("(^d|;[pcofgs])__[^;]+$").alias('known_at')
+        pl.col('taxonomy')
+        .str.extract("(^d|;[pcofgs])__[^;]+$")
+        .replace({"d": 7, ";p": 6, ";c": 5, ";o": 4, ";f": 3, ";g": 2, ";s": 1})
+        .alias('known_at')
     )
 
 

@@ -9,6 +9,7 @@ metaphlan42 = ["metaphlan42"]
 sylph = ["sylph"]
 opal = ["opal"]
 art = ["art"]
+art-dev = ["art", "art-dev"]
 singlem-dev = ["singlem-dev"]
 singlem = ["singlem"]
 start = ["start"]
@@ -45,6 +46,10 @@ pandas = "*"
 extern = "*"
 polars = "*"
 pyarrow = "*"
+
+[feature.art-dev.dependencies]
+ipykernel = "*"
+pip = "*"
 
 [feature.singlem-dev.dependencies]
 python = ">=3.7"

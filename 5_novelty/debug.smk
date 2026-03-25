@@ -11,7 +11,7 @@ rule one_test:
     input:
         "5_novelty/debug/div2top2/marine0_hits.tsv"
 
-rule singlem_renew:
+rule singlem_dev_renew:
     input:
         archive_otu_table = "5_novelty/output_singlem_dev/singlem_dev/{sample}.sma",
         metapackage = singlem_metapackage

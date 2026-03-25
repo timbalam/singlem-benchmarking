@@ -1,4 +1,4 @@
-from os.path import join
+from os.path import join, dirname
 
 datasets_bench5 = [f'marine{i}' for i in range(1)]
 
@@ -12,7 +12,9 @@ sylph_package = "tool_reference_data/gtdb_database.syldb"
 rule bench5:
     input:
         expand("5_novelty/output_{tool}/opal/{sample}.opal_report",
-               sample = datasets_bench5, tool = ['singlem', 'sylph', 'singlem_dev'])
+               sample = datasets_bench5, tool = ['singlem', 'sylph', 'singlem_dev']),
+        expand("5_novelty/output_{tool}/{tool}/after_em/{sample}.sma",
+               sample = datasets_bench5, tool = ['singlem', 'singlem_dev'])
 
 rule generate_communities_bench5:
     input:
@@ -66,6 +68,39 @@ rule download_bench7:
         [f'7_sra_mostly_novel/local_reads/{sample}.1.fq.gz' for sample in datasets_bench7],
         [f'7_sra_mostly_novel/local_reads/{sample}.2.fq.gz' for sample in datasets_bench7]
 
+rule generate_community_and_reads_bench8:
+    input:
+        gtdb_bac_metadata = 'bac120_metadata_r207.tsv',
+        gtdb_ar_metadata = 'ar53_metadata_r207.tsv',
+        known_genome_list = '1_novel_strains/shadow_genome_paths.csv',
+        novel_genomes_gtdbtk_output_directory = '4_complex_and_novel/gtdbtk_batchfile.random1000.gtdbtk_r207',
+        novel_genome_list = '4_complex_and_novel/gtdbtk_batchfile.random1000.csv',
+    output:
+        r1="8_training/local_reads/novelty{novelty_ratio}/{sample}.1.fq.gz",
+        r2="8_training/local_reads/novelty{novelty_ratio}/{sample}.2.fq.gz",
+        condensed = "8_training/truths/novelty{novelty_ratio}/{sample}.condensed",
+        done = touch("8_training/truths/novelty{novelty_ratio}/{sample}.finished"),
+        done2 = touch("8_training/local_reads/novelty{novelty_ratio}/{sample}.finished"),
+    params:
+        coverage_number = lambda wildcards: wildcards.sample.replace('marine', ''),
+    log: "8_training/local_reads/novelty{novelty_ratio}/{sample}.log"
+    threads: 8
+    shell:
+        "mkdir -p 8_training/truths 8_training/local_reads && " \
+        "pixi run -e art " \
+        "python3 8_training/generate_community.py --art art_illumina --threads {threads} " \
+        "--coverage-file 4_complex_and_novel/coverage_definitions/coverage{params.coverage_number}.tsv " \
+        "--gtdb-bac-metadata {input.gtdb_bac_metadata} " \
+        "--gtdb-ar-metadata {input.gtdb_ar_metadata} " \
+        "--known-genome-list {input.known_genome_list} " \
+        "--novel-genome-gtdbtk-output {input.novel_genomes_gtdbtk_output_directory} " \
+        "--novel-genome-list {input.novel_genome_list} " \
+        "--output-condensed {output.condensed} " \
+        "-1 8_training/local_reads/{wildcards.sample}.1.fq.gz " \
+        "-2 8_training/local_reads/{wildcards.sample}.2.fq.gz " \
+        "--novelty-ratio {wildcards.novelty_ratio} " \
+        "2> {log}"
+        
 rule truth_condensed_to_biobox:
     input:
         condensed = "{bench_dir}/truths/{sample}.condensed",
@@ -141,6 +176,8 @@ rule singlem_run_pipe:
         8
     log:
         "{bench_dir}/output_singlem/logs/singlem/{sample}.log"
+    wildcard_constraints:
+        sample="[^/]+"
     shell:
         "pixi run -e singlem " \
         "singlem pipe --threads {threads} -1 {input.r1} -2 {input.r2} " \
@@ -153,12 +190,16 @@ rule singlem_run_condense:
         db=singlem_metapackage
     output:
         profile="{bench_dir}/output_singlem/singlem/{sample}.profile",
+        after_em="{bench_dir}/output_singlem/singlem/after_em/{sample}.sma",
         done=touch("{bench_dir}/output_singlem/singlem/{sample}.profile.done")
     log:
         "{bench_dir}/output_singlem/logs/singlem/{sample}.log"
+    wildcard_constraints:
+        sample="[^/]+"
     shell:
         "pixi run -e singlem " \
         "singlem condense --input-archive-otu-table {input.report} " \
+        "--output-after-em-otu-table {output.after_em} " \
         "-p {output.profile} --metapackage {input.db} &> {log}"
 
 rule singlem_dev_run_renew:
@@ -172,6 +213,8 @@ rule singlem_dev_run_renew:
         8
     log:
         "{bench_dir}/output_singlem_dev/logs/singlem_dev/{sample}.log"
+    wildcard_constraints:
+        sample="[^/]+"
     shell:
         "pixi run -e singlem-dev " \
         "singlem renew --threads {threads} --input-archive-otu-table {input.report} " \
@@ -184,24 +227,50 @@ rule singlem_dev_run_condense:
         db=singlem_metapackage
     output:
         profile="{bench_dir}/output_singlem_dev/singlem_dev/{sample}.profile",
+        after_em="{bench_dir}/output_singlem_dev/singlem_dev/after_em/{sample}.sma",
         done=touch("{bench_dir}/output_singlem_dev/singlem_dev/{sample}.profile.done")
     log:
         "{bench_dir}/output_singlem_dev/logs/singlem_dev/{sample}.log"
+    wildcard_constraints:
+        sample="[^/]+"
     shell:
         "pixi run -e singlem-dev " \
         "singlem condense --input-archive-otu-table {input.report} " \
         "-p {output.profile} --apply-nonneg-matrix-factorisation " \
-        " --metapackage {input.db} &> {log}"
+        "--output-after-em-otu-table {output.after_em} " \
+        "--metapackage {input.db} &> {log}"
 
 ###############################################################################################
 ###############################################################################################
 ###############################################################################################
 ######### sylph
 
-rule sylph_run:
+def sylph_sketch_dir(wildcards, input, output):
+    return dirname(output.sp)
+
+rule sylph_sketch:
     input:
         r1 = "{bench_dir}/local_reads/{sample}.1.fq.gz",
-        r2 = "{bench_dir}/local_reads/{sample}.2.fq.gz",
+        r2 = "{bench_dir}/local_reads/{sample}.2.fq.gz"
+    output:
+        sp="{bench_dir}/output_sylph/sylph/{sample}.paired.sylsp",
+        done=touch("{bench_dir}/output_sylph/sylph/{sample}.paired.slysp.done")
+    threads: 8
+    resources:
+        mem_mb=32000
+    log:
+        "{bench_dir}/output_sylph/logs/sylph/{sample}.sketch.log"
+    params:
+        dir=sylph_sketch_dir
+    shell:
+        "pixi run -e sylph " \
+        "sylph sketch -1 {input.r1} -2 {input.r2} -t {threads} " \
+        "-S {wildcards.sample} -d {params.dir} " \
+        "2> {log}"
+
+rule sylph_profile:
+    input:
+        sp = "{bench_dir}/output_sylph/sylph/{sample}.paired.sylsp",
         db = sylph_package
     output:
         report="{bench_dir}/output_sylph/sylph/{sample}.tsv",
@@ -210,11 +279,12 @@ rule sylph_run:
     resources:
         mem_mb=32000
     log:
-        "{bench_dir}/output_sylph/logs/sylph/{sample}.log"
+        "{bench_dir}/output_sylph/logs/sylph/{sample}.profile.log"
     shell:
         "pixi run -e sylph " \
-        "sylph profile {input.db} -1 {input.r1} -2 {input.r2} -t {threads} " \
-        "> {output.report} 2> {log}"
+        "sylph profile {input.db} {input.sp} -t {threads} " \
+        "-u --read-seq-id 99.5 " \
+        "-o {output.report} 2> {log}"
 
 rule sylph_report_to_condensed:
     input:

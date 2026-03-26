@@ -294,10 +294,8 @@ rule singlem_dev_mask_5fold_mask:
         done=touch("{bench_dir}/output_singlem_dev/singlem_dev/{sample}.mask.done")
     log:
         "{bench_dir}/output_singlem_dev/logs/singlem_dev/{sample}.mask.log"
-    wildcard_constraints:
-        sample="[^/]+"
     params:
-        output_dir="{wildcards.bench_dir}/output_singlem_dev/singlem_dev/"
+        output_dir=lambda wildcards, input, output: basename(input.report)
     shell:
         "pixi run -e singlem-dev " \
         "python3 bin/generate_masks.py --input-archive-otu-table {input.report} " \
@@ -315,8 +313,6 @@ rule singlem_dev_run_condense_tune:
     log:
         "{bench_dir}/output_singlem_dev/logs/singlem_dev/mask{mask}/tunes{ts}g{tg}f{tf}o{to}c{tc}p{tp}d{td}r{tr}/{sample}.log"
     wildcard_constraints:
-        sample="[^/]+",
-        subpath="(.+/)?",
         ts="[^g]+",
         tg="[^f]+",
         tf="[^o]+",

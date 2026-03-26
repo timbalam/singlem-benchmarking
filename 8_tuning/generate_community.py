@@ -44,7 +44,7 @@ def read_gtdbtk(output_directory, taxonomy_only=True, remove_empty_ranks=False):
     return taxonomies
 
 
-# %%
+# %%markdown
 if __name__ == '__main__':
     parent_parser = argparse.ArgumentParser(add_help=False)
     parent_parser.add_argument('--debug', help='output debug information', action="store_true")
@@ -78,20 +78,20 @@ if __name__ == '__main__':
 
 
     # %%
-    class Args:
-        read1 = 'r1.fq.gz'
-        read2 = 'r2.fq.gz'
-        coverage_file = '../4_complex_and_novel/coverage_definitions/coverage0.tsv'
-        known_genome_list = '../1_novel_strains/shadow_genome_paths.csv'
-        novel_genome_gtdbtk_output = '../4_complex_and_novel/gtdbtk_batchfile.random1000.gtdbtk_r207'
-        novel_genome_list = '../4_complex_and_novel/gtdbtk_batchfile.random1000.csv'
-        gtdb_bac_metadata = '../bac120_metadata_r207.tsv'
-        gtdb_ar_metadata = "../ar53_metadata_r207.tsv"
-        output_condensed = 'output_condensed.tsv'
-        threads = 1
-        art = 'art_illumina'
-        novelty_ratio = 0.5
-    args = Args()
+    # class Args:
+    #     read1 = 'r1.fq.gz'
+    #     read2 = 'r2.fq.gz'
+    #     coverage_file = '../4_complex_and_novel/coverage_definitions/coverage0.tsv'
+    #     known_genome_list = '../1_novel_strains/shadow_genome_paths.csv'
+    #     novel_genome_gtdbtk_output = '../4_complex_and_novel/gtdbtk_batchfile.random1000.gtdbtk_r207'
+    #     novel_genome_list = '../4_complex_and_novel/gtdbtk_batchfile.random1000.csv'
+    #     gtdb_bac_metadata = '../bac120_metadata_r207.tsv'
+    #     gtdb_ar_metadata = "../ar53_metadata_r207.tsv"
+    #     output_condensed = 'output_condensed.tsv'
+    #     threads = 1
+    #     art = 'art_illumina'
+    #     novelty_ratio = 0.5
+    # args = Args()
 
     logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)s: %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
 
@@ -198,26 +198,63 @@ if __name__ == '__main__':
         pl.col('genome').replace(r207_taxonomy).alias('taxonomy')
     ).with_columns(
         pl.col('taxonomy')
-        .str.extract("(^d|;[pcofgs])__[^;]+$")
-        .replace({"d": 7, ";p": 6, ";c": 5, ";o": 4, ";f": 3, ";g": 2, ";s": 1})
+        .str.extract("(^d|;[pcofgs])__[^;]+$").alias("known_at")
+    ).with_columns(
+        pl.col('known_at')
+        .replace_strict({";s": 0, ";g": 1, ";f": 2, ";o": 3, ";c": 4, ";p": 5, "d": 6})
         .alias('known_at')
-    )
+    ).filter(pl.col('known_at') > 0)
 
 
 # %%
 
     logging.info(f"Read {len(novel_info)} novel genomes.")
 
-    ranks = "rdpcofgs"
-    tot = sum(args.novelty_ratio ** n for n in range(len(ranks) - 1, -1, -1))
-    n_rank = [round(len(coverages) * (args.novelty_ratio ** n) / tot) for n in range(len(ranks) - 1, 0, -1)]
-    n_known = len(coverages) - sum(n_rank)
+    #ranks = "rdpcofgs"
+    sum_weights = sum(args.novelty_ratio ** n for n in range(6))
+    n_rank = (
+        novel_info.group_by('known_at')
+        .len("max_new")
+        .with_columns(
+            r = pl.lit(args.novelty_ratio),
+            n = pl.lit(len(coverages))
+        )
+        .with_columns(
+            weight_new = pl.col("r") ** (pl.col("known_at") + 1)
+        )
+        .with_columns(
+            frac_new = pl.col("weight_new") / sum_weights
+        )
+        .with_columns(
+            n_new_r = (pl.col("n") * pl.col("frac_new")).round()
+        )
+        .with_columns(
+            n_new = pl.min_horizontal(
+                pl.col("n_new_r"),
+                pl.col("max_new")
+            )
+        )
+    )
+    
+    n_known = len(coverages) - n_rank["n_new"].sum()
 
 # %%
-    logging.info(f"Choosing {n_new} novel genomes and {n_known} known genomes.")
-    chosen_df = pl.concat(
-        [known_info.sample(n_known),
-        novel_info.sample(n_new)])
+    logging.info(f"Choosing {n_rank["n_new"].sum()} novel genomes and {n_known} known genomes.")
+    novel_info_new = novel_info.join(
+        n_rank.select("known_at", "n_new"),
+        on = "known_at",
+        how = "left",
+        validate = "m:1"
+    )
+    chosen_df = pl.concat([
+        known_info.sample(n_known),
+        novel_info_new
+        .with_columns(
+            shuff_loc = pl.int_range(pl.len()).shuffle().over(pl.col("known_at"))
+        )
+        .filter(pl.col("shuff_loc") < pl.col("n_new"))
+        .drop("shuff_loc", "known_at", "n_new")
+    ])
     
     # Add coverage column
     chosen_df = chosen_df.with_columns(
@@ -225,6 +262,7 @@ if __name__ == '__main__':
     )
     
 
+# %%
     read_length = 150
 
     with tempfile.TemporaryDirectory() as tmpdir:

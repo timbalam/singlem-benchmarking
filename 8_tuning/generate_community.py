@@ -211,12 +211,12 @@ if __name__ == '__main__':
     logging.info(f"Read {len(novel_info)} novel genomes.")
 
     #ranks = "rdpcofgs"
-    sum_weights = sum(args.novelty_ratio ** n for n in range(6))
+    sum_weights = sum(float(args.novelty_ratio) ** n for n in range(6))
     n_rank = (
         novel_info.group_by('known_at')
         .len("max_new")
         .with_columns(
-            r = pl.lit(args.novelty_ratio),
+            r = pl.lit(float(args.novelty_ratio)),
             n = pl.lit(len(coverages))
         )
         .with_columns(

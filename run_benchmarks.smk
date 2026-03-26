@@ -90,6 +90,10 @@ rule bench8:
                novelty_ratio = novelties_bench8,
                tunestr = tunestrs_bench8)
 
+rule bench8_test:
+    input:
+        "8_tuning/output_singlem_dev/opal/tunes0.1g0f0o0c0p0d0r0/novelty0.5/marine0.opal_report"
+
 rule generate_communities_bench8:
     input:
         [f'8_tuning/truths/novelty{novelty_ratio}/{sample}.finished' for sample in datasets_bench8 for novelty_ratio in novelties_bench8],
@@ -97,6 +101,12 @@ rule generate_communities_bench8:
         [f'8_tuning/truths/novelty{novelty_ratio}/marine{sample}.condensed.biobox' for sample in datasets_bench8 for novelty_ratio in novelties_bench8],
     output:
         done=touch("8_tuning/generate_communities.done")
+
+rule generate_communities_bench8_test:
+    input:
+        '8_tuning/truths/novelty0.5/marine0.finished',
+        '8_tuning/local_reads/novelty0.5/marine0.finished',
+        '8_tuning/truths/novelty0.5/marine0.condensed.biobox'
 
 rule generate_community_and_reads_bench8:
     input:
@@ -106,19 +116,19 @@ rule generate_community_and_reads_bench8:
         novel_genomes_gtdbtk_output_directory = '4_complex_and_novel/gtdbtk_batchfile.random1000.gtdbtk_r207',
         novel_genome_list = '4_complex_and_novel/gtdbtk_batchfile.random1000.csv',
     output:
-        r1="8_training/local_reads/novelty{novelty_ratio}/{sample}.1.fq.gz",
-        r2="8_training/local_reads/novelty{novelty_ratio}/{sample}.2.fq.gz",
-        condensed = "8_training/truths/novelty{novelty_ratio}/{sample}.condensed",
-        done = touch("8_training/truths/novelty{novelty_ratio}/{sample}.finished"),
-        done2 = touch("8_training/local_reads/novelty{novelty_ratio}/{sample}.finished"),
+        r1="8_tuning/local_reads/novelty{novelty_ratio}/{sample}.1.fq.gz",
+        r2="8_tuning/local_reads/novelty{novelty_ratio}/{sample}.2.fq.gz",
+        condensed = "8_tuning/truths/novelty{novelty_ratio}/{sample}.condensed",
+        done = touch("8_tuning/truths/novelty{novelty_ratio}/{sample}.finished"),
+        done2 = touch("8_tuning/local_reads/novelty{novelty_ratio}/{sample}.finished"),
     params:
         coverage_number = lambda wildcards: wildcards.sample.replace('marine', ''),
-    log: "8_training/local_reads/novelty{novelty_ratio}/{sample}.log"
+    log: "8_tuning/local_reads/novelty{novelty_ratio}/{sample}.log"
     threads: 8
     shell:
-        "mkdir -p 8_training/truths 8_training/local_reads && " \
+        "mkdir -p 8_tuning/truths 8_tuning/local_reads && " \
         "pixi run -e art " \
-        "python3 8_training/generate_community.py --art art_illumina --threads {threads} " \
+        "python3 8_tuning/generate_community.py --art art_illumina --threads {threads} " \
         "--coverage-file 4_complex_and_novel/coverage_definitions/coverage{params.coverage_number}.tsv " \
         "--gtdb-bac-metadata {input.gtdb_bac_metadata} " \
         "--gtdb-ar-metadata {input.gtdb_ar_metadata} " \
@@ -126,8 +136,7 @@ rule generate_community_and_reads_bench8:
         "--novel-genome-gtdbtk-output {input.novel_genomes_gtdbtk_output_directory} " \
         "--novel-genome-list {input.novel_genome_list} " \
         "--output-condensed {output.condensed} " \
-        "-1 8_training/local_reads/{wildcards.sample}.1.fq.gz " \
-        "-2 8_training/local_reads/{wildcards.sample}.2.fq.gz " \
+        "-1 {output.r1} -2 {output.r2} " \
         "--novelty-ratio {wildcards.novelty_ratio} " \
         "2> {log}"
         
@@ -281,8 +290,7 @@ rule singlem_dev_mask_5fold_mask:
         report="{bench_dir}/output_singlem_dev/singlem_dev/{sample}.sma",
         done="{bench_dir}/output_singlem_dev/singlem_dev/{sample}.sma.done"
     output:
-        expand("{bench_dir}/output_singlem_dev/singlem_dev/{sample}.mask{mask}.txt",
-               mask = range(5)),
+        ["{bench_dir}/output_singlem_dev/singlem_dev/{sample}.mask"+str(mask)+".txt" for mask in range(5)],
         done=touch("{bench_dir}/output_singlem_dev/singlem_dev/{sample}.mask.done")
     log:
         "{bench_dir}/output_singlem_dev/logs/singlem_dev/{sample}.mask.log"

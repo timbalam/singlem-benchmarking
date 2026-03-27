@@ -4,19 +4,21 @@ datasets_bench5 = [f'marine{i}' for i in range(1)]
 
 datasets_bench7 = ['SRR8648366']
 
-datasets_bench8 = [f'marine{i}' for i in range(1)]
 novelties_bench8 = [0.5, 0.95, 1.25]
-steps = [0, 0.01, 0.1, 0.5]
+datasets_bench8 = [f'marine{i}novelty{nr}' for i, nr in enumerate(novelties_bench8)]
+steps_low = [0.01, 0.1]
+steps_mid = [0.1, 0.5]
+steps_high = [0.5, 1]
 tunestrs_bench8 = [
     f's{s}g{g}f{f}o{o}c{c}p{p}d{d}r{r}'
-    for s in steps
-    for g in steps
-    for f in steps
-    for o in steps
-    for c in steps
-    for p in steps
-    for d in steps
-    for r in steps
+    for s in steps_low
+    for g in steps_low
+    for f in steps_low
+    for o in steps_mid
+    for c in steps_high
+    for p in steps_high
+    for d in steps_high
+    for r in steps_high
 ]
 
 singlem_metapackage = "tool_reference_data/S4.1.0.GTDB_r207.metapackage_20240502.smpkg"
@@ -28,14 +30,14 @@ rule bench5:
     input:
         expand("5_novelty/output_{tool}/opal/{sample}.opal_report",
                sample = datasets_bench5, tool = ['singlem', 'sylph', 'singlem_dev']),
-        expand("5_novelty/output_{tool}/{tool}/after_em/{sample}.sma",
+        expand("5_novelty/output_{tool}/after_em/{sample}.sma",
                sample = datasets_bench5, tool = ['singlem', 'singlem_dev'])
 
 rule generate_communities_bench5:
     input:
         [f'5_novelty/truths/{sample}.finished' for sample in datasets_bench5],
-        [f'5_novelty/local_reads/marine{sample}.finished' for sample in datasets_bench5],
-        [f'5_novelty/truths/marine{sample}.condensed.biobox' for sample in datasets_bench5],
+        [f'5_novelty/local_reads/{sample}.finished' for sample in datasets_bench5],
+        [f'5_novelty/truths/{sample}.condensed.biobox' for sample in datasets_bench5],
     output:
         done=touch("5_novelty/generate_communities.done")
 
@@ -85,28 +87,31 @@ rule download_bench7:
 
 rule bench8:
     input:
-        expand("8_tuning/output_{tool}/opal/tune{tunestr}/novelty{novelty_ratio}/{sample}.opal_report",
-               sample = datasets_bench8, tool = ['singlem', 'sylph', 'singlem_dev'],
-               novelty_ratio = novelties_bench8,
-               tunestr = tunestrs_bench8)
+        expand("8_tuning/output_singlem_dev/opal/tune{tunestr}mask{mask}/{sample}.opal_report",
+               sample = datasets_bench8, 
+               mask = range(5), tunestr = tunestrs_bench8),
+        expand("8_tuning/output_singlem_dev/singlem_dev/tune{tunestr}mask{mask}/{sample}.loss.tsv",
+               sample = datasets_bench8,
+               mask = range(5), tunestr = tunestrs_bench8)
 
 rule bench8_test:
     input:
-        "8_tuning/output_singlem_dev/opal/tunes0.1g0f0o0c0p0d0r0/novelty0.5/marine0.opal_report"
+        "8_tuning/output_singlem_dev/opal/tunes0.1g0f0o0c0p0d0r0mask0/marine0novelty0.5.opal_report",
+        "8_tuning/output_singlem_dev/singlem_dev/tunes0.1g0f0o0c0p0d0r0mask0/marine0novelty0.5.loss.tsv",
 
 rule generate_communities_bench8:
     input:
-        [f'8_tuning/truths/novelty{novelty_ratio}/{sample}.finished' for sample in datasets_bench8 for novelty_ratio in novelties_bench8],
-        [f'8_tuning/local_reads/novelty{novelty_ratio}/marine{sample}.finished' for sample in datasets_bench8 for novelty_ratio in novelties_bench8],
-        [f'8_tuning/truths/novelty{novelty_ratio}/marine{sample}.condensed.biobox' for sample in datasets_bench8 for novelty_ratio in novelties_bench8],
+        [f'8_tuning/truths/{sample}.finished' for sample in datasets_bench8],
+        [f'8_tuning/local_reads/{sample}.finished' for sample in datasets_bench8],
+        [f'8_tuning/truths/{sample}.condensed.biobox' for sample in datasets_bench8],
     output:
         done=touch("8_tuning/generate_communities.done")
 
 rule generate_communities_bench8_test:
     input:
-        '8_tuning/truths/novelty0.5/marine0.finished',
-        '8_tuning/local_reads/novelty0.5/marine0.finished',
-        '8_tuning/truths/novelty0.5/marine0.condensed.biobox'
+        '8_tuning/truths/marine0novelty0.5.finished',
+        '8_tuning/local_reads/marine0novelty0.5.finished',
+        '8_tuning/truths/marine0novelty0.5.condensed.biobox'
 
 rule generate_community_and_reads_bench8:
     input:
@@ -116,20 +121,18 @@ rule generate_community_and_reads_bench8:
         novel_genomes_gtdbtk_output_directory = '4_complex_and_novel/gtdbtk_batchfile.random1000.gtdbtk_r207',
         novel_genome_list = '4_complex_and_novel/gtdbtk_batchfile.random1000.csv',
     output:
-        r1="8_tuning/local_reads/novelty{novelty_ratio}/{sample}.1.fq.gz",
-        r2="8_tuning/local_reads/novelty{novelty_ratio}/{sample}.2.fq.gz",
-        condensed = "8_tuning/truths/novelty{novelty_ratio}/{sample}.condensed",
-        done = touch("8_tuning/truths/novelty{novelty_ratio}/{sample}.finished"),
-        done2 = touch("8_tuning/local_reads/novelty{novelty_ratio}/{sample}.finished"),
-    params:
-        coverage_number = lambda wildcards: wildcards.sample.replace('marine', ''),
-    log: "8_tuning/local_reads/novelty{novelty_ratio}/{sample}.log"
+        r1="8_tuning/local_reads/marine{coverage_number}novelty{novelty_ratio}.1.fq.gz",
+        r2="8_tuning/local_reads/marine{coverage_number}novelty{novelty_ratio}.2.fq.gz",
+        condensed = "8_tuning/truths/marine{coverage_number}novelty{novelty_ratio}.condensed",
+        done = touch("8_tuning/truths/marine{coverage_number}novelty{novelty_ratio}.finished"),
+        done2 = touch("8_tuning/local_reads/marine{coverage_number}novelty{novelty_ratio}.finished"),
+    log: "8_tuning/local_reads/marine{coverage_number}novelty{novelty_ratio}.log"
     threads: 8
     shell:
         "mkdir -p 8_tuning/truths 8_tuning/local_reads && " \
         "pixi run -e art " \
         "python3 8_tuning/generate_community.py --art art_illumina --threads {threads} " \
-        "--coverage-file 4_complex_and_novel/coverage_definitions/coverage{params.coverage_number}.tsv " \
+        "--coverage-file 8_tuning/coverage_definitions/coverage{wildcards.coverage_number}.tsv " \
         "--gtdb-bac-metadata {input.gtdb_bac_metadata} " \
         "--gtdb-ar-metadata {input.gtdb_ar_metadata} " \
         "--known-genome-list {input.known_genome_list} " \
@@ -152,12 +155,12 @@ rule truth_condensed_to_biobox:
 
 rule tool_condensed_to_biobox:
     input:
-        profile = "{bench_dir}/output_{tool}/{tool}/{subpath}{sample}.profile",
+        profile = "{bench_dir}/output_{tool}/{tool}/{tunedir}{sample}.profile",
         truth = "{bench_dir}/truths/{sample}.condensed.biobox",
     output:
-        biobox = "{bench_dir}/output_{tool}/biobox/{subpath}{sample}.biobox"
+        biobox = "{bench_dir}/output_{tool}/biobox/{tunedir}{sample}.biobox"
     wildcard_constraints:
-        subpath="(.+/)?",
+        tunedir="([^/]+/)?",
         sample="[^/]+"
     shell:
         "pixi run -e singlem " \
@@ -166,16 +169,16 @@ rule tool_condensed_to_biobox:
 
 rule opal:
     input:
-        biobox = "{bench_dir}/{tool_output}/biobox/{subpath}{sample}.biobox"
+        biobox = "{bench_dir}/{tool_output}/biobox/{tunedir}{sample}.biobox"
     params:
         output_dir = "{bench_dir}/{tool_output}",
-        output_opal_dir = "{bench_dir}/{tool_output}/opal/{subpath}{sample}.opal_output_directory",
+        output_opal_dir = "{bench_dir}/{tool_output}/opal/{tunedir}{sample}.opal_output_directory",
         truth = "{bench_dir}/truths/{sample}.condensed.biobox",
     output:
-        report="{bench_dir}/{tool_output}/opal/{subpath}{sample}.opal_report",
-        done=touch("{bench_dir}/{tool_output}/opal/{subpath}{sample}.opal_report.done")
+        report="{bench_dir}/{tool_output}/opal/{tunedir}{sample}.opal_report",
+        done=touch("{bench_dir}/{tool_output}/opal/{tunedir}{sample}.opal_report.done")
     wildcard_constraints:
-        subpath="(.+/)?",
+        tunedir="([^/]+/)?",
         sample="[^/]+"
     shell:
         "pixi run -e opal " \
@@ -215,13 +218,14 @@ rule singlem_run_pipe:
         r2="{bench_dir}/local_reads/{sample}.2.fq.gz",
         db=singlem_metapackage,
     output:
-        report="{bench_dir}/output_singlem/singlem/{sample}.sma",
-        done=touch("{bench_dir}/output_singlem/singlem/{sample}.sma.done")
+        report="{bench_dir}/output_singlem/singlem/{tunedir}{sample}.sma",
+        done=touch("{bench_dir}/output_singlem/singlem/{tunedir}{sample}.sma.done")
     threads:
         8
     log:
-        "{bench_dir}/output_singlem/logs/singlem/{sample}.log"
+        "{bench_dir}/output_singlem/logs/singlem/{tunedir}{sample}.log"
     wildcard_constraints:
+        tunedir="([^/]+/)?",
         sample="[^/]+"
     shell:
         "pixi run -e singlem " \
@@ -235,12 +239,10 @@ rule singlem_run_condense:
         db=singlem_metapackage
     output:
         profile="{bench_dir}/output_singlem/singlem/{sample}.profile",
-        after_em="{bench_dir}/output_singlem/singlem/after_em/{sample}.sma",
+        after_em="{bench_dir}/output_singlem/after_em/{sample}.sma",
         done=touch("{bench_dir}/output_singlem/singlem/{sample}.profile.done")
     log:
         "{bench_dir}/output_singlem/logs/singlem/{sample}.log"
-    wildcard_constraints:
-        sample="[^/]+"
     shell:
         "pixi run -e singlem " \
         "singlem condense --input-archive-otu-table {input.report} " \
@@ -258,8 +260,6 @@ rule singlem_dev_run_renew:
         8
     log:
         "{bench_dir}/output_singlem_dev/logs/singlem_dev/{sample}.log"
-    wildcard_constraints:
-        sample="[^/]+"
     shell:
         "pixi run -e singlem-dev " \
         "singlem renew --threads {threads} --input-archive-otu-table {input.report} " \
@@ -272,12 +272,12 @@ rule singlem_dev_run_condense:
         db=singlem_metapackage
     output:
         profile="{bench_dir}/output_singlem_dev/singlem_dev/{sample}.profile",
-        after_em="{bench_dir}/output_singlem_dev/singlem_dev/after_em/{sample}.sma",
+        after_em="{bench_dir}/output_singlem_dev/after_em/{sample}.sma",
         done=touch("{bench_dir}/output_singlem_dev/singlem_dev/{sample}.profile.done")
     log:
         "{bench_dir}/output_singlem_dev/logs/singlem_dev/{sample}.log"
     wildcard_constraints:
-        sample="[^/]+",
+        sample='[^/]+'
     shell:
         "pixi run -e singlem-dev " \
         "singlem condense --input-archive-otu-table {input.report} " \
@@ -295,7 +295,7 @@ rule singlem_dev_mask_5fold_mask:
     log:
         "{bench_dir}/output_singlem_dev/logs/singlem_dev/{sample}.mask.log"
     params:
-        output_dir=lambda wildcards, input, output: basename(input.report)
+        output_dir=lambda wildcards, input, output: dirname(input.report)
     shell:
         "pixi run -e singlem-dev " \
         "python3 bin/generate_masks.py --input-archive-otu-table {input.report} " \
@@ -308,26 +308,23 @@ rule singlem_dev_run_condense_tune:
         done="{bench_dir}/output_singlem_dev/singlem_dev/{sample}.sma.done",
         db=singlem_metapackage
     output:
-        profile="{bench_dir}/output_singlem_dev/singlem_dev/mask{mask}/tunes{ts}g{tg}f{tf}o{to}c{tc}p{tp}d{td}r{tr}/{sample}.profile",
-        done=touch("{bench_dir}/output_singlem_dev/singlem_dev/mask{mask}/tunes{ts}g{tg}f{tf}o{to}c{tc}p{tp}d{td}r{tr}/{sample}.profile.done")
+        profile="{bench_dir}/output_singlem_dev/singlem_dev/tunes{ts}g{tg}f{tf}o{to}c{tc}p{tp}d{td}r{tr}mask{mask}/{sample}.profile",
+        loss="{bench_dir}/output_singlem_dev/singlem_dev/tunes{ts}g{tg}f{tf}o{to}c{tc}p{tp}d{td}r{tr}mask{mask}/{sample}.loss.tsv",
+        done=touch("{bench_dir}/output_singlem_dev/singlem_dev/tunes{ts}g{tg}f{tf}o{to}c{tc}p{tp}d{td}r{tr}mask{mask}/{sample}.profile.done")
     log:
-        "{bench_dir}/output_singlem_dev/logs/singlem_dev/mask{mask}/tunes{ts}g{tg}f{tf}o{to}c{tc}p{tp}d{td}r{tr}/{sample}.log"
-    wildcard_constraints:
-        ts="[^g]+",
-        tg="[^f]+",
-        tf="[^o]+",
-        to="[^c]+",
-        tc="[^p]+",
-        tp="[^d]+",
-        td="[^r]+",
-        tr="[^/]+"
+        "{bench_dir}/output_singlem_dev/logs/singlem_dev/tunes{ts}g{tg}f{tf}o{to}c{tc}p{tp}d{td}r{tr}mask{mask}/{sample}.log"
+    params:
+        output_dir=lambda wildcards, input, output: dirname(output.profile)
     shell:
+        "mkdir -p {params.output_dir} && " \
         "pixi run -e singlem-dev " \
         "singlem condense --input-archive-otu-table {input.report} " \
         "-p {output.profile} --apply-nonneg-matrix-factorisation " \
-        "--penalty {wildcards.ts} {wildcards.tg} {wildcards.tf} {wildcards.to} " \
+        "--rank-penalty-steps {wildcards.ts} {wildcards.tg} {wildcards.tf} {wildcards.to} " \
         "{wildcards.tc} {wildcards.tp} {wildcards.td} {wildcards.tr} " \
         "--mask-otus-file {input.mask} " \
+        "--max-num-steps 5000 "
+        "--output-loss {output.loss} " \
         "--metapackage {input.db} &> {log}"
 
 ###############################################################################################

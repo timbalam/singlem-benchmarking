@@ -6,19 +6,16 @@ datasets_bench7 = ['SRR8648366']
 
 novelties_bench8 = [0.5, 0.95, 1.25]
 datasets_bench8 = [f'marine{i}novelty{nr}' for i, nr in enumerate(novelties_bench8)]
-steps_low = [0.01, 0.1]
-steps_mid = [0.1, 0.5]
-steps_high = [0.5, 1]
-tunestrs_bench8 = [
+tune_bench8_sg = [
     f's{s}g{g}f{f}o{o}c{c}p{p}d{d}r{r}'
-    for s in steps_low
-    for g in steps_low
-    for f in steps_low
-    for o in steps_mid
-    for c in steps_high
-    for p in steps_high
-    for d in steps_high
-    for r in steps_high
+    for s in [0.01, 0.1, 0.5]
+    for g in [0.01, 0.1, 0.5]
+    for f in [1.5 - s - g]
+    for o in [1]
+    for c in [1]
+    for p in [1]
+    for d in [1]
+    for r in [1]
 ]
 
 singlem_metapackage = "tool_reference_data/S4.1.0.GTDB_r207.metapackage_20240502.smpkg"
@@ -85,19 +82,19 @@ rule download_bench7:
         [f'7_sra_mostly_novel/local_reads/{sample}.1.fq.gz' for sample in datasets_bench7],
         [f'7_sra_mostly_novel/local_reads/{sample}.2.fq.gz' for sample in datasets_bench7]
 
-rule bench8:
+rule bench8_sg:
     input:
-        expand("8_tuning/output_singlem_dev/opal/tune{tunestr}mask{mask}/{sample}.opal_report",
+        expand("8_tuning/output_singlem_dev/opal/tune_{tunestr}mask{mask}/{sample}.opal_report",
                sample = datasets_bench8, 
-               mask = range(5), tunestr = tunestrs_bench8),
-        expand("8_tuning/output_singlem_dev/singlem_dev/tune{tunestr}mask{mask}/{sample}.loss.tsv",
+               mask = range(5), tunestr = tune_bench8_sg),
+        expand("8_tuning/output_singlem_dev/singlem_dev/tune_{tunestr}mask{mask}/{sample}.loss.tsv",
                sample = datasets_bench8,
-               mask = range(5), tunestr = tunestrs_bench8)
+               mask = range(5), tunestr = tune_bench8_sg)
 
-rule bench8_test:
+rule bench8_sg_test:
     input:
-        "8_tuning/output_singlem_dev/opal/tunes0.1g0f0o0c0p0d0r0mask0/marine0novelty0.5.opal_report",
-        "8_tuning/output_singlem_dev/singlem_dev/tunes0.1g0f0o0c0p0d0r0mask0/marine0novelty0.5.loss.tsv",
+        "8_tuning/output_singlem_dev/opal/tune_s0.1g0.1f1.8o1c1p1d1r1mask0/marine0novelty0.5.opal_report",
+        "8_tuning/output_singlem_dev/singlem_dev/tune_s0.1g0.1f1.8o1c1p1d1r1mask0/marine0novelty0.5.loss.tsv",
 
 rule generate_communities_bench8:
     input:
@@ -308,11 +305,11 @@ rule singlem_dev_run_condense_tune:
         done="{bench_dir}/output_singlem_dev/singlem_dev/{sample}.sma.done",
         db=singlem_metapackage
     output:
-        profile="{bench_dir}/output_singlem_dev/singlem_dev/tunes{ts}g{tg}f{tf}o{to}c{tc}p{tp}d{td}r{tr}mask{mask}/{sample}.profile",
-        loss="{bench_dir}/output_singlem_dev/singlem_dev/tunes{ts}g{tg}f{tf}o{to}c{tc}p{tp}d{td}r{tr}mask{mask}/{sample}.loss.tsv",
-        done=touch("{bench_dir}/output_singlem_dev/singlem_dev/tunes{ts}g{tg}f{tf}o{to}c{tc}p{tp}d{td}r{tr}mask{mask}/{sample}.profile.done")
+        profile="{bench_dir}/output_singlem_dev/singlem_dev/tune_s{ts}g{tg}f{tf}o{to}c{tc}p{tp}d{td}r{tr}mask{mask}/{sample}.profile",
+        loss="{bench_dir}/output_singlem_dev/singlem_dev/tune_s{ts}g{tg}f{tf}o{to}c{tc}p{tp}d{td}r{tr}mask{mask}/{sample}.loss.tsv",
+        done=touch("{bench_dir}/output_singlem_dev/singlem_dev/tune_s{ts}g{tg}f{tf}o{to}c{tc}p{tp}d{td}r{tr}mask{mask}/{sample}.profile.done")
     log:
-        "{bench_dir}/output_singlem_dev/logs/singlem_dev/tunes{ts}g{tg}f{tf}o{to}c{tc}p{tp}d{td}r{tr}mask{mask}/{sample}.log"
+        "{bench_dir}/output_singlem_dev/logs/singlem_dev/tune_s{ts}g{tg}f{tf}o{to}c{tc}p{tp}d{td}r{tr}mask{mask}/{sample}.log"
     params:
         output_dir=lambda wildcards, input, output: dirname(output.profile)
     shell:

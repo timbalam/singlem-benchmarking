@@ -80,7 +80,7 @@ if __name__ == '__main__':
         .join(taxonomy, on="genome", how="left")
         .select([
             pl.lit(args.sample).alias("sample"),
-            pl.col("Taxonomic_abundance").alias("coverage"),
+            pl.col("True_cov").alias("coverage"),
             pl.col("taxonomy"),
             ])
     )

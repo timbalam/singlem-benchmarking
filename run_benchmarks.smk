@@ -6,16 +6,19 @@ datasets_bench7 = ['SRR8648366']
 
 novelties_bench8 = [0.5, 0.95, 1.25]
 datasets_bench8 = [f'marine{i}novelty{nr}' for i, nr in enumerate(novelties_bench8)]
+tune_bench8_slope = [
+    f's{n}g{n}f{n}o{n}c{n}p{n}d{n}r{n}' for n in [0.01, 0.02, 0.03, 0.04, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5]
+]
 tune_bench8_sg = [
     f's{s}g{g}f{f}o{o}c{c}p{p}d{d}r{r}'
-    for s in [0.01, 0.1, 0.5]
-    for g in [0.01, 0.1, 0.5]
-    for f in [1.5 - s - g]
-    for o in [1]
-    for c in [1]
-    for p in [1]
-    for d in [1]
-    for r in [1]
+    for s in [0.1, 0.2, 0.25, 0.3, 0.35, 0.4]
+    for g in [round(c(1.0, 1.1) - s, 5)]
+    for f in [round(1.4 - g, 5)]
+    for o in [0.3]
+    for c in [0.3]
+    for p in [0.3]
+    for d in [0.3]
+    for r in [0.3]
 ]
 
 singlem_metapackage = "tool_reference_data/S4.1.0.GTDB_r207.metapackage_20240502.smpkg"
@@ -82,6 +85,20 @@ rule download_bench7:
         [f'7_sra_mostly_novel/local_reads/{sample}.1.fq.gz' for sample in datasets_bench7],
         [f'7_sra_mostly_novel/local_reads/{sample}.2.fq.gz' for sample in datasets_bench7]
 
+rule bench8_slope:
+    input:
+        expand("8_tuning/output_singlem_dev/opal/tune_{tunestr}mask{mask}/{sample}.opal_report",
+               sample = datasets_bench8, 
+               mask = range(5), tunestr = tune_bench8_slope),
+        expand("8_tuning/output_singlem_dev/singlem_dev/tune_{tunestr}mask{mask}/{sample}.loss.tsv",
+               sample = datasets_bench8,
+               mask = range(5), tunestr = tune_bench8_slope)
+
+rule bench8_slope_test:
+    input:
+        "8_tuning/output_singlem_dev/opal/tune_s0.1g0.1f0.1o0.1c0.1p0.1d0.1r0.1mask0/marine0novelty0.5.opal_report",
+        "8_tuning/output_singlem_dev/singlem_dev/tune_s0.1g0.1f0.1o0.1c0.1p0.1d0.1r0.1mask0/marine0novelty0.5.loss.tsv",
+
 rule bench8_sg:
     input:
         expand("8_tuning/output_singlem_dev/opal/tune_{tunestr}mask{mask}/{sample}.opal_report",
@@ -90,11 +107,6 @@ rule bench8_sg:
         expand("8_tuning/output_singlem_dev/singlem_dev/tune_{tunestr}mask{mask}/{sample}.loss.tsv",
                sample = datasets_bench8,
                mask = range(5), tunestr = tune_bench8_sg)
-
-rule bench8_sg_test:
-    input:
-        "8_tuning/output_singlem_dev/opal/tune_s0.1g0.1f1.8o1c1p1d1r1mask0/marine0novelty0.5.opal_report",
-        "8_tuning/output_singlem_dev/singlem_dev/tune_s0.1g0.1f1.8o1c1p1d1r1mask0/marine0novelty0.5.loss.tsv",
 
 rule generate_communities_bench8:
     input:

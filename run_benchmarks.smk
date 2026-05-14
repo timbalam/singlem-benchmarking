@@ -6,19 +6,17 @@ datasets_bench7 = ['SRR8648366', 'SRR29850984']
 
 novelties_bench8 = [0.5, 0.95, 1.25]
 datasets_bench8 = [f'marine{i}novelty{nr}' for i, nr in enumerate(novelties_bench8)]
-tune_bench8_slope = [
-    f's{n}g{n}f{n}o{n}c{n}p{n}d{n}r{n}' for n in [0.01, 0.02, 0.03, 0.04, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5]
-]
+
 tune_bench8_r = [
     f's{s}g{g}f{f}o{o}c{c}p{p}d{d}r{r}'
-    for s in [0.3]
-    for g in [0.3]
-    for f in [0.3]
-    for o in [0.3]
-    for c in [0.3]
-    for p in [0.3]
-    for d in [0.3]
-    for r in [0.3, 0.5, 0.8, 1.0, 1.2, 1.5, 2.0]
+    for s in [0.0]
+    for g in [0.0]
+    for f in [0.0]
+    for o in [0.0]
+    for c in [0.0]
+    for p in [0.0]
+    for d in [0.0]
+    for r in [0.0, 0.1, 0.5, 1]
 ]
 tune_bench8_d = [
     f's{s}g{g}f{f}o{o}c{c}p{p}d{d}r{r}'
@@ -108,19 +106,14 @@ rule download_bench7:
         [f'7_sra_mostly_novel/local_reads/{sample}.1.fq.gz' for sample in datasets_bench7],
         [f'7_sra_mostly_novel/local_reads/{sample}.2.fq.gz' for sample in datasets_bench7]
 
-rule bench8_slope:
+rule bench8_r_test:
     input:
         expand("8_tuning/output_singlem_dev/opal/tune_{tunestr}mask{mask}/{sample}.opal_report",
-               sample = datasets_bench8, 
-               mask = range(5), tunestr = tune_bench8_slope),
+               sample = datasets_bench8[:1],
+               mask = range(1), tunestr = tune_bench8_r[:1]),
         expand("8_tuning/output_singlem_dev/singlem_dev/tune_{tunestr}mask{mask}/{sample}.loss.tsv",
-               sample = datasets_bench8,
-               mask = range(5), tunestr = tune_bench8_slope)
-
-rule bench8_slope_test:
-    input:
-        "8_tuning/output_singlem_dev/opal/tune_s0.1g0.1f0.1o0.1c0.1p0.1d0.1r0.1mask0/marine0novelty0.5.opal_report",
-        "8_tuning/output_singlem_dev/singlem_dev/tune_s0.1g0.1f0.1o0.1c0.1p0.1d0.1r0.1mask0/marine0novelty0.5.loss.tsv",
+               sample = datasets_bench8[:1],
+               mask = range(1), tunestr = tune_bench8_r[:1])
 
 rule bench8_r:
     input:

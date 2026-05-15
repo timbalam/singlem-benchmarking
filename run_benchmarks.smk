@@ -29,17 +29,40 @@ tune_bench8_d = [
     for d in [0.3, 0.4, 0.5, 0.6]
     for r in [round(3.1 - d - p - c - o - f - g - s, 5)]
 ]
-tune_bench8_p = [
+tune_bench8_g = [
     f's{s}g{g}f{f}o{o}c{c}p{p}d{d}r{r}'
-    for s in [0.3]
-    for g in [0.3]
-    for f in [0.3]
-    for o in [0.3]
-    for c in [0.3]
-    for p in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
-    for d in [round(2.8 - p - c - o - f - g - s, 5)]
-    for r in [round(3.1 - d - p - c - o - f - g - s, 5)]
+    for s in [0.0]
+    for g in [0.0, 0.01, 0.1, 1.0, 10.0]
+    for f in [round(5000.0 - g - s, 4)]
+    for o in [0.0]
+    for c in [0.0]
+    for p in [0.0]
+    for d in [0.0]
+    for r in [0.0]
 ]
+tune_bench8_s = [
+    f's{s}g{g}f{f}o{o}c{c}p{p}d{d}r{r}'
+    for s in [0.0, 0.01, 0.1, 1.0, 10.0, 100.0, 500.0]
+    for g in [round(5000.0 - s, 4)]
+    for f in [0.0]
+    for o in [0.0]
+    for c in [0.0]
+    for p in [0.0]
+    for d in [0.0]
+    for r in [0.0]
+]
+tune_bench8_a = [
+    f's{s}g{g}f{f}o{o}c{c}p{p}d{d}r{r}'
+    for s in [500.0, 1000.0, 2000.0, 5000.0, 10000.0]
+    for g in [0.0]
+    for f in [0.0]
+    for o in [0.0]
+    for c in [0.0]
+    for p in [0.0]
+    for d in [0.0]
+    for r in [0.0]
+]
+
 
 
 singlem_metapackage = "tool_reference_data/S4.1.0.GTDB_r207.metapackage_20240502.smpkg"
@@ -106,6 +129,18 @@ rule download_bench7:
         [f'7_sra_mostly_novel/local_reads/{sample}.1.fq.gz' for sample in datasets_bench7],
         [f'7_sra_mostly_novel/local_reads/{sample}.2.fq.gz' for sample in datasets_bench7]
 
+rule bench8_baseline:
+    input:
+        expand("8_tuning/output_singlem/opal/{sample}.opal_report",
+               sample = datasets_bench8, 
+               mask = range(5)),
+        expand("8_tuning/output_singlem_dev/opal/tune_s0.0g0.0f0.0o0.0c0.0p0.0d0.0r0.0mask{mask}/{sample}.opal_report",
+               sample = datasets_bench8,
+               mask = range(5)),
+        expand("8_tuning/output_singlem_dev/singlem_dev/tune_s0.0g0.0f0.0o0.0c0.0p0.0d0.0r0.0mask{mask}/{sample}.loss.tsv",
+               sample = datasets_bench8,
+               mask = range(5))
+    
 rule bench8_r_test:
     input:
         expand("8_tuning/output_singlem_dev/opal/tune_{tunestr}mask{mask}/{sample}.opal_report",
@@ -133,14 +168,32 @@ rule bench8_d:
                sample = datasets_bench8,
                mask = range(5), tunestr = tune_bench8_d)
 
-rule bench8_p:
+rule bench8_g:
     input:
         expand("8_tuning/output_singlem_dev/opal/tune_{tunestr}mask{mask}/{sample}.opal_report",
                sample = datasets_bench8, 
-               mask = range(5), tunestr = tune_bench8_p),
+               mask = range(5), tunestr = tune_bench8_g),
         expand("8_tuning/output_singlem_dev/singlem_dev/tune_{tunestr}mask{mask}/{sample}.loss.tsv",
                sample = datasets_bench8,
-               mask = range(5), tunestr = tune_bench8_p)
+               mask = range(5), tunestr = tune_bench8_g)
+
+rule bench8_s:
+    input:
+        expand("8_tuning/output_singlem_dev/opal/tune_{tunestr}mask{mask}/{sample}.opal_report",
+               sample = datasets_bench8, 
+               mask = range(5), tunestr = tune_bench8_s),
+        expand("8_tuning/output_singlem_dev/singlem_dev/tune_{tunestr}mask{mask}/{sample}.loss.tsv",
+               sample = datasets_bench8,
+               mask = range(5), tunestr = tune_bench8_s)
+
+rule bench8_a:
+    input:
+        expand("8_tuning/output_singlem_dev/opal/tune_{tunestr}mask{mask}/{sample}.opal_report",
+               sample = datasets_bench8, 
+               mask = range(5), tunestr = tune_bench8_a),
+        expand("8_tuning/output_singlem_dev/singlem_dev/tune_{tunestr}mask{mask}/{sample}.loss.tsv",
+               sample = datasets_bench8,
+               mask = range(5), tunestr = tune_bench8_a)
 
 rule generate_communities_bench8:
     input:

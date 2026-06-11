@@ -47,6 +47,7 @@ rule all:
         ["3_cami2_marine/split_reads/marine{sample_number}.done".format(sample_number=sample_number) for sample_number in range(10)],
         "2_phylogenetic_novelty/genomes",
         "2_phylogenetic_novelty/genome_pairs",
+        "9_zymo/zymo_refseq.v2-download.done"
 
 rule dev:
     input:
@@ -399,4 +400,28 @@ rule bench2_genomes_extract:
     shell:
         """
         cd 2_phylogenetic_novelty && tar -xzf bench2_genomes.tar.gz &> ../{log}
+        """
+
+rule bench9_genomes_download:
+    output:
+        touch("9_zymo/zymo_refseq.v2-download.done"),
+    log:
+        "9_zymo/zymo_refseq.v2-download.log"
+    shell:
+        """
+        cd 9_zymo && wget 'https://zenodo.org/records/3935737/files/ZymoBIOMICS.STD.refseq.v2.zip?download=1' -O ZymoBIOMICS.STD.refseq.v2.zip &> ../{log}
+        """
+
+rule bench9_genomes_extract:
+    input:
+        "9_zymo/zymo_refseq.v2-download.done"
+    output:
+        touch("2_phylogenetic_novelty/reference_genomes-extract.done"),
+        d1 = directory("2_phylogenetic_novelty/genomes"),
+        d2 = directory("2_phylogenetic_novelty/genome_pairs"),
+    log:
+        "2_phylogenetic_novelty/reference_genomes-extract.log"
+    shell:
+        """
+        cd 9_zymo && tar -xzf bench2_genomes.tar.gz &> ../{log}
         """

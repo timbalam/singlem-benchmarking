@@ -16,6 +16,7 @@ start = ["start"]
 kingfisher = ["kingfisher"]
 metakssd = ["metakssd"]
 meteor2 = ["meteor2"]
+fastexcel = ["fastexcel"]
 
 [feature.map2b.dependencies]
 perl="5.*"
@@ -97,6 +98,10 @@ singlem = {path = "singlem", editable = true}
 
 [feature.singlem.dependencies]
 singlem = "==0.18.0"
+
+[feature.fastexcel.dependencies]
+fastexcel = "*"
+polars = "*"
 
 [feature.start.dependencies]
 python = ">=3.10,<3.14"

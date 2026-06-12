@@ -402,26 +402,25 @@ rule bench2_genomes_extract:
         cd 2_phylogenetic_novelty && tar -xzf bench2_genomes.tar.gz &> ../{log}
         """
 
-rule bench9_genomes_download:
+rule download_zymo_reference_genomes:
     output:
-        touch("9_zymo/zymo_refseq.v2-download.done"),
+        touch("6_zymo/zymo_refseq.v2-download.done"),
     log:
-        "9_zymo/zymo_refseq.v2-download.log"
+        "6_zymo/zymo_refseq.v2-download.log"
     shell:
         """
-        cd 9_zymo && wget 'https://zenodo.org/records/3935737/files/ZymoBIOMICS.STD.refseq.v2.zip?download=1' -O ZymoBIOMICS.STD.refseq.v2.zip &> ../{log}
+        cd 6_zymo && wget 'https://zenodo.org/records/3935737/files/ZymoBIOMICS.STD.refseq.v2.zip?download=1' -O ZymoBIOMICS.STD.refseq.v2.zip &> ../{log}
         """
 
-rule bench9_genomes_extract:
+rule extract_zymo_reference_genomes:
     input:
-        "9_zymo/zymo_refseq.v2-download.done"
+        "6_zymo/zymo_refseq.v2-download.done"
     output:
-        touch("2_phylogenetic_novelty/reference_genomes-extract.done"),
-        d1 = directory("2_phylogenetic_novelty/genomes"),
-        d2 = directory("2_phylogenetic_novelty/genome_pairs"),
+        touch("6_zymo/reference_genomes-extract.done"),
+        d1 = directory("6_zymo/ZymoBIOMICS.STD.refseq.v2/Genomes"),
     log:
-        "2_phylogenetic_novelty/reference_genomes-extract.log"
+        "6_zymo/reference_genomes-extract.log"
     shell:
         """
-        cd 9_zymo && tar -xzf bench2_genomes.tar.gz &> ../{log}
+        cd 6_zymo && unzip ZymoBIOMICS.STD.refseq.v2.zip &> ../{log}
         """

@@ -117,83 +117,29 @@ rule generate_community_and_reads_bench5:
         "-1 5_novelty/local_reads/{wildcards.sample}.1.fq.gz " \
         "-2 5_novelty/local_reads/{wildcards.sample}.2.fq.gz " \
         "2> {log}"
-        
-rule bench7:
-    input:
-        expand("7_sra_mostly_novel/output_{tool}/{tool}/{sample}.profile",
-               sample = datasets_bench7,
-               tool = ['singlem', 'sylph'])
 
-rule download_bench7:
+rule download_shakya:
     input:
-        [f'7_sra_mostly_novel/local_reads/{sample}.1.fq.gz' for sample in datasets_bench7],
-        [f'7_sra_mostly_novel/local_reads/{sample}.2.fq.gz' for sample in datasets_bench7]
+        '7_shakya_synthetic/local_reads/SRR606249.1.fq.gz',
+        '7_shakya_synthetic/local_reads/SRR606249.2.fq.gz',
 
-rule bench8_baseline:
-    input:
-        expand("8_tuning/output_singlem/opal/{sample}.opal_report",
-               sample = datasets_bench8, 
-               mask = range(5)),
-        expand("8_tuning/output_singlem_dev/opal/tune_s0.0g0.0f0.0o0.0c0.0p0.0d0.0r0.0mask{mask}/{sample}.opal_report",
-               sample = datasets_bench8,
-               mask = range(5)),
-        expand("8_tuning/output_singlem_dev/singlem_dev/tune_s0.0g0.0f0.0o0.0c0.0p0.0d0.0r0.0mask{mask}/{sample}.loss.tsv",
-               sample = datasets_bench8,
-               mask = range(5))
-    
-rule bench8_r_test:
-    input:
-        expand("8_tuning/output_singlem_dev/opal/tune_{tunestr}mask{mask}/{sample}.opal_report",
-               sample = datasets_bench8[:1],
-               mask = range(1), tunestr = tune_bench8_r[:1]),
-        expand("8_tuning/output_singlem_dev/singlem_dev/tune_{tunestr}mask{mask}/{sample}.loss.tsv",
-               sample = datasets_bench8[:1],
-               mask = range(1), tunestr = tune_bench8_r[:1])
 
-rule bench8_r:
+rule generate_shakya_truth_condensed_format:
     input:
-        expand("8_tuning/output_singlem_dev/opal/tune_{tunestr}mask{mask}/{sample}.opal_report",
-               sample = datasets_bench8, 
-               mask = range(5), tunestr = tune_bench8_r),
-        expand("8_tuning/output_singlem_dev/singlem_dev/tune_{tunestr}mask{mask}/{sample}.loss.tsv",
-               sample = datasets_bench8,
-               mask = range(5), tunestr = tune_bench8_r)
+        sup_xlsx = "7_shakya_synthetic/emi12086-sup-0010-tables1.xlsx",
+        gtdb_bac_tax = "bac120_taxonomy_r207.tsv",
+        gtdb_ar_tax = "ar53_taxonomy_r207.tsv",
+    output:
+        condensed = "7_shakya_synthetic/truths/{sample}.condensed",
+    log:
+        "7_shakya_synthetic/logs/generate_truth_condensed_format-{sample}.log"
+    shell:
+        "pixi run -e singlem " \
+        "python3 bin/shakya_sup_table_to_condensed.py --supplementary-xlsx {input.sup_xlsx} " \
+        "--sample {wildcards.sample} " \
+        "--bac-tax {input.gtdb_bac_tax} " \
+        "--arc-tax {input.gtdb_ar_tax} > {output.profile} 2> {log}"
 
-rule bench8_d:
-    input:
-        expand("8_tuning/output_singlem_dev/opal/tune_{tunestr}mask{mask}/{sample}.opal_report",
-               sample = datasets_bench8, 
-               mask = range(5), tunestr = tune_bench8_d),
-        expand("8_tuning/output_singlem_dev/singlem_dev/tune_{tunestr}mask{mask}/{sample}.loss.tsv",
-               sample = datasets_bench8,
-               mask = range(5), tunestr = tune_bench8_d)
-
-rule bench8_g:
-    input:
-        expand("8_tuning/output_singlem_dev/opal/tune_{tunestr}mask{mask}/{sample}.opal_report",
-               sample = datasets_bench8, 
-               mask = range(5), tunestr = tune_bench8_g),
-        expand("8_tuning/output_singlem_dev/singlem_dev/tune_{tunestr}mask{mask}/{sample}.loss.tsv",
-               sample = datasets_bench8,
-               mask = range(5), tunestr = tune_bench8_g)
-
-rule bench8_s:
-    input:
-        expand("8_tuning/output_singlem_dev/opal/tune_{tunestr}mask{mask}/{sample}.opal_report",
-               sample = datasets_bench8, 
-               mask = range(5), tunestr = tune_bench8_s),
-        expand("8_tuning/output_singlem_dev/singlem_dev/tune_{tunestr}mask{mask}/{sample}.loss.tsv",
-               sample = datasets_bench8,
-               mask = range(5), tunestr = tune_bench8_s)
-
-rule bench8_a:
-    input:
-        expand("8_tuning/output_singlem_dev/opal/tune_{tunestr}mask{mask}/{sample}.opal_report",
-               sample = datasets_bench8, 
-               mask = range(5), tunestr = tune_bench8_a),
-        expand("8_tuning/output_singlem_dev/singlem_dev/tune_{tunestr}mask{mask}/{sample}.loss.tsv",
-               sample = datasets_bench8,
-               mask = range(5), tunestr = tune_bench8_a)
 
 rule generate_communities_bench8:
     input:
@@ -251,12 +197,11 @@ rule truth_condensed_to_biobox:
 
 rule tool_condensed_to_biobox:
     input:
-        profile = "{bench_dir}/output_{tool}/{tool}/{tunedir}{sample}.profile",
+        profile = "{bench_dir}/output_{tool}/{tool}/{sample}.profile",
         truth = "{bench_dir}/truths/{sample}.condensed.biobox",
     output:
-        biobox = "{bench_dir}/output_{tool}/biobox/{tunedir}{sample}.biobox"
+        biobox = "{bench_dir}/output_{tool}/biobox/{sample}.biobox"
     wildcard_constraints:
-        tunedir="([^/]+/)?",
         sample="[^/]+"
     shell:
         "pixi run -e singlem " \
@@ -265,16 +210,15 @@ rule tool_condensed_to_biobox:
 
 rule opal:
     input:
-        biobox = "{bench_dir}/{tool_output}/biobox/{tunedir}{sample}.biobox"
+        biobox = "{bench_dir}/{tool_output}/biobox/{sample}.biobox"
     params:
         output_dir = "{bench_dir}/{tool_output}",
-        output_opal_dir = "{bench_dir}/{tool_output}/opal/{tunedir}{sample}.opal_output_directory",
+        output_opal_dir = "{bench_dir}/{tool_output}/opal/{sample}.opal_output_directory",
         truth = "{bench_dir}/truths/{sample}.condensed.biobox",
     output:
-        report="{bench_dir}/{tool_output}/opal/{tunedir}{sample}.opal_report",
-        done=touch("{bench_dir}/{tool_output}/opal/{tunedir}{sample}.opal_report.done")
+        report="{bench_dir}/{tool_output}/opal/{sample}.opal_report",
+        done=touch("{bench_dir}/{tool_output}/opal/{sample}.opal_report.done")
     wildcard_constraints:
-        tunedir="([^/]+/)?",
         sample="[^/]+"
     shell:
         "pixi run -e opal " \
@@ -296,7 +240,7 @@ rule download_fastq:
         "kingfisher get -r {wildcards.sample} " \
         "--output_directory {wildcards.bench_dir}/local_reads " \
         "-m ena-ftp prefetch -f fastq.gz " \
-	"&& mv {wildcards.bench_dir}/local_reads/{wildcards.sample}_1.fastq.gz {output.r1} " \
+	    "&& mv {wildcards.bench_dir}/local_reads/{wildcards.sample}_1.fastq.gz {output.r1} " \
         "&& mv {wildcards.bench_dir}/local_reads/{wildcards.sample}_2.fastq.gz {output.r2} " \
         "&> {log}"
 
@@ -314,12 +258,12 @@ rule singlem_run_pipe:
         r2="{bench_dir}/local_reads/{sample}.2.fq.gz",
         db=singlem_metapackage,
     output:
-        report="{bench_dir}/output_singlem/singlem/{tunedir}{sample}.sma",
-        done=touch("{bench_dir}/output_singlem/singlem/{tunedir}{sample}.sma.done")
+        report="{bench_dir}/output_singlem/singlem/{sample}.sma",
+        done=touch("{bench_dir}/output_singlem/singlem/{sample}.sma.done")
     threads:
         8
     log:
-        "{bench_dir}/output_singlem/logs/singlem/{tunedir}{sample}.log"
+        "{bench_dir}/output_singlem/logs/singlem/{sample}.log"
     wildcard_constraints:
         tunedir="([^/]+/)?",
         sample="[^/]+"
@@ -379,48 +323,6 @@ rule singlem_dev_run_condense:
         "singlem condense --input-archive-otu-table {input.report} " \
         "-p {output.profile} --apply-nonneg-matrix-factorisation " \
         "--output-after-em-otu-table {output.after_em} " \
-        "--metapackage {input.db} &> {log}"
-
-rule singlem_dev_mask_5fold_mask:
-    input:
-        report="{bench_dir}/output_singlem_dev/singlem_dev/{sample}.sma",
-        done="{bench_dir}/output_singlem_dev/singlem_dev/{sample}.sma.done"
-    output:
-        ["{bench_dir}/output_singlem_dev/singlem_dev/{sample}.mask"+str(mask)+".txt" for mask in range(5)],
-        done=touch("{bench_dir}/output_singlem_dev/singlem_dev/{sample}.mask.done")
-    log:
-        "{bench_dir}/output_singlem_dev/logs/singlem_dev/{sample}.mask.log"
-    params:
-        output_dir=lambda wildcards, input, output: dirname(input.report)
-    shell:
-        "pixi run -e singlem-dev " \
-        "python3 bin/generate_masks.py --input-archive-otu-table {input.report} " \
-        "--fold 5 --output-mask-dir {params.output_dir} &> {log}"
-
-rule singlem_dev_run_condense_tune:
-    input:
-        report="{bench_dir}/output_singlem_dev/singlem_dev/{sample}.sma",
-        mask="{bench_dir}/output_singlem_dev/singlem_dev/{sample}.mask{mask}.txt",
-        done="{bench_dir}/output_singlem_dev/singlem_dev/{sample}.sma.done",
-        db=singlem_metapackage
-    output:
-        profile="{bench_dir}/output_singlem_dev/singlem_dev/tune_s{ts}g{tg}f{tf}o{to}c{tc}p{tp}d{td}r{tr}mask{mask}/{sample}.profile",
-        loss="{bench_dir}/output_singlem_dev/singlem_dev/tune_s{ts}g{tg}f{tf}o{to}c{tc}p{tp}d{td}r{tr}mask{mask}/{sample}.loss.tsv",
-        done=touch("{bench_dir}/output_singlem_dev/singlem_dev/tune_s{ts}g{tg}f{tf}o{to}c{tc}p{tp}d{td}r{tr}mask{mask}/{sample}.profile.done")
-    log:
-        "{bench_dir}/output_singlem_dev/logs/singlem_dev/tune_s{ts}g{tg}f{tf}o{to}c{tc}p{tp}d{td}r{tr}mask{mask}/{sample}.log"
-    params:
-        output_dir=lambda wildcards, input, output: dirname(output.profile)
-    shell:
-        "mkdir -p {params.output_dir} && " \
-        "pixi run -e singlem-dev " \
-        "singlem condense --input-archive-otu-table {input.report} " \
-        "-p {output.profile} --apply-nonneg-matrix-factorisation " \
-        "--rank-penalty-steps {wildcards.ts} {wildcards.tg} {wildcards.tf} {wildcards.to} " \
-        "{wildcards.tc} {wildcards.tp} {wildcards.td} {wildcards.tr} " \
-        "--mask-otus-file {input.mask} " \
-        "--max-num-steps 5000 "
-        "--output-loss {output.loss} " \
         "--metapackage {input.db} &> {log}"
 
 ###############################################################################################

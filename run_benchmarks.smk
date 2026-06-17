@@ -1,69 +1,7 @@
 from os.path import join, dirname
+import polars as pl
 
 datasets_bench5 = [f'marine{i}' for i in range(1)]
-
-datasets_bench7 = ['SRR8648366', 'SRR29850984']
-
-novelties_bench8 = [0.5, 0.95, 1.25]
-datasets_bench8 = [f'marine{i}novelty{nr}' for i, nr in enumerate(novelties_bench8)]
-
-tune_bench8_r = [
-    f's{s}g{g}f{f}o{o}c{c}p{p}d{d}r{r}'
-    for s in [0.0]
-    for g in [0.0]
-    for f in [0.0]
-    for o in [0.0]
-    for c in [0.0]
-    for p in [0.0]
-    for d in [0.0]
-    for r in [0.0, 0.1, 0.5, 1]
-]
-tune_bench8_d = [
-    f's{s}g{g}f{f}o{o}c{c}p{p}d{d}r{r}'
-    for s in [0.3]
-    for g in [0.3]
-    for f in [0.3]
-    for o in [0.3]
-    for c in [0.3]
-    for p in [0.3]
-    for d in [0.3, 0.4, 0.5, 0.6]
-    for r in [round(3.1 - d - p - c - o - f - g - s, 5)]
-]
-tune_bench8_g = [
-    f's{s}g{g}f{f}o{o}c{c}p{p}d{d}r{r}'
-    for s in [0.0]
-    for g in [0.0, 0.01, 0.1, 1.0, 10.0]
-    for f in [round(5000.0 - g - s, 4)]
-    for o in [0.0]
-    for c in [0.0]
-    for p in [0.0]
-    for d in [0.0]
-    for r in [0.0]
-]
-tune_bench8_s = [
-    f's{s}g{g}f{f}o{o}c{c}p{p}d{d}r{r}'
-    for s in [0.0, 0.01, 0.1, 1.0, 10.0, 100.0, 500.0]
-    for g in [round(5000.0 - s, 4)]
-    for f in [0.0]
-    for o in [0.0]
-    for c in [0.0]
-    for p in [0.0]
-    for d in [0.0]
-    for r in [0.0]
-]
-tune_bench8_a = [
-    f's{s}g{g}f{f}o{o}c{c}p{p}d{d}r{r}'
-    for s in [500.0, 1000.0, 2000.0, 5000.0, 10000.0]
-    for g in [0.0]
-    for f in [0.0]
-    for o in [0.0]
-    for c in [0.0]
-    for p in [0.0]
-    for d in [0.0]
-    for r in [0.0]
-]
-
-
 
 singlem_metapackage = "tool_reference_data/S4.1.0.GTDB_r207.metapackage_20240502.smpkg"
 sylph_package = "tool_reference_data/gtdb_database.syldb"
@@ -117,29 +55,6 @@ rule generate_community_and_reads_bench5:
         "-1 5_novelty/local_reads/{wildcards.sample}.1.fq.gz " \
         "-2 5_novelty/local_reads/{wildcards.sample}.2.fq.gz " \
         "2> {log}"
-
-rule download_shakya:
-    input:
-        '7_shakya_synthetic/local_reads/SRR606249.1.fq.gz',
-        '7_shakya_synthetic/local_reads/SRR606249.2.fq.gz',
-
-
-rule generate_shakya_truth_condensed_format:
-    input:
-        sup_xlsx = "7_shakya_synthetic/emi12086-sup-0010-tables1.xlsx",
-        gtdb_bac_tax = "bac120_taxonomy_r207.tsv",
-        gtdb_ar_tax = "ar53_taxonomy_r207.tsv",
-    output:
-        condensed = "7_shakya_synthetic/truths/{sample}.condensed",
-    log:
-        "7_shakya_synthetic/logs/generate_truth_condensed_format-{sample}.log"
-    shell:
-        "pixi run -e singlem " \
-        "python3 bin/shakya_sup_table_to_condensed.py --supplementary-xlsx {input.sup_xlsx} " \
-        "--sample {wildcards.sample} " \
-        "--bac-tax {input.gtdb_bac_tax} " \
-        "--arc-tax {input.gtdb_ar_tax} > {output.profile} 2> {log}"
-
 
 rule generate_communities_bench8:
     input:
@@ -224,6 +139,116 @@ rule opal:
         "pixi run -e opal " \
         "opal.py -g {params.truth} -o {params.output_opal_dir} {input.biobox} || echo 'expected opal non-zero exit status'; mv {params.output_opal_dir}/results.tsv {output.report} && rm -rf {params.output_opal_dir}"
 
+rule download_shakya:
+    input:
+        [f'7_shakya_synthetic/local_reads/{sample}.1.fq.gz' for sample in ['SRR606249', 'SRR606245']],
+        [f'7_shakya_synthetic/local_reads/{sample}.2.fq.gz' for sample in ['SRR606249', 'SRR606245']],
+
+rule generate_shakya_truth_condensed_format:
+    input:
+        sup_xlsx = "7_shakya_synthetic/emi12086-sup-0010-tables1.xlsx",
+        gtdb_bac_tax = "bac120_taxonomy_r207.tsv",
+        gtdb_ar_tax = "ar53_taxonomy_r207.tsv",
+    output:
+        condensed = "7_shakya_synthetic/truths/{sample}.condensed",
+    log:
+        "7_shakya_synthetic/logs/generate_truth_condensed_format-{sample}.log"
+    shell:
+        "pixi run -e singlem " \
+        "python3 bin/shakya_sup_table_to_condensed.py --supplementary-xlsx {input.sup_xlsx} " \
+        "--sample {wildcards.sample} " \
+        "--bac-tax {input.gtdb_bac_tax} " \
+        "--arc-tax {input.gtdb_ar_tax} > {output.profile} 2> {log}"
+
+def parse_samples(report_file):
+    return pl.read_csv(report_file, columns = "run_accession").to_series(0)
+
+zymo_samples = parse_samples("6_zymo_synthetic/filereport_read_run_ERP121404_D6300.txt")
+
+rule download_zymo:
+    input:
+        [f'6_zymo_synthetic/local_reads/{sample}.1.fq.gz' for sample in zymo_samples],
+        [f'6_zymo_synthetic/local_reads/{sample}.2.fq.gz' for sample in zymo_samples],
+
+rule generate_zymo_truth_condensed_format:
+    input:
+        sup_xlsx = "7_shakya_synthetic/emi12086-sup-0010-tables1.xlsx",
+        gtdb_bac_tax = "bac120_taxonomy_r207.tsv",
+        gtdb_ar_tax = "ar53_taxonomy_r207.tsv",
+    output:
+        condensed = "7_shakya_synthetic/truths/{sample}.condensed",
+    log:
+        "7_shakya_synthetic/logs/generate_truth_condensed_format-{sample}.log"
+    shell:
+        "pixi run -e singlem " \
+        "python3 bin/shakya_sup_table_to_condensed.py --supplementary-xlsx {input.sup_xlsx} " \
+        "--sample {wildcards.sample} " \
+        "--bac-tax {input.gtdb_bac_tax} " \
+        "--arc-tax {input.gtdb_ar_tax} > {output.profile} 2> {log}"
+
+rule download_cami_strain_madness_reads:
+    output:
+        "8_cami2_strain/short_read/strmgCAMI2_setup.tar.gz"
+    log:
+        "8_cami2_strain/short_read/strmgCAMI2_setup-download.log"
+    shell:
+        "bash -c " \
+        "'mkdir -p 8_cami2_strain/short_read && " \
+        "cd 8_cami2_strain/short_read && " \
+        "rm -f strmgCAMI2_setup.tar.gz && " \
+        "wget https://frl.publisso.de/data/frl:6425521/strain/short_read/strmgCAMI2_setup.tar.gz' &> {log}"
+
+rule download_cami_strain_madness_genomes:
+    output:
+        "8_cami2_strain/short_read/strmgCAMI2_genomes.tar.gz"
+    log:
+        "8_cami2_strain/short_read/strmgCAMI2_genomes-download.log"
+    shell:
+        "bash -c " \
+        "'mkdir -p 8_cami2_strain/short_read && " \
+        "cd 8_cami2_strain/short_read && " \
+        "rm -f strmgCAMI2_genomes.tar.gz && " \
+        "wget https://frl.publisso.de/data/frl:6425521/strain/strmgCAMI2_genomes.tar.gz' &> {log}"
+
+rule extract_cami_strain_madness_reads:
+    input:
+        "8_cami2_strain/short_read/marmgCAMI2_sample_{sample_number}_reads.tar.gz"
+    output:
+        "8_cami2_strain/short_read/short_read/2018.08.15_09.49.32_sample_{sample_number}/reads/anonymous_reads.fq.gz"
+    log:
+        "8_cami2_strain/short_read/marmgCAMI2_sample_{sample_number}_reads-extract.log"
+    shell:
+        "bash -c " \
+        "'cd 8_cami2_strain/short_read && " \
+        "tar -xzf strmgCAMI2_setup.tar.gz' &> {log}"
+
+rule extract_cami_strain_madness_genomes:
+    input:
+        "8_cami2_strain/short_read/strmgCAMI2_genomes.tar.gz"
+    output:
+        dir("8_cami2_strain/short_read/short_read/source_genomes/")
+    log:
+        "8_cami2_strain/short_read/strmgCAMI2_genomes-extract.log"
+    shell:
+        "bash -c " \
+        "'cd 8_cami2_strain/short_read && " \
+        "tar -xzf strmgCAMI2_genomes.tar.gz' &> {log}"
+
+rule split_cami_reads:
+    input:
+        "3_cami2_marine/simulation_short_read/simulation_short_read/2018.08.15_09.49.32_sample_{sample_number}/reads/anonymous_reads.fq.gz"
+    output:
+        r1="3_cami2_marine/split_reads/marine{sample_number}.1.fq.gz",
+        r2="3_cami2_marine/split_reads/marine{sample_number}.2.fq.gz",
+        done=touch("3_cami2_marine/split_reads/marine{sample_number}.done")
+    log:
+        "3_cami2_marine/split_reads/marine{sample_number}.log"
+    shell:
+        """
+        bash -c 'mkdir -p 3_cami2_marine/split_reads && zcat {input[0]} |./bin/deinterleave_fastq.sh {output.r1} {output.r2} compress' &> {log}
+        """
+
+
 rule download_fastq:
     output:
         r1="{bench_dir}/local_reads/{sample}.1.fq.gz",
@@ -243,7 +268,6 @@ rule download_fastq:
 	    "&& mv {wildcards.bench_dir}/local_reads/{wildcards.sample}_1.fastq.gz {output.r1} " \
         "&& mv {wildcards.bench_dir}/local_reads/{wildcards.sample}_2.fastq.gz {output.r2} " \
         "&> {log}"
-
 
 
 ###############################################################################################

@@ -17,6 +17,7 @@ kingfisher = ["kingfisher"]
 metakssd = ["metakssd"]
 meteor2 = ["meteor2"]
 fastexcel = ["fastexcel"]
+gtdbtk = ["gtdbtk"]
 
 [feature.map2b.dependencies]
 perl="5.*"
@@ -136,3 +137,7 @@ channels = ["https://conda.anaconda.org/luxiaoxin2"]
 
 [feature.meteor2.dependencies]
 meteor = "==2.0.22"
+
+[feature.gtdbtk.dependencies]
+gtdbtk = "==2.1.0"
+numpy = "<=1.20"

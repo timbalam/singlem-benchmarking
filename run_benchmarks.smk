@@ -151,7 +151,7 @@ rule extract_zymo_reference_genomes:
 
 rule download_cami_strain:
     input:
-        ["8_cami2_strain/split_reads/strain{sample_number}.done".format(sample_number=sample_number) for sample_number in range(100)],
+        [f'8_cami2_strain/short_read/short_read/2018.09.07_11.43.52_sample_{sample_number}/reads/anonymous_reads.fq.gz' for sample_number in range(100)],
         "8_cami2_strain/strmgCAMI2_setup-extract.done",
         "8_cami2_strain/short_read/source_genomes/"
 
@@ -302,18 +302,72 @@ rule download_fastq:
         "&> {log}"
 
 def gtdbtk_data_path(wildcards):
-    abspath("tool_reference_data/release207_v2")
+    return abspath("tool_reference_data/release207_v2")
+
+rule gtdbtk_identify:
+    input:
+        fa="8_cami2_strain/short_read/source_genomes",
+        data_path=gtdbtk_data_path
+    output:
+        output_dir=directory("8_cami2_strain/gtdbtk_r207/identify")
+    log:
+        "8_cami2_strain/gtdbtk_r207/identify.log"
+    shell:
+        "GTDBTK_DATA_PATH={input.data_path} " \
+        "pixi run -e gtdbtk " \
+        "gtdbtk identify --genome_dir {input.fa} " \
+        "--out_dir {output.output_dir} " \
+        "--extension .fasta " \
+        "&> {log}"
+
+rule gtdbtk_align:
+    input:
+        id="8_cami2_strain/gtdbtk_r207/identify",
+        data_path=gtdbtk_data_path
+    output:
+        output_dir=directory("8_cami2_strain/gtdbtk_r207/align")
+    log:
+        "8_cami2_strain/gtdbtk_r207/align.log"
+    shell:
+        "GTDBTK_DATA_PATH={input.data_path} " \
+        "pixi run -e gtdbtk " \
+        "gtdbtk align --identify_dir {input.id} " \
+        "--out_dir {output.output_dir} " \
+        "&> {log}"
+
+rule gtdbtk_classify:
+    input:
+        fa="8_cami2_strain/short_read/source_genomes",
+        al="8_cami2_strain/gtdbtk_r207/align",
+        data_path=gtdbtk_data_path
+    output:
+        output_dir=directory("8_cami2_strain/gtdbtk_r207/classify"),
+        done=touch("8_cami2_strain/gtdbtk_r207/classify.done")
+    log:
+        "8_cami2_strain/gtdbtk_r207/classify.log"
+    resources:
+        mem_mb=64000,
+        runtime="1h"
+    shell:
+        "GTDBTK_DATA_PATH={input.data_path} " \
+        "pixi run -e gtdbtk " \
+        "gtdbtk classify --genome_dir {input.fa} " \
+        "--align_dir {input.al} " \
+        "--extension .fasta " \
+        #"--scratch_data " \
+        "--out_dir {output.output_dir} " \
+        "&> {log}"
 
 rule gtdbtk_classify_wf:
     input:
-        fa="8_cami2_strain/short_read/source_genome_test",
+        fa="8_cami2_strain/short_read/source_genomes",
         data_path=gtdbtk_data_path
     output:
-        output_dir="8_cami2_strain/gtdbtk_r207"
+        output_dir=directory("8_cami2_strain/gtdbtk_r207_wf")
     log:
-        "8_cami2_strain/gtdb_classify_wf.log"
+        "8_cami2_strain/gtdb_r207_wf/classify_wf.log"
     shell:
-        "GTDBTK_DATA_PATH=$(pwd)/{input.data_path} " \
+        "GTDBTK_DATA_PATH={input.data_path} " \
         "pixi run -e gtdbtk " \
         "gtdbtk classify_wf --genome-dir {input.fa} " \
         "--out_dir {output.output_dir} " \

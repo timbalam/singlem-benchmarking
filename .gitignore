@@ -27,7 +27,4 @@ __pycache__
 8_cami2_strain/split_reads
 8_cami2_strain/strmgCAMI2_setup.tar.gz
 8_cami2_strain/strmgCAMI2_setup-extract.done
-8_cami2_strain/gtdbtk_r207/align
-8_cami2_strain/gtdbtk_r207/classify
-8_cami2_strain/gtdbtk_r207/identify
-8_cami2_strain/gtdbtk_r207/output
+8_cami2_strain/gtdbtk_r207/

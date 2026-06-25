@@ -56,7 +56,8 @@ if __name__ == '__main__':
     # (env)cl5n007:20221031:~/m/msingle/mess/115_camisim_ish_benchmarking$ \ls -f ~/m/msingle/sam/1_gtdb_r207_smpkg/20220513/shadow_GTDB/genomes |grep GC |sed 's=\(.*\).fna=\1\t/work/microbiome/msingle/sam/1_gtdb_r207_smpkg/20220513/shadow_GTDB/genomes\1.fna=' >shadow_genome_paths.csv
     parent_parser.add_argument('--novel-genome-gtdbtk-output', required=True, help='Path to where new genomes have been run through gtdbtk')
     parent_parser.add_argument('--novel-genome-list', required=True, help='Path to genome list')
-    parent_parser.add_argument('--novelty-ratio', required=True, help='Ratio of rank to parent rank novelty')
+    parent_parser.add_argument('--percent-known', required=True, help='Percent of known closely related genomes to use')
+    parent_parser.add_argument('--percent-dominant', required=True, help='Percent of species from the dominant genus')
     parent_parser.add_argument('--gtdb-bac-metadata', required=True, help='Path to GTDB metadata file, for genome length')
     parent_parser.add_argument('--gtdb-ar-metadata', required=True, help='Path to GTDB metadata file, for genome length')
     parent_parser.add_argument('--output-condensed', required=True, help='Path to output file in singlem condensed format')
@@ -210,50 +211,41 @@ if __name__ == '__main__':
 
     logging.info(f"Read {len(novel_info)} novel genomes.")
 
-    #ranks = "rdpcofgs"
-    sum_weights = sum(float(args.novelty_ratio) ** n for n in range(6))
-    n_rank = (
-        novel_info.group_by('known_at')
-        .len("max_new")
-        .with_columns(
-            r = pl.lit(float(args.novelty_ratio)),
-            n = pl.lit(len(coverages))
-        )
-        .with_columns(
-            weight_new = pl.col("r") ** (pl.col("known_at") + 1)
-        )
-        .with_columns(
-            frac_new = pl.col("weight_new") / sum_weights
-        )
-        .with_columns(
-            n_new_r = (pl.col("n") * pl.col("frac_new")).round()
-        )
-        .with_columns(
-            n_new = pl.min_horizontal(
-                pl.col("n_new_r"),
-                pl.col("max_new")
-            )
-        )
-    )
-    
-    n_known = len(coverages) - n_rank["n_new"].sum()
+    fraction_known = float(args.percent_known) / 100
+    n_new = round(len(coverages) * (1 - fraction_known))
+    n_known = len(coverages) - n_new
+    fraction_dominant = float(args.percent_dominant) / 100
+    n_new_dom = round(n_new * fraction_dominant)
+    n_new_bg = n_new - n_new_dom
+    n_known_dom = round(n_known * fraction_dominant)
+    n_known_bg = n_known - n_known_dom
 
 # %%
-    logging.info(f"Choosing {n_rank["n_new"].sum()} novel genomes and {n_known} known genomes.")
-    novel_info_new = novel_info.join(
-        n_rank.select("known_at", "n_new"),
-        on = "known_at",
-        how = "left",
-        validate = "m:1"
+
+    # Streptomyces has 43 known, 13 novel genomes
+    logging.info(f"Choosing {n_new_dom} novel genomes and {n_known_dom} known genomes from genus Streptomyces.")
+    logging.info(f"Choosing {n_new_bg} novel genomes and {n_known_bg} known genomes from other lineages.")
+    known_info_split = (
+        known_info
+        .with_columns(pl.col("taxonomy").str.contains("g__Streptomyces").alias("dominant"))
+        .partition_by("dominant", as_dict = True)
     )
+    known_info_dom = known_info_split[(True,)].drop("dominant")
+    known_info_bg = known_info_split[(False,)].drop("dominant")
+    novel_info_split = (
+        novel_info
+        .drop("known_at")
+        .with_columns(pl.col("taxonomy").str.contains("g__Streptomyces").alias("dominant"))
+        .partition_by("dominant", as_dict = True)
+    )
+    novel_info_dom = novel_info_split[(True,)].drop("dominant")
+    novel_info_bg = novel_info_split[(False,)].drop("dominant")
+    
     chosen_df = pl.concat([
-        known_info.sample(n_known),
-        novel_info_new
-        .with_columns(
-            shuff_loc = pl.int_range(pl.len()).shuffle().over(pl.col("known_at"))
-        )
-        .filter(pl.col("shuff_loc") < pl.col("n_new"))
-        .drop("shuff_loc", "known_at", "n_new")
+        known_info_dom.sample(n_known_dom),
+        known_info_bg.sample(n_known_bg),
+        novel_info_dom.sample(n_new_dom),
+        novel_info_bg.sample(n_new_bg)
     ])
     
     # Add coverage column

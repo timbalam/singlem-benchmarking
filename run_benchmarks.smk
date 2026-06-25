@@ -8,6 +8,8 @@ sylph_package = "tool_reference_data/gtdb_database.syldb"
 
 #####################################################################
 
+# ## bench 5 novelty
+
 rule bench5:
     input:
         expand("5_novelty/output_{tool}/opal/{sample}.opal_report",
@@ -55,45 +57,8 @@ rule generate_community_and_reads_bench5:
         "-1 5_novelty/local_reads/{wildcards.sample}.1.fq.gz " \
         "-2 5_novelty/local_reads/{wildcards.sample}.2.fq.gz " \
         "2> {log}"
-      
-rule truth_condensed_to_biobox:
-    input:
-        condensed = "{bench_dir}/truths/{sample}.condensed",
-    output:
-        biobox = "{bench_dir}/truths/{sample}.condensed.biobox"
-    shell:
-        "pixi run -e singlem " \
-        "python3 bin/condensed_profile_to_biobox.py --input-condensed-table {input.condensed} " \
-        "--output-biobox {output.biobox}"
 
-rule tool_condensed_to_biobox:
-    input:
-        profile = "{bench_dir}/output_{tool}/{tool}/{sample}.profile",
-        truth = "{bench_dir}/truths/{sample}.condensed.biobox",
-    output:
-        biobox = "{bench_dir}/output_{tool}/biobox/{sample}.biobox"
-    wildcard_constraints:
-        sample="[^/]+"
-    shell:
-        "pixi run -e singlem " \
-        "python3 bin/condensed_profile_to_biobox.py --input-condensed-table {input.profile} " \
-        "--output-biobox {output.biobox} --template-biobox {input.truth} "
-
-rule opal:
-    input:
-        biobox = "{bench_dir}/{tool_output}/biobox/{sample}.biobox"
-    params:
-        output_dir = "{bench_dir}/{tool_output}",
-        output_opal_dir = "{bench_dir}/{tool_output}/opal/{sample}.opal_output_directory",
-        truth = "{bench_dir}/truths/{sample}.condensed.biobox",
-    output:
-        report="{bench_dir}/{tool_output}/opal/{sample}.opal_report",
-        done=touch("{bench_dir}/{tool_output}/opal/{sample}.opal_report.done")
-    wildcard_constraints:
-        sample="[^/]+"
-    shell:
-        "pixi run -e opal " \
-        "opal.py -g {params.truth} -o {params.output_opal_dir} {input.biobox} || echo 'expected opal non-zero exit status'; mv {params.output_opal_dir}/results.tsv {output.report} && rm -rf {params.output_opal_dir}"
+# ## bench 7
 
 rule download_shakya:
     input:
@@ -115,6 +80,8 @@ rule generate_shakya_truth_condensed_format:
         "--sample {wildcards.sample} " \
         "--bac-tax {input.gtdb_bac_tax} " \
         "--arc-tax {input.gtdb_ar_tax} > {output.profile} 2> {log}"
+
+# ## 6 zymo
 
 def parse_samples(report_file):
     return pl.read_csv(report_file, separator = "\t", columns = "run_accession").to_series(0)
@@ -149,11 +116,17 @@ rule extract_zymo_reference_genomes:
         "'cd 6_zymo_synthetic && " \
         "tar -xzf ZymoBIOMICS.STD.refseq.v2.zip' &> {log}"
 
+# ## 8 cami2 strain madness
+
 rule download_cami_strain:
     input:
         [f'8_cami2_strain/short_read/short_read/2018.09.07_11.43.52_sample_{sample_number}/reads/anonymous_reads.fq.gz' for sample_number in range(100)],
         "8_cami2_strain/strmgCAMI2_setup-extract.done",
         "8_cami2_strain/short_read/source_genomes/"
+
+rule split_cami_strain:
+    input:
+        [f'8_cami2_strain/split_reads/strain{sample_number}.{dir}.fq.gz' for sample_number in range(100) for dir in [1,2]]
 
 rule download_cami_strain_reads:
     output:
@@ -189,7 +162,7 @@ rule split_cami_strain_reads:
         "8_cami2_strain/split_reads/strain{sample_number}.log"
     shell:
         "bash -c " \
-        "'mkdir -p 3_cami2_marine/split_reads && zcat {input[0]} | " \
+        "'mkdir -p 8_cami2_strain/split_reads && zcat {input[0]} | " \
         "bin/deinterleave_fastq.sh {output.r1} {output.r2} compress' &> {log}"
 
 rule download_cami_strain_genomes:
@@ -281,26 +254,6 @@ rule extract_gtdbtk_r207_data:
         "'cd tool_reference_data && " \
         "tar -xzf gtdbtk_r207_v2_data.tar.gz' &> {log}"
 
-rule download_fastq:
-    output:
-        r1="{bench_dir}/local_reads/{sample}.1.fq.gz",
-        r2="{bench_dir}/local_reads/{sample}.2.fq.gz",
-        done=touch("{bench_dir}/local_reads/{sample}.done")
-    log:
-        "{bench_dir}/local_reads/{sample}.log"
-    threads:
-        1
-    wildcard_constraints:
-        bench_dir="^7_.+"
-    shell:
-        "pixi run -e kingfisher " \
-        "kingfisher get -r {wildcards.sample} " \
-        "--output_directory {wildcards.bench_dir}/local_reads " \
-        "-m ena-ftp prefetch -f fastq.gz " \
-	    "&& mv {wildcards.bench_dir}/local_reads/{wildcards.sample}_1.fastq.gz {output.r1} " \
-        "&& mv {wildcards.bench_dir}/local_reads/{wildcards.sample}_2.fastq.gz {output.r2} " \
-        "&> {log}"
-
 def gtdbtk_data_path(wildcards):
     return abspath("tool_reference_data/release207_v2")
 
@@ -346,8 +299,7 @@ rule gtdbtk_classify:
     log:
         "8_cami2_strain/gtdbtk_r207/classify.log"
     resources:
-        mem_mb=64000,
-        runtime="1h"
+        mem_mb=64000
     shell:
         "GTDBTK_DATA_PATH={input.data_path} " \
         "pixi run -e gtdbtk " \
@@ -373,6 +325,125 @@ rule gtdbtk_classify_wf:
         "--out_dir {output.output_dir} " \
         "&> {log}"
 
+# ## bench 9 related
+
+datasets_bench9 = [f"sample{i}" for i in range(4, 5)]
+
+rule bench9:
+    input:
+        expand("9_related/output_{tool}/opal/{sample}.opal_report",
+               sample = datasets_bench9,
+               tool = ['singlem', 'sylph', 'singlem_dev', 'singlem_joint', 'singlem_inject'])
+
+rule generate_communities_bench9:
+    input:
+        [f'9_related/truths/dominance{percent_dom}/{sample}.finished'
+         for sample in datasets_bench9
+         for percent_dom in [50]],
+        [f'9_related/local_reads/dominance{percent_dom}/{sample}.finished'
+         for sample in datasets_bench9
+         for percent_dom in [50]],
+        [f'9_related/truths/dominance{percent_dom}/{sample}.condensed.biobox'
+         for sample in datasets_bench9
+         for percent_dom in [50]],
+    output:
+        done=touch("9_related/generate_communities.done")
+
+rule generate_community_and_reads_bench9:
+    input:
+        gtdb_bac_metadata = 'bac120_metadata_r207.tsv',
+        gtdb_ar_metadata = 'ar53_metadata_r207.tsv',
+        known_genome_list = '1_novel_strains/shadow_genome_paths.csv',
+        novel_genomes_gtdbtk_output_directory = '4_complex_and_novel/gtdbtk_batchfile.random1000.gtdbtk_r207',
+        novel_genome_list = '4_complex_and_novel/gtdbtk_batchfile.random1000.csv',
+    output:
+        r1="9_related/local_reads/dominance{percent_dom}/{sample}.1.fq.gz",
+        r2="9_related/local_reads/dominance{percent_dom}/{sample}.2.fq.gz",
+        condensed = "9_related/truths/dominance{percent_dom}/{sample}.condensed",
+        done = touch("9_related/truths/dominance{percent_dom}/{sample}.finished"),
+        done2 = touch("9_related/local_reads/dominance{percent_dom}/{sample}.finished"),
+    params:
+        coverage_number = lambda wildcards: wildcards.sample.replace('sample', ''),
+    log: "9_related/local_reads/dominance{percent_dom}/{sample}.log"
+    threads: 8
+    shell:
+        "mkdir -p 9_related/truths 9_related/local_reads && " \
+        "pixi run -e art " \
+        "python3 9_related/generate_community.py --art art_illumina --threads {threads} " \
+        "--coverage-file 9_related/coverage_definitions/coverage{params.coverage_number}.tsv " \
+        "--gtdb-bac-metadata {input.gtdb_bac_metadata} " \
+        "--gtdb-ar-metadata {input.gtdb_ar_metadata} " \
+        "--percent-known 100 " \
+        "--percent-dominant {wildcards.percent_dom} " \
+        "--known-genome-list {input.known_genome_list} " \
+        "--novel-genome-gtdbtk-output {input.novel_genomes_gtdbtk_output_directory} " \
+        "--novel-genome-list {input.novel_genome_list} " \
+        "--output-condensed {output.condensed} " \
+        "-1 {output.r1} " \
+        "-2 {output.r2} " \
+        "2> {log}"
+
+# utils
+
+rule opal:
+    input:
+        biobox = "{bench_dir}/{tool_output}/biobox/{sample}.biobox"
+    params:
+        output_dir = "{bench_dir}/{tool_output}",
+        output_opal_dir = "{bench_dir}/{tool_output}/opal/{sample}.opal_output_directory",
+        truth = "{bench_dir}/truths/{sample}.condensed.biobox",
+    output:
+        report="{bench_dir}/{tool_output}/opal/{sample}.opal_report",
+        done=touch("{bench_dir}/{tool_output}/opal/{sample}.opal_report.done")
+    wildcard_constraints:
+        sample="[^/]+"
+    shell:
+        "pixi run -e opal " \
+        "opal.py -g {params.truth} -o {params.output_opal_dir} {input.biobox} || echo 'expected opal non-zero exit status'; mv {params.output_opal_dir}/results.tsv {output.report} && rm -rf {params.output_opal_dir}"
+  
+rule truth_condensed_to_biobox:
+    input:
+        condensed = "{bench_dir}/truths/{sample}.condensed",
+    output:
+        biobox = "{bench_dir}/truths/{sample}.condensed.biobox"
+    shell:
+        "pixi run -e singlem " \
+        "python3 bin/condensed_profile_to_biobox.py --input-condensed-table {input.condensed} " \
+        "--output-biobox {output.biobox}"
+
+rule tool_condensed_to_biobox:
+    input:
+        profile = "{bench_dir}/output_{tool}/{tool}/{sample}.profile",
+        truth = "{bench_dir}/truths/{sample}.condensed.biobox",
+    output:
+        biobox = "{bench_dir}/output_{tool}/biobox/{sample}.biobox"
+    wildcard_constraints:
+        sample="[^/]+"
+    shell:
+        "pixi run -e singlem " \
+        "python3 bin/condensed_profile_to_biobox.py --input-condensed-table {input.profile} " \
+        "--output-biobox {output.biobox} --template-biobox {input.truth} "
+
+rule download_fastq:
+    output:
+        r1="{bench_dir}/local_reads/{sample}.1.fq.gz",
+        r2="{bench_dir}/local_reads/{sample}.2.fq.gz",
+        done=touch("{bench_dir}/local_reads/{sample}.done")
+    log:
+        "{bench_dir}/local_reads/{sample}.log"
+    threads:
+        1
+    wildcard_constraints:
+        bench_dir="^7_.+"
+    shell:
+        "pixi run -e kingfisher " \
+        "kingfisher get -r {wildcards.sample} " \
+        "--output_directory {wildcards.bench_dir}/local_reads " \
+        "-m ena-ftp prefetch -f fastq.gz " \
+	    "&& mv {wildcards.bench_dir}/local_reads/{wildcards.sample}_1.fastq.gz {output.r1} " \
+        "&& mv {wildcards.bench_dir}/local_reads/{wildcards.sample}_2.fastq.gz {output.r2} " \
+        "&> {log}"
+
 ###############################################################################################
 ###############################################################################################
 ###############################################################################################
@@ -391,9 +462,6 @@ rule singlem_run_pipe:
         8
     log:
         "{bench_dir}/output_singlem/logs/singlem/{sample}.log"
-    wildcard_constraints:
-        tunedir="([^/]+/)?",
-        sample="[^/]+"
     shell:
         "pixi run -e singlem " \
         "singlem pipe --threads {threads} -1 {input.r1} -2 {input.r2} " \
@@ -443,12 +511,66 @@ rule singlem_dev_run_condense:
         done=touch("{bench_dir}/output_singlem_dev/singlem_dev/{sample}.profile.done")
     log:
         "{bench_dir}/output_singlem_dev/logs/singlem_dev/{sample}.log"
-    wildcard_constraints:
-        sample='[^/]+'
     shell:
         "pixi run -e singlem-dev " \
         "singlem condense --input-archive-otu-table {input.report} " \
         "-p {output.profile} --apply-nonneg-matrix-factorisation " \
+        "--output-after-em-otu-table {output.after_em} " \
+        "--metapackage {input.db} &> {log}"
+
+rule singlem_regime3_run_renew:
+    input:
+        report="{bench_dir}/output_singlem/singlem/{sample}.sma",
+        db=singlem_metapackage
+    output:
+        report="{bench_dir}/output_singlem_{regime3}/singlem_{regime3}/{sample}.sma",
+        done=touch("{bench_dir}/output_singlem_{regime3}/singlem_{regime3}/{sample}.sma.done")
+    threads:
+        8
+    log:
+        "{bench_dir}/output_singlem_{regime3}/logs/singlem_{regime3}/{sample}.log"
+    wildcard_constraints:
+        regime3="joint|inject"
+    shell:
+        "pixi run -e singlem-regime3 " \
+        "singlem renew --threads {threads} --input-archive-otu-table {input.report} " \
+        "--archive-otu-table {output.report} --metapackage {input.db} &> {log}"
+
+rule singlem_joint_run_condense:
+    input:
+        report="{bench_dir}/output_singlem_joint/singlem_joint/{sample}.sma",
+        sylph="{bench_dir}/output_sylph/sylph/{sample}.tsv",
+        done="{bench_dir}/output_singlem_joint/singlem_joint/{sample}.sma.done",
+        db=singlem_metapackage
+    output:
+        profile="{bench_dir}/output_singlem_joint/singlem_joint/{sample}.profile",
+        done=touch("{bench_dir}/output_singlem_joint/singlem_joint/{sample}.profile.done")
+    log:
+        "{bench_dir}/output_singlem_joint/logs/singlem_joint/{sample}.log"
+    shell:
+        "pixi run -e singlem-regime3 " \
+        "singlem condense --input-archive-otu-table {input.report} " \
+        "-p {output.profile} --joint " \
+        "--sylph-profile {input.sylph} " \
+        "--output-after-em-otu-table {output.after_em} " \
+        "--metapackage {input.db} &> {log}"
+
+rule singlem_inject_run_condense:
+    input:
+        report="{bench_dir}/output_singlem_inject/singlem_inject/{sample}.sma",
+        sylph="{bench_dir}/output_sylph/sylph/{sample}.tsv",
+        done="{bench_dir}/output_singlem_inject/singlem_inject/{sample}.sma.done",
+        db=singlem_metapackage
+    output:
+        profile="{bench_dir}/output_singlem_inject/singlem_inject/{sample}.profile",
+        done=touch("{bench_dir}/output_singlem_inject/singlem_inject/{sample}.profile.done")
+    log:
+        "{bench_dir}/output_singlem_inject/logs/singlem_inject/{sample}.log"
+    shell:
+        "pixi run -e singlem-regime3 " \
+        "singlem condense --input-archive-otu-table {input.report} " \
+        "-p {output.profile} " \
+        "--sylph-profile {input.sylph} " \
         "--output-after-em-otu-table {output.after_em} " \
         "--metapackage {input.db} &> {log}"
 

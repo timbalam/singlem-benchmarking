@@ -179,7 +179,7 @@ cd-hit = "*"
 fasttree = "*"
 fastalite = "*"
 jinja2 = "*"
-pip = "*"
+pip = "==26.1.1"
 prodigal = "*"
 galah = ">=0.4.0"
 sqlparse = "*"  # Required indirectly (e.g. taxtastic)

@@ -328,24 +328,30 @@ rule gtdbtk_classify_wf:
 # ## bench 9 related
 
 datasets_bench9 = [f"sample{i}" for i in range(4, 5)]
+percent_dominance_bench9 = [50]
 
 rule bench9:
     input:
-        expand("9_related/output_{tool}/opal/{sample}.opal_report",
+        expand("9_related/output_{tool}/opal/dominance{percent_dom}/{sample}.opal_report",
                sample = datasets_bench9,
-               tool = ['singlem', 'sylph', 'singlem_dev', 'singlem_joint', 'singlem_inject'])
+               percent_dom = percent_dominance_bench9,
+               tool = ['singlem',
+                       'sylph',
+                       'singlem_dev',
+                       'singlem_joint', 'singlem_inject'
+                       ])
 
 rule generate_communities_bench9:
     input:
         [f'9_related/truths/dominance{percent_dom}/{sample}.finished'
          for sample in datasets_bench9
-         for percent_dom in [50]],
+         for percent_dom in percent_dominance_bench9],
         [f'9_related/local_reads/dominance{percent_dom}/{sample}.finished'
          for sample in datasets_bench9
-         for percent_dom in [50]],
+         for percent_dom in percent_dominance_bench9],
         [f'9_related/truths/dominance{percent_dom}/{sample}.condensed.biobox'
          for sample in datasets_bench9
-         for percent_dom in [50]],
+         for percent_dom in percent_dominance_bench9],
     output:
         done=touch("9_related/generate_communities.done")
 
@@ -395,8 +401,6 @@ rule opal:
     output:
         report="{bench_dir}/{tool_output}/opal/{sample}.opal_report",
         done=touch("{bench_dir}/{tool_output}/opal/{sample}.opal_report.done")
-    wildcard_constraints:
-        sample="[^/]+"
     shell:
         "pixi run -e opal " \
         "opal.py -g {params.truth} -o {params.output_opal_dir} {input.biobox} || echo 'expected opal non-zero exit status'; mv {params.output_opal_dir}/results.tsv {output.report} && rm -rf {params.output_opal_dir}"
@@ -417,8 +421,6 @@ rule tool_condensed_to_biobox:
         truth = "{bench_dir}/truths/{sample}.condensed.biobox",
     output:
         biobox = "{bench_dir}/output_{tool}/biobox/{sample}.biobox"
-    wildcard_constraints:
-        sample="[^/]+"
     shell:
         "pixi run -e singlem " \
         "python3 bin/condensed_profile_to_biobox.py --input-condensed-table {input.profile} " \
@@ -552,7 +554,6 @@ rule singlem_joint_run_condense:
         "singlem condense --input-archive-otu-table {input.report} " \
         "-p {output.profile} --joint " \
         "--sylph-profile {input.sylph} " \
-        "--output-after-em-otu-table {output.after_em} " \
         "--metapackage {input.db} &> {log}"
 
 rule singlem_inject_run_condense:
@@ -571,7 +572,6 @@ rule singlem_inject_run_condense:
         "singlem condense --input-archive-otu-table {input.report} " \
         "-p {output.profile} " \
         "--sylph-profile {input.sylph} " \
-        "--output-after-em-otu-table {output.after_em} " \
         "--metapackage {input.db} &> {log}"
 
 ###############################################################################################

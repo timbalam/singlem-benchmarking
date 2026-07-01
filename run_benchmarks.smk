@@ -538,10 +538,28 @@ rule singlem_regime3_run_renew:
         "singlem renew --threads {threads} --input-archive-otu-table {input.report} " \
         "--archive-otu-table {output.report} --metapackage {input.db} &> {log}"
 
+rule singlem_nnls_run_condense:
+    input:
+        report="{bench_dir}/output_singlem_nnls/singlem_nnls/{sample}.sma",
+        sylph="{bench_dir}/output_sylph/sylph/{sample}.tax",
+        done="{bench_dir}/output_singlem_nnls/singlem_nnls/{sample}.sma.done",
+        db=singlem_metapackage
+    output:
+        profile="{bench_dir}/output_singlem_nnls/singlem_nnls/{sample}.profile",
+        done=touch("{bench_dir}/output_singlem_nnls/singlem_nnls/{sample}.profile.done")
+    log:
+        "{bench_dir}/output_singlem_nnls/logs/singlem_nnls/{sample}.log"
+    shell:
+        "pixi run -e singlem-regime3 " \
+        "singlem condense --input-archive-otu-table {input.report} " \
+        "-p {output.profile} --nnls " \
+        "--sylph-profile {input.sylph} " \
+        "--metapackage {input.db} &> {log}"
+
 rule singlem_joint_run_condense:
     input:
         report="{bench_dir}/output_singlem_joint/singlem_joint/{sample}.sma",
-        sylph="{bench_dir}/output_sylph/sylph/{sample}.tsv",
+        sylph="{bench_dir}/output_sylph/sylph/{sample}.tax",
         done="{bench_dir}/output_singlem_joint/singlem_joint/{sample}.sma.done",
         db=singlem_metapackage
     output:
@@ -559,7 +577,7 @@ rule singlem_joint_run_condense:
 rule singlem_inject_run_condense:
     input:
         report="{bench_dir}/output_singlem_inject/singlem_inject/{sample}.sma",
-        sylph="{bench_dir}/output_sylph/sylph/{sample}.tsv",
+        sylph="{bench_dir}/output_sylph/sylph/{sample}.tax",
         done="{bench_dir}/output_singlem_inject/singlem_inject/{sample}.sma.done",
         db=singlem_metapackage
     output:
@@ -622,15 +640,42 @@ rule sylph_profile:
 
 rule sylph_report_to_condensed:
     input:
-        report = "{bench_dir}/output_sylph/sylph/{sample}.tsv",
+        report = "{bench_dir}/output_sylph/sylph/{sample}.tsv{eff}",
         gtdb_bac_tax = "bac120_taxonomy_r207.tsv",
         gtdb_ar_tax = "ar53_taxonomy_r207.tsv",
+    wildcard_constraints:
+        eff="(\.eff)?"
     output:
-        profile = "{bench_dir}/output_sylph/sylph/{sample}.profile",
-        done=touch("{bench_dir}/output_sylph/sylph/{sample}.profile.done")
+        profile = "{bench_dir}/output_sylph/sylph/{sample}.profile{eff}",
+        done=touch("{bench_dir}/output_sylph/sylph/{sample}.profile{eff}.done")
     shell:
         "pixi run -e singlem " \
         "python3 bin/sylph_to_condensed.py --sylph-genome {input.report} " \
         "--sample {wildcards.sample} " \
         "--bac-tax {input.gtdb_bac_tax} " \
         "--arc-tax {input.gtdb_ar_tax} > {output.profile}"
+
+rule sylph_profile_eff:
+    input:
+        sp = "{bench_dir}/output_sylph/sylph/{sample}.paired.sylsp",
+        db = sylph_package
+    output:
+        report="{bench_dir}/output_sylph/sylph/{sample}.tsv.eff",
+        done=touch("{bench_dir}/output_sylph/sylph/{sample}.tsv.eff.done")
+    threads: 8
+    resources:
+        mem_mb=32000
+    log:
+        "{bench_dir}/output_sylph/logs/sylph/{sample}.eff.log"
+    shell:
+        "pixi run -e sylph " \
+        "sylph profile {input.db} {input.sp} -t {threads} " \
+        "-o {output.report} 2> {log}"
+
+rule sylph_tax:
+    input:
+        profile = "{bench_dir}/output_sylph/sylph/{sample}.profile.eff"
+    output:
+        tax = "{bench_dir}/output_sylph/sylph/{sample}.tax"
+    shell:
+        "sed '1s/coverage/Eff_cov/' {input.profile} > {output.tax}"

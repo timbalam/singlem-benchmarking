@@ -1,0 +1,5 @@
+module simulate_art:
+    snakefile: simulate_art/simulate_art.smk
+    config: config
+
+use rule * from simulate_art

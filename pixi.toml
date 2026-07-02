@@ -19,6 +19,8 @@ meteor2 = ["meteor2"]
 fastexcel = ["fastexcel"]
 gtdbtk = ["gtdbtk"]
 singlem-regime3 = ["singlem-regime3"]
+taxonomake = ["taxonomake"]
+taxonomake-dev = ["taxonomake", "taxonomake-dev"]
 
 [feature.map2b.dependencies]
 perl="5.*"
@@ -189,3 +191,15 @@ sqlparse = "*"  # Required indirectly (e.g. taxtastic)
 
 [feature.singlem-regime3.pypi-dependencies]
 singlem = {path = "singlem_sylph_condense_regime", editable = true}
+
+[feature.taxonomake.dependencies]
+python = ">=3.9"
+snakemake = "9.*" # Current target, v10 not released yet
+"ruamel.yaml" = ">=0.15.99"
+polars = "*"
+pigz = ">=2.6"
+extern = "*"
+
+[feature.taxonomake-dev.dependencies]
+# Dev/test dependencies only
+pytest = "*"

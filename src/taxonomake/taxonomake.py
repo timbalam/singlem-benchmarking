@@ -29,6 +29,7 @@ __status__ = "Development"
 
 import argparse
 import logging
+import os
 from taxonomake.modules.config import load_config
 from taxonomake.modules.processor import process
 
@@ -37,6 +38,8 @@ if __name__ == '__main__':
     parent_parser.add_argument('--debug', help='output debug information', action="store_true")
     #parent_parser.add_argument('--version', help='output version information and quit',  action='version', version=repeatm.__version__)
     parent_parser.add_argument('--quiet', help='only output errors', action="store_true")
+    parent_parser.add_argument('-o', '--output', help='Output directory', dest='output',
+                               default='./')
 
     parent_parser.add_argument('configfile', argument_default = "community.toml")
 
@@ -52,6 +55,10 @@ if __name__ == '__main__':
     logging.basicConfig(level=loglevel, format='%(asctime)s %(levelname)s: %(message)s',
                         datefmt='%m/%d/%Y %I:%M:%S %p')
 
+    prefix = args.output
+    if not os.path.exists(prefix):
+        os.makedirs(prefix)
+    
     config = load_config(args.configfile)
-    process(config)
+    process(config, prefix)
 

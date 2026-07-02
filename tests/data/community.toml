@@ -1,0 +1,10 @@
+truth = "truth.tsv"
+
+genomes_file = "genomes.tsv"
+
+[samples]
+small = "tmp/small.fa"
+
+[readsim]
+tool = "art"
+read_length = 150

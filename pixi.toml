@@ -200,6 +200,9 @@ polars = "*"
 pigz = ">=2.6"
 extern = "*"
 
+[feature.taxonomake.pypi-dependencies]
+taxonomake = {path = ".", editable = true}
+
 [feature.taxonomake-dev.dependencies]
 # Dev/test dependencies only
 pytest = "*"

@@ -17,5 +17,8 @@ classifiers = [
 ]
 license = "GPL-3.0-or-later"
 
+[project.scripts]
+taxonomake = "taxonomake.taxonomake:main"
+
 [project.urls]
 Homepage = "https://github.com/wwood/singlem-benchmarking"

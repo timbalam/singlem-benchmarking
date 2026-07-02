@@ -30,20 +30,26 @@ __status__ = "Development"
 import argparse
 import logging
 import os
-from taxonomake.modules.config import load_config
-from taxonomake.modules.processor import process
+from taxonomake.modules.community_description import load_community_description
 
-if __name__ == '__main__':
-    parent_parser = argparse.ArgumentParser(add_help=False)
-    parent_parser.add_argument('--debug', help='output debug information', action="store_true")
-    #parent_parser.add_argument('--version', help='output version information and quit',  action='version', version=repeatm.__version__)
-    parent_parser.add_argument('--quiet', help='only output errors', action="store_true")
-    parent_parser.add_argument('-o', '--output', help='Output directory', dest='output',
-                               default='./')
+def main():
+    parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument('--debug', help='output debug information', action="store_true")
+    #parser.add_argument('--version', help='output version information and quit',  action='version', version=repeatm.__version__)
+    parser.add_argument('--quiet', help='only output errors', action="store_true")
+    parser.add_argument('-o', '--output', help='Output directory', dest='output',
+                        default='./')
+    parser.add_argument(
+        '--snakemake-args',
+        help='Additional arguments to supplied to snakemake in the form of a single string '
+             'e.g. "--print-compilation True". \n '
+             'NOTE: Most commands in snakemake -h are valid but some commands may clash with commands \n '
+             'taxonomake directly supplies to snakemake. Please make sure your additional commands don\'t clash.',
+        default='',
+    )
+    parser.add_argument('configfile', default = "community.toml")
 
-    parent_parser.add_argument('configfile', argument_default = "community.toml")
-
-    args = parent_parser.parse_args()
+    args = parser.parse_args()
 
     # Setup logging
     if args.debug:
@@ -59,6 +65,9 @@ if __name__ == '__main__':
     if not os.path.exists(prefix):
         os.makedirs(prefix)
     
-    config = load_config(args.configfile)
-    process(config, prefix)
+    config = load_community_description(args.configfile)
+    config.process(args = args.snakemake_args)
+
+if __name__ == '__main__':
+    main()
 

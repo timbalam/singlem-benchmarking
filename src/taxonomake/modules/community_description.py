@@ -4,35 +4,43 @@ import polars as pl
 import os
 import logging
 import subprocess
+import shutil
+import sys
 from ruamel.yaml import YAML
 
 def load_community_description(file):
-    toml = tomllib.loads(file)
+    with open(file, "rb") as f:
+        toml = tomllib.load(f)
 
-    return CommunityDescription(toml)
+    dir = os.path.dirname(os.path.abspath(file))
+    return CommunityDescription(
+        samples = get_samples(toml, dir),
+        truth = get_truth(toml, dir),
+        annotated_genomes = get_annotated_genomes(toml, dir),
+        readsim_tool = get_readsim_tool(toml, dir)
+    )
+
+def make_absolute(dir, *paths):
+    return os.path.normpath(os.path.join(dir, *paths))
 
 class CommunityDescription:
-    def __init__(self, *, toml):
-        self.samples = get_samples(toml)
-        
-        self.truth = get_truth(toml)
+    def __init__(self, *, samples, truth, annotated_genomes = None,
+                 readsim_tool = None):
+        self.samples = samples
+        self.truth = truth
+        self.annotated_genomes = annotated_genomes
+        self.readsim_tool = readsim_tool
 
-        #optional
-        self.annotated_genomes = get_genomes(toml)
-        
-        self.readsim_tool = get_readsim_tool(toml)
-
-    def process(self, *, prefix, snakemake_args):  
+    def process(self, *, prefix, cores = 8, snakemake_args):  
         output_config = os.path.join(prefix, 'config.yaml')
 
-        conf = self.readsim_tool.config(
-            reads1 = self.reads1,
-            reads2 = self.reads2,
+        conf, workflow = get_config_and_workflow(
+            samples = self.samples,
+            readsim_tool = self.readsim_tool,
             coverage_file = self.truth,
-            genomes_file = self.annotated_genomes,
-            threads = 8
+            genomes_list = self.annotated_genomes,
+            threads = cores
         )
-        workflow = self.readsim_tool.workflow
         
         yaml = YAML()
         yaml.version = (1, 1)
@@ -43,22 +51,25 @@ class CommunityDescription:
         logging.info(f"Configuration file written to {output_config}")
 
         cmd = (
-            "snakemake --snakefile {snakefile} --directory {working_dir} "
+            "{snakemake} --snakefile {snakefile} --directory {prefix} "
             "--rerun-incomplete --keep-going "
             "--configfile {config_file} --nolock "
+            "--cores {cores} "
             "{snakemake_args} "
-            "{target_rule}"
+            "{workflow}"
         ).format(
-            snakefile=get_snakefile(),
-            working_dir=prefix,
-            config_file=output_config,
-            snakemake_args=snakemake_args,
-            target_rule=workflow
+            snakemake = shutil.which("snakemake"),
+            snakefile = get_snakefile(),
+            prefix = prefix,
+            cores = cores,
+            config_file = output_config,
+            snakemake_args = snakemake_args,
+            workflow = workflow
         )
 
         logging.debug(f"Command: {cmd}")
         logging.info("Executing: %s" % cmd)
-        subprocess.Popen(
+        proc = subprocess.Popen(
             cmd,
             shell=True,
             stdout=subprocess.PIPE,
@@ -68,6 +79,22 @@ class CommunityDescription:
             errors="replace",
             bufsize=1
         )
+        
+        proc.wait()
+
+        for line in proc.stdout:
+            sys.stdout.write(line)
+            sys.stdout.flush()
+        
+        for line in proc.stderr:
+            sys.stderr.write(line)
+            sys.stderr.flush()
+        
+        if proc.returncode == 0:
+            logging.info("Finished: %s" % workflow)
+        else:
+            sys.exit(1)
+
 
 def get_snakefile(file="Snakefile"):
     sf = os.path.join(os.path.dirname(os.path.abspath(__file__)), file)
@@ -75,28 +102,56 @@ def get_snakefile(file="Snakefile"):
         sys.exit("Unable to locate the Snakemake workflow file; tried %s" % sf)
     return sf
 
-def get_samples(toml):
-
+def get_samples(toml, dir):
     try:
         conf_samples = toml["samples"]
-        return pl.DataFrame({
-            sample: conf_samples.keys(),
-            path: conf_samples.values()
-        })
     except KeyError:
         raise Exception("'samples' missing")
 
-def get_truth(toml):
+    try:
+        conf_sample_names = conf_samples["names"]
+    except KeyError:
+        raise InvalidCommunityDescription("'samples.names' missing")
+    
+    try:
+        conf_sample_reads1 = [make_absolute(dir, p) for p in conf_samples["reads1"]]
+        conf_sample_reads2 = [make_absolute(dir, p) for p in conf_samples["reads2"]]
+        
+        return PairedSamples(
+            samples = conf_sample_names,
+            reads1 = conf_sample_reads1,
+            reads2 = conf_sample_reads2
+        )
+    except KeyError:
+        raise InvalidCommunityDescription("'samples.reads1' or 'samples.reads2' missing")
+
+class PairedSamples:
+    def __init__(self, *, samples, reads1, reads2):
+        self.samples = samples
+        self.reads1 = reads1
+        self.reads2 = reads2
+    
+    def config_and_workflow(self, *, readsim_tool, **args):
+        return readsim_tool.paired_config_and_workflow(samples = self.samples,
+                                                       reads1 = self.reads1,
+                                                       reads2 = self.reads2,
+                                                       **args)
+
+def get_truth(toml, dir):
     try:
         truth = toml["truth"]
-        return truth
+        return make_absolute(dir, truth)
     except KeyError:
-        raise Exception("'truth' missing")
+        raise InvalidCommunityDescription("'truth' missing")
 
-def get_genomes(toml):
-    toml.get("genomes_file")
+def get_annotated_genomes(toml, dir):
+    try:
+        genomes_file = toml["genomes_file"]
+        return make_absolute(dir, genomes_file)
+    except KeyError:
+        return None
    
-def get_readsim_tool(toml):
+def get_readsim_tool(toml, dir):
     try:
         conf_readsim = toml["readsim"]
     except KeyError:
@@ -105,34 +160,48 @@ def get_readsim_tool(toml):
     try:
         conf_readsim_tool = conf_readsim["tool"]
     except KeyError:
-        raise Exception("'readsim.tool' missing")
+        raise InvalidCommunityDescription("'readsim.tool' missing")
     
     if conf_readsim_tool == "art":
         try:
             conf_readsim_art_bin = conf_readsim["bin"]
         except KeyError:
-            raise Exception("'readsim.bin' missing")
+            raise InvalidCommunityDescription("'readsim.bin' missing")
 
         return ArtSimTool(
-            read_length = toml.get("read_length"),
-            bin = conf_readsim_art_bin
+            read_length = conf_readsim.get("read_length"),
+            bin = make_absolute(dir, conf_readsim_art_bin)
+                if is_path(conf_readsim_art_bin)
+                else shutil.which(conf_readsim_art_bin)
         )
     else:
-        raise Exception(f"Unknown 'readsim.tool' option: {conf_readsim_tool}")
+        raise InvalidCommunityDescription(f"Unknown 'readsim.tool' option: {conf_readsim_tool}")
+
+def is_path(name):
+    return os.path.dirname(name) != ""
+
+def get_config_and_workflow(*, samples, **args):
+    return samples.config_and_workflow(**args)
 
 class ArtSimTool:
-    def __init__(self, *, read_length, binary):
+    def __init__(self, *, read_length, bin):
         self.read_length = read_length
-        self.binary = binary
-        self.workflow = "simulate_art_reads"
+        self.bin = bin
 
-    def config(self, *, reads1, reads2, coverage_file, genomes_file, threads):
-        return {
-            reads1: reads1,
-            reads2: reads2,
-            coverage_file: truth,
-            genomes_file: annotated_genomes,
-            threads: threads,
-            read_length: self.read_length,
-            art_bin: self.binary
+    def paired_config_and_workflow(self, *, samples, reads1, reads2, coverage_file, genomes_list,
+                                   threads):
+        workflow = "simulate_art_paired_reads"
+        config = {
+            "samples": samples,
+            "reads1": reads1,
+            "reads2": reads2,
+            "coverage_file": coverage_file,
+            "genomes_list": genomes_list,
+            "threads": threads,
+            "read_length": self.read_length,
+            "art_bin": self.bin
         }
+        return config, workflow
+
+class InvalidCommunityDescription(Exception):
+    pass

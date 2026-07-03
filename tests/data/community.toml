@@ -1,10 +1,15 @@
+# truth.tsv has columns sample/taxonomy/coverage
 truth = "truth.tsv"
 
+# genomes.tsv has taxonomy/path_to_fna
 genomes_file = "genomes.tsv"
 
 [samples]
-small = "tmp/small.fa"
+names = ["small"]
+reads1 = ["tmp/small_1.fq.gz"]
+reads2 = ["tmp/small_2.fq.gz"]
 
 [readsim]
 tool = "art"
+bin = "art_illumina"
 read_length = 150

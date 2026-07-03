@@ -66,7 +66,7 @@ def main():
         os.makedirs(prefix)
     
     config = load_community_description(args.configfile)
-    config.process(args = args.snakemake_args)
+    config.process(prefix = prefix, snakemake_args = args.snakemake_args)
 
 if __name__ == '__main__':
     main()

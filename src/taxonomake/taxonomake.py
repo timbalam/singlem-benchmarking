@@ -30,6 +30,7 @@ __status__ = "Development"
 import argparse
 import logging
 import os
+import tempfile
 from taxonomake.modules.community_description import load_community_description
 
 def main():
@@ -37,8 +38,8 @@ def main():
     parser.add_argument('--debug', help='output debug information', action="store_true")
     #parser.add_argument('--version', help='output version information and quit',  action='version', version=repeatm.__version__)
     parser.add_argument('--quiet', help='only output errors', action="store_true")
-    parser.add_argument('-o', '--output', help='Output directory', dest='output',
-                        default='./')
+    parser.add_argument('-d', '--directory', help='Directory for intermediate outputs (defaults to a temporary directory)', dest='directory',
+                        default=None)
     parser.add_argument(
         '--snakemake-args',
         help='Additional arguments to supplied to snakemake in the form of a single string '
@@ -61,12 +62,22 @@ def main():
     logging.basicConfig(level=loglevel, format='%(asctime)s %(levelname)s: %(message)s',
                         datefmt='%m/%d/%Y %I:%M:%S %p')
 
-    prefix = args.output
-    if not os.path.exists(prefix):
-        os.makedirs(prefix)
-    
     config = load_community_description(args.configfile)
-    config.process(prefix = prefix, snakemake_args = args.snakemake_args)
+
+    prefix = args.directory
+    if prefix is not None:
+        os.makedirs(prefix, exist_ok = True)
+        def cleanup():
+            pass
+    else:
+        td = tempfile.TemporaryDirectory()
+        prefix = td.name
+        def cleanup():
+            td.cleanup()
+    try:
+        config.process(prefix = prefix, snakemake_args = args.snakemake_args)
+    finally:
+        cleanup()
 
 if __name__ == '__main__':
     main()

@@ -23,7 +23,8 @@ rule simulate_art_paired_reads_sample:
         r2 = "{sample}_2.fq.gz"
     input:
         coverage_file=config["coverage_file"],
-        genomes_list=config["genomes_list"]
+        genomes_list=config["genomes_list"],
+        taxonomy=config["taxonomy"]
     params:
         art_bin=config["art_bin"]
     threads: config["threads"]
@@ -35,6 +36,7 @@ rule simulate_art_paired_reads_sample:
         "--threads {threads} " \
         "--coverage-file {input.coverage_file} " \
         "--genome-list {input.genomes_list} " \
+        "--taxonomy {input.taxonomy} " \
         "--sample {wildcards.sample} " \
         "-1 {output.r1} " \
         "-2 {output.r2} " \

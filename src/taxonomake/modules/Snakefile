@@ -2,4 +2,10 @@ module simulate:
     snakefile: "simulate/simulate.smk"
     config: config
 
+module classify:
+    snakefile: "classify/classify.smk"
+    config: config
+
 use rule * from simulate as *
+
+use rule * from classify as *

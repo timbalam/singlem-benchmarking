@@ -1,8 +1,10 @@
 # truth.tsv has columns sample/taxonomy/coverage
-truth = "truth.tsv"
+truth = "tmp/truth.tsv"
 
-# taxonomy.tsv has otu/taxonomy
-taxonomy = "taxonomy.tsv"
+[gtdbtk]
+release = "207"
+dir = "tmp/genomes.gtdbtk_r207"
+data = "tmp/gtdbtk_r207_v2_data"
 
 # genomes.tsv has otu/path_to_fna
 genomes_list = "genomes.tsv"
@@ -16,3 +18,4 @@ reads2 = ["tmp/small_2.fq.gz"]
 tool = "art"
 bin = "art_illumina"
 read_length = 150
+

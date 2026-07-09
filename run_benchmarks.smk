@@ -327,7 +327,7 @@ rule gtdbtk_classify_wf:
 
 # ## bench 9 related
 
-datasets_bench9 = [f"sample{i}" for i in range(4, 5)]
+datasets_bench9 = [f"sample{i}" for i in range(4, 6)]
 percent_dominance_bench9 = [50]
 
 rule bench9:
@@ -381,6 +381,70 @@ rule generate_community_and_reads_bench9:
         "--gtdb-ar-metadata {input.gtdb_ar_metadata} " \
         "--percent-known 100 " \
         "--percent-dominant {wildcards.percent_dom} " \
+        "--known-genome-list {input.known_genome_list} " \
+        "--novel-genome-gtdbtk-output {input.novel_genomes_gtdbtk_output_directory} " \
+        "--novel-genome-list {input.novel_genome_list} " \
+        "--output-condensed {output.condensed} " \
+        "-1 {output.r1} " \
+        "-2 {output.r2} " \
+        "2> {log}"
+
+# bench 10
+
+datasets_bench10 = [f"sample{i}" for i in range(4, 6)]
+percent_known_bench10 = [0, 10, 50, 70]
+
+rule bench10:
+    input:
+        expand("10_related_and_novel/output_{tool}/opal/known{percent_known}/{sample}.opal_report",
+               sample = datasets_bench10,
+               percent_known = percent_known_bench10,
+               tool = ['singlem',
+                       'sylph',
+                       'singlem_dev',
+                       'singlem_joint', 'singlem_inject'
+                       ])
+
+rule generate_communities_bench10:
+    input:
+        [f'10_related_and_novel/truths/known{percent_known}/{sample}.finished'
+         for sample in datasets_bench10
+         for percent_known in percent_known_bench10],
+        [f'10_related_and_novel/local_reads/known{percent_known}/{sample}.finished'
+         for sample in datasets_bench10
+         for percent_known in percent_known_bench10],
+        [f'10_related_and_novel/truths/known{percent_known}/{sample}.condensed.biobox'
+         for sample in datasets_bench10
+         for percent_known in percent_known_bench10],
+    output:
+        done=touch("10_related_and_novel/generate_communities.done")
+
+rule generate_community_and_reads_bench10:
+    input:
+        gtdb_bac_metadata = 'bac120_metadata_r207.tsv',
+        gtdb_ar_metadata = 'ar53_metadata_r207.tsv',
+        known_genome_list = '1_novel_strains/shadow_genome_paths.csv',
+        novel_genomes_gtdbtk_output_directory = '4_complex_and_novel/gtdbtk_batchfile.random1000.gtdbtk_r207',
+        novel_genome_list = '4_complex_and_novel/gtdbtk_batchfile.random1000.csv',
+    output:
+        r1="10_related_and_novel/local_reads/known{percent_known}/{sample}.1.fq.gz",
+        r2="10_related_and_novel/local_reads/known{percent_known}/{sample}.2.fq.gz",
+        condensed = "10_related_and_novel/truths/known{percent_known}/{sample}.condensed",
+        done = touch("10_related_and_novel/truths/known{percent_known}/{sample}.finished"),
+        done2 = touch("10_related_and_novel/local_reads/known{percent_known}/{sample}.finished"),
+    params:
+        coverage_number = lambda wildcards: wildcards.sample.replace('sample', ''),
+    log: "10_related_and_novel/local_reads/known{percent_known}/{sample}.log"
+    threads: 8
+    shell:
+        "mkdir -p 10_related_and_novel/truths 10_related_and_novel/local_reads && " \
+        "pixi run -e art " \
+        "python3 9_related/generate_community.py --art art_illumina --threads {threads} " \
+        "--coverage-file 10_related_and_novel/coverage_definitions/coverage{params.coverage_number}.tsv " \
+        "--gtdb-bac-metadata {input.gtdb_bac_metadata} " \
+        "--gtdb-ar-metadata {input.gtdb_ar_metadata} " \
+        "--percent-known {wildcards.percent_known} " \
+        "--percent-dominant 50 " \
         "--known-genome-list {input.known_genome_list} " \
         "--novel-genome-gtdbtk-output {input.novel_genomes_gtdbtk_output_directory} " \
         "--novel-genome-list {input.novel_genome_list} " \

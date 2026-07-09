@@ -223,6 +223,11 @@ if __name__ == '__main__':
 # %%
 
     # Streptomyces has 43 known, 13 novel genomes
+    # known_pc | known strep | unknown strep | total strep | total taxa at 50% dom
+    # 0        | 0           | 13            | 13          | 26
+    # 10       | 1           | 13            | 14          | 28
+    # 50       | 13          | 13            | 26          | 52
+    # 70       | 27          | 13            | 40          | 80
     logging.info(f"Choosing {n_new_dom} novel genomes and {n_known_dom} known genomes from genus Streptomyces.")
     logging.info(f"Choosing {n_new_bg} novel genomes and {n_known_bg} known genomes from other lineages.")
     known_info_split = (

@@ -12,18 +12,18 @@ sylph_package = "tool_reference_data/gtdb_database.syldb"
 
 rule bench5:
     input:
-        expand("5_novelty/output_{tool}/opal/{sample}.opal_report",
+        expand("5_small_1novel/output_{tool}/opal/{sample}.opal_report",
                sample = datasets_bench5, tool = ['singlem', 'sylph', 'singlem_dev']),
-        expand("5_novelty/output_{tool}/after_em/{sample}.sma",
+        expand("5_small_1novel/output_{tool}/after_em/{sample}.sma",
                sample = datasets_bench5, tool = ['singlem', 'singlem_dev'])
 
 rule generate_communities_bench5:
     input:
-        [f'5_novelty/truths/{sample}.finished' for sample in datasets_bench5],
-        [f'5_novelty/local_reads/{sample}.finished' for sample in datasets_bench5],
-        [f'5_novelty/truths/{sample}.condensed.biobox' for sample in datasets_bench5],
+        [f'5_small_1novel/truths/{sample}.finished' for sample in datasets_bench5],
+        [f'5_small_1novel/local_reads/{sample}.finished' for sample in datasets_bench5],
+        [f'5_small_1novel/truths/{sample}.condensed.biobox' for sample in datasets_bench5],
     output:
-        done=touch("5_novelty/generate_communities.done")
+        done=touch("5_small_1novel/generate_communities.done")
 
 rule generate_community_and_reads_bench5:
     input:
@@ -33,29 +33,29 @@ rule generate_community_and_reads_bench5:
         novel_genomes_gtdbtk_output_directory = '4_complex_and_novel/gtdbtk_batchfile.random1000.gtdbtk_r207',
         novel_genome_list = '4_complex_and_novel/gtdbtk_batchfile.random1000.csv',
     output:
-        r1="5_novelty/local_reads/{sample}.1.fq.gz",
-        r2="5_novelty/local_reads/{sample}.2.fq.gz",
-        condensed = "5_novelty/truths/{sample}.condensed",
-        #genomewise = "5_novelty/truths/{sample}.genomewise.csv",
-        done = touch("5_novelty/truths/{sample}.finished"),
-        done2 = touch("5_novelty/local_reads/{sample}.finished"),
+        r1="5_small_1novel/local_reads/{sample}.1.fq.gz",
+        r2="5_small_1novel/local_reads/{sample}.2.fq.gz",
+        condensed = "5_small_1novel/truths/{sample}.condensed",
+        #genomewise = "5_small_1novel/truths/{sample}.genomewise.csv",
+        done = touch("5_small_1novel/truths/{sample}.finished"),
+        done2 = touch("5_small_1novel/local_reads/{sample}.finished"),
     params:
         coverage_number = lambda wildcards: wildcards.sample.replace('marine', ''),
-    log: "5_novelty/local_reads/{sample}.log"
+    log: "5_small_1novel/local_reads/{sample}.log"
     threads: 8
     shell:
-        "mkdir -p 5_novelty/truths 5_novelty/local_reads && " \
+        "mkdir -p 5_small_1novel/truths 5_small_1novel/local_reads && " \
         "pixi run -e art " \
-        "python3 5_novelty/generate_community.py --art art_illumina --threads {threads} " \
-        "--coverage-file 5_novelty/coverage_definitions/coverage{params.coverage_number}.tsv " \
+        "python3 5_small_1novel/generate_community.py --art art_illumina --threads {threads} " \
+        "--coverage-file 5_small_1novel/coverage_definitions/coverage{params.coverage_number}.tsv " \
         "--gtdb-bac-metadata {input.gtdb_bac_metadata} " \
         "--gtdb-ar-metadata {input.gtdb_ar_metadata} " \
         "--known-genome-list {input.known_genome_list} " \
         "--novel-genome-gtdbtk-output {input.novel_genomes_gtdbtk_output_directory} " \
         "--novel-genome-list {input.novel_genome_list} " \
         "--output-condensed {output.condensed} " \
-        "-1 5_novelty/local_reads/{wildcards.sample}.1.fq.gz " \
-        "-2 5_novelty/local_reads/{wildcards.sample}.2.fq.gz " \
+        "-1 5_small_1novel/local_reads/{wildcards.sample}.1.fq.gz " \
+        "-2 5_small_1novel/local_reads/{wildcards.sample}.2.fq.gz " \
         "2> {log}"
 
 # ## bench 7
@@ -338,7 +338,8 @@ rule bench9:
                tool = ['singlem',
                        'sylph',
                        'singlem_dev',
-                       'singlem_joint', 'singlem_inject'
+                       'singlem_joint', 'singlem_inject',
+                       'singlem_nnls', 'singlem_truecov'
                        ])
 
 rule generate_communities_bench9:
@@ -392,18 +393,20 @@ rule generate_community_and_reads_bench9:
 # bench 10
 
 datasets_bench10 = [f"sample{i}" for i in range(4, 6)]
-percent_known_bench10 = [0, 10, 50, 70]
+percent_known_bench10 = [0, 10, 50, 70, 100]
+tools_bench10 = ['singlem', 'sylph', 'singlem_dev', 'singlem_joint', 'singlem_inject',
+                 'singlem_nnls', 'singlem_truecov']
 
 rule bench10:
     input:
         expand("10_related_and_novel/output_{tool}/opal/known{percent_known}/{sample}.opal_report",
                sample = datasets_bench10,
-               percent_known = percent_known_bench10,
-               tool = ['singlem',
-                       'sylph',
-                       'singlem_dev',
-                       'singlem_joint', 'singlem_inject'
-                       ])
+               percent_known = percent_known_bench10[1:],
+               tool = tools_bench10),
+        expand("10_related_and_novel/output_{tool}/opal/known{percent_known}/{sample}.opal_report",
+               sample = datasets_bench10,
+               percent_known = percent_known_bench10[:1],
+               tool = tools_bench10[:1]+tools_bench10[2:]), # skip sylph for known0
 
 rule generate_communities_bench10:
     input:
@@ -584,17 +587,17 @@ rule singlem_dev_run_condense:
         "--output-after-em-otu-table {output.after_em} " \
         "--metapackage {input.db} &> {log}"
 
-rule singlem_regime3_run_renew:
+rule singlem_joint_run_renew:
     input:
         report="{bench_dir}/output_singlem/singlem/{sample}.sma",
         db=singlem_metapackage
     output:
-        report="{bench_dir}/output_singlem_{regime3}/singlem_{regime3}/{sample}.sma",
-        done=touch("{bench_dir}/output_singlem_{regime3}/singlem_{regime3}/{sample}.sma.done")
+        report="{bench_dir}/output_singlem_joint/singlem_joint/{sample}.sma",
+        done=touch("{bench_dir}/output_singlem_joint/singlem_joint/{sample}.sma.done")
     threads:
         8
     log:
-        "{bench_dir}/output_singlem_{regime3}/logs/singlem_{regime3}/{sample}.log"
+        "{bench_dir}/output_singlem_joint/logs/singlem_joint/{sample}.log"
     wildcard_constraints:
         regime3="joint|inject"
     shell:
@@ -602,28 +605,10 @@ rule singlem_regime3_run_renew:
         "singlem renew --threads {threads} --input-archive-otu-table {input.report} " \
         "--archive-otu-table {output.report} --metapackage {input.db} &> {log}"
 
-rule singlem_nnls_run_condense:
-    input:
-        report="{bench_dir}/output_singlem_nnls/singlem_nnls/{sample}.sma",
-        sylph="{bench_dir}/output_sylph/sylph/{sample}.tax",
-        done="{bench_dir}/output_singlem_nnls/singlem_nnls/{sample}.sma.done",
-        db=singlem_metapackage
-    output:
-        profile="{bench_dir}/output_singlem_nnls/singlem_nnls/{sample}.profile",
-        done=touch("{bench_dir}/output_singlem_nnls/singlem_nnls/{sample}.profile.done")
-    log:
-        "{bench_dir}/output_singlem_nnls/logs/singlem_nnls/{sample}.log"
-    shell:
-        "pixi run -e singlem-regime3 " \
-        "singlem condense --input-archive-otu-table {input.report} " \
-        "-p {output.profile} --nnls " \
-        "--sylph-profile {input.sylph} " \
-        "--metapackage {input.db} &> {log}"
-
 rule singlem_joint_run_condense:
     input:
         report="{bench_dir}/output_singlem_joint/singlem_joint/{sample}.sma",
-        sylph="{bench_dir}/output_sylph/sylph/{sample}.tax",
+        sylph="{bench_dir}/output_sylph/sylph/{sample}.tax.eff",
         done="{bench_dir}/output_singlem_joint/singlem_joint/{sample}.sma.done",
         db=singlem_metapackage
     output:
@@ -638,11 +623,53 @@ rule singlem_joint_run_condense:
         "--sylph-profile {input.sylph} " \
         "--metapackage {input.db} &> {log}"
 
+rule singlem_nnls_run_condense:
+    input:
+        report="{bench_dir}/output_singlem_joint/singlem_joint/{sample}.sma",
+        sylph="{bench_dir}/output_sylph/sylph/{sample}.tax.eff",
+        done="{bench_dir}/output_singlem_joint/singlem_joint/{sample}.sma.done",
+        db=singlem_metapackage
+    output:
+        profile="{bench_dir}/output_singlem_nnls/singlem_nnls/{sample}.profile",
+        done=touch("{bench_dir}/output_singlem_nnls/singlem_nnls/{sample}.profile.done")
+    log:
+        "{bench_dir}/output_singlem_nnls/logs/singlem_nnls/{sample}.log"
+    shell:
+        "pixi run -e singlem-regime3 " \
+        "singlem condense --input-archive-otu-table {input.report} " \
+        "-p {output.profile} --joint " \
+        "--sylph-profile {input.sylph} " \
+        "--joint-sylph-weight 0 --joint-absence-weight 0 " \
+        "--metapackage {input.db} &> {log}"
+
+rule test_bench9:
+    input:
+        "9_related/output_sylph/sylph/dominance50/sample5.tax"
+
+rule singlem_truecov_run_condense:
+    input:
+        report="{bench_dir}/output_singlem_joint/singlem_joint/{sample}.sma",
+        sylph="{bench_dir}/output_sylph/sylph/{sample}.tax",
+        done="{bench_dir}/output_singlem_joint/singlem_joint/{sample}.sma.done",
+        db=singlem_metapackage
+    output:
+        profile="{bench_dir}/output_singlem_truecov/singlem_truecov/{sample}.profile",
+        done=touch("{bench_dir}/output_singlem_truecov/singlem_truecov/{sample}.profile.done")
+    log:
+        "{bench_dir}/output_singlem_truecov/logs/singlem_truecov/{sample}.log"
+    shell:
+        "pixi run -e singlem-regime3 " \
+        "singlem condense --input-archive-otu-table {input.report} " \
+        "-p {output.profile} --joint " \
+        "--sylph-profile {input.sylph} " \
+        "--alpha 1.0 " \
+        "--metapackage {input.db} &> {log}"
+
 rule singlem_inject_run_condense:
     input:
-        report="{bench_dir}/output_singlem_inject/singlem_inject/{sample}.sma",
-        sylph="{bench_dir}/output_sylph/sylph/{sample}.tax",
-        done="{bench_dir}/output_singlem_inject/singlem_inject/{sample}.sma.done",
+        report="{bench_dir}/output_singlem_joint/singlem_joint/{sample}.sma",
+        sylph="{bench_dir}/output_sylph/sylph/{sample}.tax.eff",
+        done="{bench_dir}/output_singlem_joint/singlem_joint/{sample}.sma.done",
         db=singlem_metapackage
     output:
         profile="{bench_dir}/output_singlem_inject/singlem_inject/{sample}.profile",
@@ -738,8 +765,10 @@ rule sylph_profile_eff:
 
 rule sylph_tax:
     input:
-        profile = "{bench_dir}/output_sylph/sylph/{sample}.profile.eff"
+        profile = "{bench_dir}/output_sylph/sylph/{sample}.profile{eff}"
     output:
-        tax = "{bench_dir}/output_sylph/sylph/{sample}.tax"
+        tax = "{bench_dir}/output_sylph/sylph/{sample}.tax{eff}"
+    wildcard_constraints:
+        eff="(\.eff)?"
     shell:
         "sed '1s/coverage/Eff_cov/' {input.profile} > {output.tax}"

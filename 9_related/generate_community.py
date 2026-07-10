@@ -255,7 +255,7 @@ if __name__ == '__main__':
     
     # Add coverage column
     chosen_df = chosen_df.with_columns(
-        pl.lit(coverages['coverage']).alias('coverage')
+        pl.lit(coverages['coverage']).shuffle().alias('coverage')
     )
     
 

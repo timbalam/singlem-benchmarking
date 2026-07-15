@@ -1,9 +1,7 @@
-SIM_SCRIPTS_DIR = os.path.join(os.path.dirname(os.path.abspath(workflow.snakefile)), 'scripts')
+import os.path
 
-rule simulate_art_paired_reads:
-    input:
-        config["reads1"],
-        config["reads2"]
+SIM_SCRIPTS_DIR = os.path.join(os.path.dirname(os.path.abspath(workflow.snakefile)), 'scripts')
+MANIFESTS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(workflow.snakefile))), 'manifests')
 
 rule simulate_art_paired_reads_rename:
     input:
@@ -30,7 +28,7 @@ rule simulate_art_paired_reads_sample:
     threads: config["threads"]
     log: "logs/{sample}.log"
     shell:
-        "pixi run -e art " \
+        f"pixi run --manifest-path {MANIFESTS_DIR}/art.toml " \
         f"python3 {SIM_SCRIPTS_DIR}/simulate_art.py " \
         "--art {params.art_bin} " \
         "--threads {threads} " \

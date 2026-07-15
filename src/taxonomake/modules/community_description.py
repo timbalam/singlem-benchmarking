@@ -38,7 +38,7 @@ class CommunityDescription:
     def process(self, *, prefix, cores = 8, snakemake_args):  
         output_config = os.path.join(prefix, 'config.yaml')
 
-        conf, workflow = get_config_and_workflow(
+        conf = get_config(
             samples = self.samples,
             readsim_tool = self.readsim_tool,
             coverage_file = self.truth,
@@ -64,7 +64,6 @@ class CommunityDescription:
             "--configfile {config_file} --nolock "
             "--cores {cores} "
             "{snakemake_args} "
-            "{workflow}"
         ).format(
             snakemake = shutil.which("snakemake"),
             snakefile = get_snakefile(),
@@ -139,11 +138,11 @@ class PairedSamples:
         self.reads1 = reads1
         self.reads2 = reads2
     
-    def config_and_workflow(self, *, readsim_tool, **args):
-        return readsim_tool.paired_config_and_workflow(samples = self.samples,
-                                                       reads1 = self.reads1,
-                                                       reads2 = self.reads2,
-                                                       **args)
+    def config(self, *, readsim_tool, **args):
+        return readsim_tool.paired_config(samples = self.samples,
+                                          reads1 = self.reads1,
+                                          reads2 = self.reads2,
+                                          **args)
 
 def get_truth(toml, dir):
     try:
@@ -226,20 +225,18 @@ def get_readsim_tool(toml, dir):
 def is_path(name):
     return os.path.dirname(name) != ""
 
-def get_config_and_workflow(*, samples, **args):
-    return samples.config_and_workflow(**args)
+def get_config(*, samples, **args):
+    return samples.config(**args)
 
 class ArtSimTool:
     def __init__(self, *, read_length, bin):
         self.read_length = read_length
         self.bin = bin
 
-    def paired_config_and_workflow(self, *, samples, reads1, reads2,
-                                   coverage_file, genomes_list,
-                                   taxonomy, gtdbtk_data, gtdbtk_dir,
-                                   gtdbtk_release,
-                                   threads):
-        workflow = "simulate_art_paired_reads"
+    def paired_config(self, *, samples, reads1, reads2,
+                      coverage_file, genomes_list,
+                      taxonomy, gtdbtk_data, gtdbtk_dir,
+                      gtdbtk_release, threads):
         config = {
             "samples": samples,
             "reads1": reads1,
@@ -254,7 +251,7 @@ class ArtSimTool:
             "gtdbtk_dir": gtdbtk_dir,
             "gtdbtk_release": gtdbtk_release
         }
-        return config, workflow
+        return config
 
 class InvalidCommunityDescription(Exception):
     pass

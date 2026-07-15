@@ -9,3 +9,8 @@ module classify:
 use rule * from simulate as *
 
 use rule * from classify as *
+
+rule all:
+    input:
+        config["reads1"],
+        config["reads2"]

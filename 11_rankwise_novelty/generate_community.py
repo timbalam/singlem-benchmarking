@@ -56,8 +56,7 @@ if __name__ == '__main__':
     # (env)cl5n007:20221031:~/m/msingle/mess/115_camisim_ish_benchmarking$ \ls -f ~/m/msingle/sam/1_gtdb_r207_smpkg/20220513/shadow_GTDB/genomes |grep GC |sed 's=\(.*\).fna=\1\t/work/microbiome/msingle/sam/1_gtdb_r207_smpkg/20220513/shadow_GTDB/genomes\1.fna=' >shadow_genome_paths.csv
     parent_parser.add_argument('--novel-genome-gtdbtk-output', required=True, help='Path to where new genomes have been run through gtdbtk')
     parent_parser.add_argument('--novel-genome-list', required=True, help='Path to genome list')
-    parent_parser.add_argument('--percent-known', required=True, help='Percent of known closely related genomes to use')
-    parent_parser.add_argument('--percent-dominant', required=True, help='Percent of species from the dominant genus')
+    parent_parser.add_argument('--percent-known-at', required=True, nargs=7, help='Relative weight of genomes known at each rank in ascending order (sgfocpd)')
     parent_parser.add_argument('--gtdb-bac-metadata', required=True, help='Path to GTDB metadata file, for genome length')
     parent_parser.add_argument('--gtdb-ar-metadata', required=True, help='Path to GTDB metadata file, for genome length')
     parent_parser.add_argument('--output-condensed', required=True, help='Path to output file in singlem condensed format')
@@ -211,62 +210,47 @@ if __name__ == '__main__':
 
     logging.info(f"Read {len(novel_info)} novel genomes.")
 
-    fraction_known = float(args.percent_known) / 100
-    n_new = round(len(coverages) * (1 - fraction_known))
-    n_known = len(coverages) - n_new
-    fraction_dominant = float(args.percent_dominant) / 100
-    n_new_dom = round(n_new * fraction_dominant)
-    n_new_bg = n_new - n_new_dom
-    n_known_dom = round(n_known * fraction_dominant)
-    n_known_bg = n_known - n_known_dom
+    #ranks = "rdpcofgs"
+    sum_weights = sum(float(f) for f in args.percent_known_at)
+    n_rank = (
+        pl.DataFrame({
+            known_at = range(1, 7),
+            n_new = (round(float(f) * len(coverages) / sum_weights) for f in args.percent_known_at[1:])
+        })
+        .join(
+            novel_info
+            .group_by('known_at')
+            .len("max_new"),
+            on = "known_at",
+            how = "outer",
+            validate = "1:1"
+        )
+    )
+    not_enough = n_rank.filter(pl.col("n_new") > pl.col("max_new"))
+    if not_enough.height() > 0:
+        ranks_not_enough = ", ".join(not_enough["ranks"])
+        num_needed = ", ".join(not_enough["n_new"])
+        num_not_enough = ", ".join(not_enough["max_new"])
+        raise Exception("Needed {num_needed} novel genomes at ranks {ranks_not_enough} but there are only {num_not_enough}.")
+
+    n_known = len(coverages) - n_rank["n_new"].sum()
 
 # %%
-
-    # Streptomyces has 43 known, 13 novel genomes
-    # known_pc | known strep | unknown strep | total strep | total taxa at 50% dom
-    # 0        | 0           | 13            | 13          | 26
-    # 10       | 1           | 13            | 14          | 28
-    # 50       | 13          | 13            | 26          | 52
-    # 70       | 27          | 13            | 40          | 80
-    logging.info(f"Choosing {n_new_dom} novel genomes and {n_known_dom} known genomes from genus Streptomyces.")
-    logging.info(f"Choosing {n_new_bg} novel genomes and {n_known_bg} known genomes from other lineages.")
-    known_info_split = (
-        known_info
-        .with_columns(pl.col("taxonomy").str.contains("g__Streptomyces").alias("dominant"))
-        .partition_by("dominant", as_dict = True)
+    logging.info(f"Choosing {n_rank["n_new"].sum()} novel genomes and {n_known} known genomes.")
+    novel_info_new = novel_info.join(
+        n_rank.select("known_at", "n_new"),
+        on = "known_at",
+        how = "left",
+        validate = "m:1"
     )
-    known_info_dom = known_info_split[(True,)].drop("dominant")
-    known_info_bg = known_info_split[(False,)].drop("dominant")
-    novel_info_split = (
-        novel_info
-        .drop("known_at")
-        .with_columns(pl.col("taxonomy").str.contains("g__Streptomyces").alias("dominant"))
-        .partition_by("dominant", as_dict = True)
-    )
-    novel_info_dom = novel_info_split[(True,)].drop("dominant")
-    novel_info_bg = novel_info_split[(False,)].drop("dominant")
-
-    # ensure that no clade (truncated to genus) has more genomes than dominant genus
-    info_bg_sub = (
-        pl.concat([
-            known_info_bg.with_columns(known = True),
-            novel_info_bg.with_columns(known = False)
-        ])
-        .with_columns(
-            shuff_loc = pl.int_range(pl.len()).shuffle().over(
-                pl.col("taxonomy").str.replace(";s__[^;]+", "").alias("trunc")
-            )
-        )
-        .filter(pl.col("shuff_loc") < n_known_dom + n_novel_dom)
-    )
-    known_info_bg_sub = info_bg_sub.filter(pl.col("known")).drop("known", "shuff_loc", "trunc")
-    novel_info_bg_sub = info_bg_sub.filter(~pl.col("known")).drop("known", "shuff_loc", "trunc")
-    
     chosen_df = pl.concat([
-        known_info_dom.sample(n_known_dom),
-        known_info_bg.sample(n_known_bg),
-        novel_info_dom.sample(n_new_dom),
-        novel_info_bg.sample(n_new_bg)
+        known_info.sample(n_known),
+        novel_info_new
+        .with_columns(
+            shuff_loc = pl.int_range(pl.len()).shuffle().over(pl.col("known_at"))
+        )
+        .filter(pl.col("shuff_loc") < pl.col("n_new"))
+        .drop("shuff_loc", "known_at", "n_new")
     ])
     
     # Add coverage column

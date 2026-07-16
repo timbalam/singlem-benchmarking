@@ -1,5 +1,5 @@
 import argparse
-import os
+import shutil
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(add_help=False)
@@ -8,4 +8,4 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     for i, o in zip(args.i, args.o):
-        os.rename(i, o)
+        shutil.move(i, o)

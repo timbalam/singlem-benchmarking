@@ -1,12 +1,17 @@
 import os.path
 
 SIM_SCRIPTS_DIR = os.path.join(os.path.dirname(os.path.abspath(workflow.snakefile)), 'scripts')
-MANIFESTS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(workflow.snakefile))), 'manifests')
+MANIFESTS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(workflow.snakefile)))), 'manifests')
+
+def make_absolute(*paths):
+    return os.path.normpath(os.path.join(config["configfiledir"], *paths))
+
+gtdbtk_dir = make_absolute(config["gtdbtk"]["dir"])
 
 # release 207
 rule download_gtdbtk_r207_data:
     output:
-        config["gtdbtk_dir"] + '/gtdbtk_r207_v2_data.tar.gz'
+        make_absolute(config["gtdbtk"]["dir"], '/gtdbtk_r207_v2_data.tar.gz')
     log:
         "logs/gtdbtk_r207_data-download.log"
     shell:
@@ -37,7 +42,7 @@ rule gtdbtk_r207_identify:
         "logs/gtdbtk_r207_identify.log"
     shell:
         "GTDBTK_DATA_PATH={input.data_path} " \
-        f"pixi run --manifest-path {MANIFESTS_DIR}/gtdbtk_r207.toml " \
+        f"pixi run --manifest-path {MANIFEST_PATH} -e gtdbtk-r207 " \
         "gtdbtk identify --batchfile {input.genomes_list} " \
         "--out_dir {output.output_dir} " \
         "--extension .fasta " \
@@ -53,7 +58,7 @@ rule gtdbtk_r207_align:
         "logs/gtdbtk_r207_align.log"
     shell:
         "GTDBTK_DATA_PATH={input.data_path} " \
-        f"pixi run --manifest-path {MANIFESTS_DIR}/gtdbtk_r207.toml " \
+        f"pixi run --manifest-path {MANIFEST_PATH} -e gtdbtk-r207 " \
         "gtdbtk align --identify_dir {input.id} " \
         "--out_dir {output.output_dir} " \
         "&> {log}"
@@ -72,7 +77,7 @@ rule gtdbtk_r207_classify:
         mem_mb=64000
     shell:
         "GTDBTK_DATA_PATH={input.data_path} " \
-        f"pixi run --manifest-path {MANIFESTS_DIR}/gtdbtk_r207.toml " \
+        f"pixi run --manifest-path {MANIFEST_PATH} -e gtdbtk-r207 " \
         "gtdbtk classify --batchfile {input.genomes_file} " \
         "--align_dir {input.al} " \
         "--extension .fasta " \

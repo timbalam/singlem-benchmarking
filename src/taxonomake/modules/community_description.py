@@ -7,100 +7,54 @@ import subprocess
 import shutil
 import sys
 from ruamel.yaml import YAML
+import shlex
 
-def load_community_description(file):
-    with open(file, "rb") as f:
-        toml = tomllib.load(f)
+def process_community_description(file, *, prefix, cores = 8, snakemake_args):
+    cmd = [
+        shutil.which("snakemake"),
+        "--snakefile",
+        get_snakefile(),
+        "--directory",
+        f"{prefix}",
+        "--rerun-incomplete",
+        "--keep-going",
+        "--configfile",
+        f"{file}", 
+        "--nolock",
+        "--cores,"
+        f"{cores}",
+        "--config",
+        f"configfilepath={file}",
+        f"{snakemake_args} "
+    ]
 
-    dir = os.path.dirname(os.path.abspath(file))
-    return CommunityDescription(
-        samples = get_samples(toml, dir),
-        truth = get_truth(toml, dir),
-        taxonomy = get_taxonomy(toml, dir),
-        genomes_list = get_genomes_list(toml, dir),
-        readsim_tool = get_readsim_tool(toml, dir),
-        gtdbtk = get_gtdbtk(toml, dir)
+    logging.debug(f"Command: {shlex.join(cmd)}")
+    logging.info("Executing: %s" % shlex.join(cmd))
+    proc = subprocess.Popen(
+        cmd,
+        shell=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        bufsize=1
     )
+    
+    proc.wait()
 
-def make_absolute(dir, *paths):
-    return os.path.normpath(os.path.join(dir, *paths))
-
-class CommunityDescription:
-    def __init__(self, *, samples, truth, taxonomy = None, genomes_list = None,
-                 readsim_tool = None, gtdbtk = None):
-        self.samples = samples
-        self.truth = truth
-        self.taxonomy = taxonomy
-        self.genomes_list = genomes_list
-        self.readsim_tool = readsim_tool
-        self.gtdbtk = gtdbtk
-
-    def process(self, *, prefix, cores = 8, snakemake_args):  
-        output_config = os.path.join(prefix, 'config.yaml')
-
-        conf = get_config(
-            samples = self.samples,
-            readsim_tool = self.readsim_tool,
-            coverage_file = self.truth,
-            taxonomy = self.taxonomy,
-            genomes_list = self.genomes_list,
-            gtdbtk_data = self.gtdbtk_data if self.gtdbk is not None,
-            gtdbtk_dir = self.gtdbtk_dir if self.gtdbk is not None,
-            gtdbtk_release = self.gtdbtk_release if self.gtdbk is not None,
-            threads = cores
-        )
-        
-        yaml = YAML()
-        yaml.version = (1, 1)
-        yaml.default_flow_style = False    
-
-        with open(output_config, "w") as f:
-            yaml.dump(conf, f)
-        logging.info(f"Configuration file written to {output_config}")
-
-        cmd = (
-            "{snakemake} --snakefile {snakefile} --directory {prefix} "
-            "--rerun-incomplete --keep-going "
-            "--configfile {config_file} --nolock "
-            "--cores {cores} "
-            "{snakemake_args} "
-        ).format(
-            snakemake = shutil.which("snakemake"),
-            snakefile = get_snakefile(),
-            prefix = prefix,
-            cores = cores,
-            config_file = output_config,
-            snakemake_args = snakemake_args,
-            workflow = workflow
-        )
-
-        logging.debug(f"Command: {cmd}")
-        logging.info("Executing: %s" % cmd)
-        proc = subprocess.Popen(
-            cmd,
-            shell=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            bufsize=1
-        )
-        
-        proc.wait()
-
-        for line in proc.stdout:
-            sys.stdout.write(line)
-            sys.stdout.flush()
-        
-        for line in proc.stderr:
-            sys.stderr.write(line)
-            sys.stderr.flush()
-        
-        if proc.returncode == 0:
-            logging.info("Finished: %s" % workflow)
-        else:
-            sys.exit(1)
+    for line in proc.stdout:
+        sys.stdout.write(line)
+        sys.stdout.flush()
+    
+    for line in proc.stderr:
+        sys.stderr.write(line)
+        sys.stderr.flush()
+    
+    if proc.returncode == 0:
+        logging.info("Finished")
+    else:
+        sys.exit(1)
 
 
 def get_snakefile(file="Snakefile"):
@@ -184,7 +138,7 @@ def get_gtdbtk(toml, dir):
     except KeyError:
         conf_gtdbtk_data = None
     
-    return GtdbTKAssignTaxonomy(
+    return GtdbTkAssignTaxonomy(
         dir = conf_gtdbtk_dir,
         release = conf_gtdbtk_release,
         data = conf_gtdbtk_data

@@ -2,15 +2,16 @@ module simulate:
     snakefile: "simulate/simulate.smk"
     config: config
 
-module classify:
-    snakefile: "classify/classify.smk"
-    config: config
+if "gtdbtk" in config:
+    module classify:
+        snakefile: "classify/classify.smk"
+        config: config
 
-use rule * from simulate as *
+    use rule * from classify
 
-use rule * from classify as *
+use rule * from simulate
 
 rule all:
     input:
-        config["reads1"],
-        config["reads2"]
+        config["samples"]["reads1"],
+        config["samples"]["reads2"]

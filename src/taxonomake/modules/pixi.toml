@@ -2,10 +2,19 @@
 channels = ["conda-forge", "bioconda"]
 platforms = ["linux-64"]
 
-[dependencies]
+[environments]
+art = ["art"]
+gtdbtk-r207 = ["gtdbtk-r207"]
+
+[feature.art.dependencies]
 python = ">=3.10,<3.14"
 art = "*"
 pandas = "*"
 extern = "*"
 polars = "*"
 pyarrow = "*"
+
+[feature.gtdbtk-r207.dependencies]
+gtdbtk = "==2.1.0"
+numpy = "<=1.20"
+

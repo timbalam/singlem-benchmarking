@@ -1,6 +1,3 @@
 [submodule "singlem"]
 	path = singlem
 	url = https://github.com/timbalam/singlem.git
-[submodule "singlem_sylph_condense_regime"]
-	path = singlem_sylph_condense_regime
-	url = https://github.com/wwood/singlem.git

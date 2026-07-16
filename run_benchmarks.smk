@@ -390,7 +390,7 @@ rule generate_community_and_reads_bench9:
         "-2 {output.r2} " \
         "2> {log}"
 
-# bench 10
+# ## bench 10 related and novel
 
 datasets_bench10 = [f"sample{i}" for i in range(4, 6)]
 percent_dominance_bench10 = [10, 50]
@@ -420,12 +420,15 @@ rule generate_communities_bench10:
     input:
         [f'10_related_and_novel/truths/known{percent_known}/dominance{percent_dom}/{sample}.finished'
          for sample in datasets_bench10
+         for percent_dom in percent_dominance_bench10
          for percent_known in percent_known_bench10],
         [f'10_related_and_novel/local_reads/known{percent_known}/dominance{percent_dom}/{sample}.finished'
          for sample in datasets_bench10
+         for percent_dom in percent_dominance_bench10
          for percent_known in percent_known_bench10],
         [f'10_related_and_novel/truths/known{percent_known}/dominance{percent_dom}/{sample}.condensed.biobox'
          for sample in datasets_bench10
+         for percent_dom in percent_dominance_bench10
          for percent_known in percent_known_bench10],
     output:
         done=touch("10_related_and_novel/generate_communities.done")
@@ -450,7 +453,7 @@ rule generate_community_and_reads_bench10:
     shell:
         "mkdir -p 10_related_and_novel/truths 10_related_and_novel/local_reads && " \
         "pixi run -e art " \
-        "python3 11_rankwise_novelty/generate_community.py --art art_illumina --threads {threads} " \
+        "python3 9_related/generate_community.py --art art_illumina --threads {threads} " \
         "--coverage-file 10_related_and_novel/coverage_definitions/coverage{params.coverage_number}.tsv " \
         "--gtdb-bac-metadata {input.gtdb_bac_metadata} " \
         "--gtdb-ar-metadata {input.gtdb_ar_metadata} " \
@@ -464,6 +467,38 @@ rule generate_community_and_reads_bench10:
         "-2 {output.r2} " \
         "2> {log}"
 
+# ## bench 11 rankwise novelty
+
+datasets_bench11 = [f"sample{i}" for i in range(4, 6)]
+skew_bench11 = ["low_skew", "high_skew"]
+
+rule bench11:
+    input:
+        expand("11_rankwise_novelty/output_{tool}/opal/{skew}/{sample}.opal_report",
+               sample = datasets_bench11,
+               skew = skew_bench11,
+               tool = tools_bench10)
+
+rule generate_communities_bench11:
+    input:
+        [f'11_rankwise_novelty/truths/{skew}/{sample}.finished'
+         for skew in skew_bench11
+         for sample in datasets_bench11],
+        [f'11_rankwise_novelty/local_reads/{skew}/{sample}.finished'
+         for sample in datasets_bench10
+         for skew in skew_bench11],
+        [f'11_rankwise_novelty/truths/{skew}/{sample}.condensed.biobox'
+         for sample in datasets_bench10
+         for skew in skew_bench11],
+    output:
+        done=touch("11_rankwise_novelty/generate_communities.done")
+
+# percent-known-at in rank order sgfcopd for low and high skew novelty
+skew_known_at = {
+    "low_skew": "5 4 3 2 0 0 0",
+    "high_skew": "100 10 5 2 1 0 0"
+}
+
 rule generate_community_and_reads_bench11_low_skew:
     input:
         gtdb_bac_metadata = 'bac120_metadata_r207.tsv',
@@ -472,15 +507,17 @@ rule generate_community_and_reads_bench11_low_skew:
         novel_genomes_gtdbtk_output_directory = '4_complex_and_novel/gtdbtk_batchfile.random1000.gtdbtk_r207',
         novel_genome_list = '4_complex_and_novel/gtdbtk_batchfile.random1000.csv',
     output:
-        r1="11_rankwise_novelty/local_reads/low_skew/sample{coverage_number}.1.fq.gz",
-        r2="11_rankwise_novelty/local_reads/low_skew/sample{coverage_number}.2.fq.gz",
-        condensed = "11_rankwise_novelty/truths/low_skew/sample{coverage_number}.condensed",
-        done = touch("11_rankwise_novelty/truths/low_skew/sample{coverage_number}.finished"),
-        done2 = touch("11_rankwise_novelty/local_reads/low_skew/sample{coverage_number}.finished"),
-    log: "11_rankwise_novelty/local_reads/low_skew/sample{coverage_number}.log"
+        r1="11_rankwise_novelty/local_reads/{skew}/sample{coverage_number}.1.fq.gz",
+        r2="11_rankwise_novelty/local_reads/{skew}/sample{coverage_number}.2.fq.gz",
+        condensed = "11_rankwise_novelty/truths/{skew}/sample{coverage_number}.condensed",
+        done = touch("11_rankwise_novelty/truths/{skew}/sample{coverage_number}.finished"),
+        done2 = touch("11_rankwise_novelty/local_reads/{skew}/sample{coverage_number}.finished"),
+    log: "11_rankwise_novelty/local_reads/{skew}/sample{coverage_number}.log"
     threads: 8
+    params:
+        percent_known_at = lambda wildcards: skew_known_at[wildcards.skew]
     shell:
-        "mkdir -p 11_rankwise_novelty/truths/low_skew 11_rankwise_novelty/local_reads/low_skew && " \
+        "mkdir -p 11_rankwise_novelty/truths/{wildcards.skew} 11_rankwise_novelty/local_reads/{wildcards.skew} && " \
         "pixi run -e art " \
         "python3 11_rankwise_novelty/generate_community.py --art art_illumina --threads {threads} " \
         "--coverage-file 10_related_and_novel/coverage_definitions/coverage{wildcards.coverage_number}.tsv " \
@@ -491,39 +528,8 @@ rule generate_community_and_reads_bench11_low_skew:
         "--novel-genome-list {input.novel_genome_list} " \
         "--output-condensed {output.condensed} " \
         "-1 {output.r1} -2 {output.r2} " \
-        "--percent-known-at 5 4 3 2 0 0 0 " \
+        "--percent-known-at {params.percent_known_at} " \
         "2> {log}"
-
-rule generate_community_and_reads_bench11_high_skew:
-    input:
-        gtdb_bac_metadata = 'bac120_metadata_r207.tsv',
-        gtdb_ar_metadata = 'ar53_metadata_r207.tsv',
-        known_genome_list = '1_novel_strains/shadow_genome_paths.csv',
-        novel_genomes_gtdbtk_output_directory = '4_complex_and_novel/gtdbtk_batchfile.random1000.gtdbtk_r207',
-        novel_genome_list = '4_complex_and_novel/gtdbtk_batchfile.random1000.csv',
-    output:
-        r1="11_rankwise_novelty/local_reads/high_skew/sample{coverage_number}.1.fq.gz",
-        r2="11_rankwise_novelty/local_reads/high_skew/sample{coverage_number}.2.fq.gz",
-        condensed = "11_rankwise_novelty/truths/high_skew/sample{coverage_number}.condensed",
-        done = touch("11_rankwise_novelty/truths/high_skew/sample{coverage_number}.finished"),
-        done2 = touch("11_rankwise_novelty/local_reads/high_skew/sample{coverage_number}.finished"),
-    log: "11_rankwise_novelty/local_reads/high_skew/sample{coverage_number}.log"
-    threads: 8
-    shell:
-        "mkdir -p 11_rankwise_novelty/truths/high_skew 11_rankwise_novelty/local_reads/high_skew && " \
-        "pixi run -e art " \
-        "python3 11_rankwise_novelty/generate_community.py --art art_illumina --threads {threads} " \
-        "--coverage-file 10_related_and_novel/coverage_definitions/coverage{wildcards.coverage_number}.tsv " \
-        "--gtdb-bac-metadata {input.gtdb_bac_metadata} " \
-        "--gtdb-ar-metadata {input.gtdb_ar_metadata} " \
-        "--known-genome-list {input.known_genome_list} " \
-        "--novel-genome-gtdbtk-output {input.novel_genomes_gtdbtk_output_directory} " \
-        "--novel-genome-list {input.novel_genome_list} " \
-        "--output-condensed {output.condensed} " \
-        "-1 {output.r1} -2 {output.r2} " \
-        "--percent-known-at 100 10 5 2 1 0 0 " \
-        "2> {log}"
-
 
 # utils
 

@@ -198,11 +198,9 @@ if __name__ == '__main__':
         pl.col('genome').replace(r207_taxonomy).alias('taxonomy')
     ).with_columns(
         pl.col('taxonomy')
-        .str.extract("(^d|;[pcofgs])__[^;]+$").alias("known_at")
-    ).with_columns(
-        pl.col('known_at')
+        .str.extract("(^d|;[pcofgs])__[^;]+$")
         .replace_strict({";s": 0, ";g": 1, ";f": 2, ";o": 3, ";c": 4, ";p": 5, "d": 6})
-        .alias('known_at')
+        .alias("known_at")
     ).filter(pl.col('known_at') > 0)
 
 
@@ -214,20 +212,22 @@ if __name__ == '__main__':
     sum_weights = sum(float(f) for f in args.percent_known_at)
     n_rank = (
         pl.DataFrame({
-            known_at = range(1, 7),
-            n_new = (round(float(f) * len(coverages) / sum_weights) for f in args.percent_known_at[1:])
+            "known_at": range(1, 7),
+            "n_new": (round(float(f) * len(coverages) / sum_weights) for f in args.percent_known_at[1:])
         })
         .join(
             novel_info
             .group_by('known_at')
             .len("max_new"),
             on = "known_at",
-            how = "outer",
+            how = "left",
             validate = "1:1"
         )
+    ).with_columns(
+        pl.col("max_new").fill_null(strategy="zero")
     )
     not_enough = n_rank.filter(pl.col("n_new") > pl.col("max_new"))
-    if not_enough.height() > 0:
+    if not_enough.height > 0:
         ranks_not_enough = ", ".join(not_enough["ranks"])
         num_needed = ", ".join(not_enough["n_new"])
         num_not_enough = ", ".join(not_enough["max_new"])

@@ -257,10 +257,10 @@ if __name__ == '__main__':
                 pl.col("taxonomy").str.replace(";s__[^;]+", "").alias("trunc")
             )
         )
-        .filter(pl.col("shuff_loc") < n_known_dom + n_novel_dom)
+        .filter(pl.col("shuff_loc") < n_known_dom + n_new_dom)
     )
-    known_info_bg_sub = info_bg_sub.filter(pl.col("known")).drop("known", "shuff_loc", "trunc")
-    novel_info_bg_sub = info_bg_sub.filter(~pl.col("known")).drop("known", "shuff_loc", "trunc")
+    known_info_bg_sub = info_bg_sub.filter(pl.col("known")).drop("known", "shuff_loc")
+    novel_info_bg_sub = info_bg_sub.filter(~pl.col("known")).drop("known", "shuff_loc")
     
     chosen_df = pl.concat([
         known_info_dom.sample(n_known_dom),

@@ -1,3 +1,5 @@
+from taxonomake.modules.common import config_sample_reads1, config_sample_reads2
+
 module simulate:
     snakefile: "simulate/simulate.smk"
     config: config
@@ -13,5 +15,5 @@ use rule * from simulate
 
 rule all:
     input:
-        config["samples"]["reads1"],
-        config["samples"]["reads2"]
+        config_sample_reads1(config),
+        config_sample_reads2(config)

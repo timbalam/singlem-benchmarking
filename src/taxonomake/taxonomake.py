@@ -31,7 +31,7 @@ import argparse
 import logging
 import os
 import tempfile
-from taxonomake.modules.community_description import load_community_description
+from taxonomake.modules.community_description import process_community_description
 
 def main():
     parser = argparse.ArgumentParser(add_help=False)
@@ -62,8 +62,6 @@ def main():
     logging.basicConfig(level=loglevel, format='%(asctime)s %(levelname)s: %(message)s',
                         datefmt='%m/%d/%Y %I:%M:%S %p')
 
-    config = load_community_description(args.configfile)
-
     prefix = args.directory
     if prefix is not None:
         os.makedirs(prefix, exist_ok = True)
@@ -75,7 +73,8 @@ def main():
         def cleanup():
             td.cleanup()
     try:
-        config.process(prefix = prefix, snakemake_args = args.snakemake_args)
+        process_community_description(args.configfile, prefix = prefix,
+                                      snakemake_args = args.snakemake_args)
     finally:
         cleanup()
 

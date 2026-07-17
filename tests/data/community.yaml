@@ -14,5 +14,5 @@ samples:
 
 readsim:
   tool: "art"
-  bin: "art_illumina"
+  binary: "art_illumina"
   read_length: 150

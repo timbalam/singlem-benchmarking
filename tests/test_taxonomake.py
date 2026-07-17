@@ -24,7 +24,7 @@ def end_to_end():
     cleanup()
 
 def test_taxonomake(end_to_end):
-    cmd = f"snakemake --snakefile {snakefile} --configfile {path_to_data}/community.yaml --config threads=1 --cores 8"
+    cmd = f"taxonomake {path_to_data}/community.yaml"
     extern.run(cmd)
     assert os.path.isfile(f"{path_to_data}/tmp/small_1.fq.gz")
     assert os.path.isfile(f"{path_to_data}/tmp/small_2.fq.gz")

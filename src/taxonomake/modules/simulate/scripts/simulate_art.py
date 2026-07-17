@@ -57,7 +57,7 @@ def read_genomes_list(path):
     make_absolute = lambda path: os.path.normpath(os.path.join(dir, path))
     return (
         pl.read_csv(path, separator = '\t', has_header = False,
-                    new_columns = ["otu", "path"])
+                    new_columns = ["path", "otu"])
         .with_columns(
             pl.col("path").map_elements(make_absolute)
         )

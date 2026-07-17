@@ -1,6 +1,4 @@
 
-import tomllib
-import polars as pl
 import os
 import logging
 import subprocess
@@ -8,12 +6,20 @@ import shutil
 import sys
 from ruamel.yaml import YAML
 import shlex
+from snakemake.utils import validate
+
+SNAKEFILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Snakefile")
+SCHEMA = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.schema.yaml")
 
 def process_community_description(file, *, prefix, cores = 8, snakemake_args):
+    yaml = YAML()
+    with open(file) as f:
+        conf = yaml.load(f)
+    validate(conf, SCHEMA)
     cmd = [
         shutil.which("snakemake"),
         "--snakefile",
-        get_snakefile(),
+        SNAKEFILE,
         "--directory",
         f"{prefix}",
         "--rerun-incomplete",
@@ -21,18 +27,19 @@ def process_community_description(file, *, prefix, cores = 8, snakemake_args):
         "--configfile",
         f"{file}", 
         "--nolock",
-        "--cores,"
+        "--cores",
         f"{cores}",
         "--config",
-        f"configfilepath={file}",
-        f"{snakemake_args} "
+        f"configfilepath={os.path.abspath(file)}"
     ]
+    if snakemake_args != "":
+        cmd += snakemake_args
 
     logging.debug(f"Command: {shlex.join(cmd)}")
     logging.info("Executing: %s" % shlex.join(cmd))
     proc = subprocess.Popen(
         cmd,
-        shell=True,
+        #shell=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,
@@ -55,13 +62,6 @@ def process_community_description(file, *, prefix, cores = 8, snakemake_args):
         logging.info("Finished")
     else:
         sys.exit(1)
-
-
-def get_snakefile(file="Snakefile"):
-    sf = os.path.join(os.path.dirname(os.path.abspath(__file__)), file)
-    if not os.path.exists(sf):
-        sys.exit("Unable to locate the Snakemake workflow file; tried %s" % sf)
-    return sf
 
 def get_samples(toml, dir):
     try:

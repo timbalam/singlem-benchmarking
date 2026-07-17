@@ -1,0 +1,87 @@
+$schema: "https://json-schema.org/draft/2020-12/schema" 
+title: Community description
+description: Schema for taxonomake community description configuration
+type: object
+properties: 
+  samples:
+    description: Sample reads
+    type: object
+    properties:
+      names:
+        description: Sample names
+        type: array
+        items:
+          type: string
+      reads1:
+        description: Forward read files
+        type: array
+        items:
+          type: string
+      reads2:
+        description: Reverse read files
+        type: array
+        items:
+          type: string
+    required: ["names", "reads1", "reads2"]
+    
+    additionalProperties: false
+  
+  truth:
+    description: Truth community profile
+    type: string
+  
+  genomes_list:
+    description: Tab-separated file (headerless) with columns 'genome fasta', 'genome id'
+    type: string
+  
+  taxonomy:
+    description: Tab-separated file (headerless) with columns 'genome id', 'taxonomy string'
+    type: string
+  
+  gtdbtk:
+    description: GTDB toolkit for genome taxonomic classification
+    type: object
+    properties:
+      directory:
+        description: Directory for GTDB-TK intermediate outputs
+        type: string
+      
+      release:
+        description: GTDB version
+        enum: ["207"]
+      
+      data:
+        description: Directory for downloaded GTDB-TK data
+        type: string
+      
+    required: ["directory", "release", "data"]
+    
+    additionalProperties: false
+  
+  readsim:
+    description: Read simulation
+    type: object
+    properties: 
+      tool:
+        description: Tool for generating simulated reads
+        enum: ["art"]
+      
+      binary:
+        description: Path to tool binary
+        type: string
+      
+      read_length:
+        description: Read length of simulated reads
+        type: integer
+      
+    required: ["tool", "binary", "read_length"]
+
+    additionalProperties: false
+  
+required: ["samples", "truth"]
+
+additionalProperties: false
+
+dependentRequired:
+  gtdbtk: ["genomes_list", "taxonomy"]
+  readsim: ["genomes_list", "taxonomy"]

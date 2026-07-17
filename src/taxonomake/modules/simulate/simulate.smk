@@ -1,24 +1,22 @@
 import os.path
+from taxonomake.modules.common import (
+    config_sample_reads1, config_sample_reads2, config_sample_names,
+    config_truth, config_genomes_list,
+    config_taxonomy, config_readsim_bin
+)
 
 SIM_SCRIPTS_DIR = os.path.join(os.path.dirname(os.path.abspath(workflow.snakefile)), 'scripts')
 MANIFEST_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(workflow.snakefile))), 'pixi.toml')
 
-def make_absolute(*paths):
-    return os.path.normpath(os.path.join(config["configfiledir"], *paths))
-
-def make_absolute_if_path(path):
-    return make_absolute(path) if os.path.dirname(path) != "" else path
-
-config:
-    threads: 1
+THREADS = 8
 
 rule simulate_paired_reads_rename:
     input:
-        r1 = ["readsim_" + config["readsim"]["tool"] + f"/{sample}_1.fq.gz" for sample in config["samples"]["names"]],
-        r2 = ["readsim_" + config["readsim"]["tool"] + f"/{sample}_2.fq.gz" for sample in config["samples"]["names"]]
+        r1 = ["readsim_" + config["readsim"]["tool"] + f"/{sample}_1.fq.gz" for sample in config_sample_names(config)],
+        r2 = ["readsim_" + config["readsim"]["tool"] + f"/{sample}_2.fq.gz" for sample in config_sample_names(config)]
     output:
-        r1 = [make_absolute(s) for s in config["samples"]["reads1"]],
-        r2 = [make_absolute(s) for s in config["samples"]["reads2"]]
+        r1 = config_sample_reads1(config),
+        r2 = config_sample_reads2(config)
     shell:
         f"python3 {SIM_SCRIPTS_DIR}/rename_all.py " \
         "-i {input.r1} {input.r2} " \
@@ -29,14 +27,15 @@ rule simulate_art_paired_reads_sample:
         r1 = "readsim_art/{sample}_1.fq.gz",
         r2 = "readsim_art/{sample}_2.fq.gz"
     input:
-        truth=make_absolute(config["truth"]),
-        genomes_list=make_absolute(config["genomes_list"]),
-        taxonomy=make_absolute(config["taxonomy"])
+        truth=config_truth(config),
+        genomes_list=config_genomes_list(config),
+        taxonomy=config_taxonomy(config)
     params:
-        art_bin=make_absolute_if_path(config["readsim"]["bin"])
-    threads: config["threads"]
+        art_bin=config_readsim_bin(config)
+    threads: THREADS
     log: "logs/{sample}.log"
     shell:
+        "mkdir -p readsim_art && " \
         f"pixi run --manifest-path {MANIFEST_PATH} -e art " \
         f"python3 {SIM_SCRIPTS_DIR}/simulate_art.py " \
         "--art {params.art_bin} " \

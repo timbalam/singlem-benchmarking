@@ -407,14 +407,9 @@ rule bench10:
                tool = tools_bench10),
         expand("10_related_and_novel/output_{tool}/opal/known{percent_known}/dominance{percent_dom}/{sample}.opal_report",
                sample = datasets_bench10,
-               percent_dom = percent_dominance_bench10[1:],
+               percent_dom = percent_dominance_bench10,
                percent_known = percent_known_bench10[:1],
-               tool = tools_bench10[:1]+tools_bench10[2:]), # skip sylph for known0/dominance50
-        expand("10_related_and_novel/output_{tool}/opal/known{percent_known}/dominance{percent_dom}/{sample}.opal_report",
-               sample = datasets_bench10,
-               percent_dom = percent_dominance_bench10[:1],
-               percent_known = percent_known_bench10,
-               tool = tools_bench10)
+               tool = tools_bench10[:1]+tools_bench10[2:]), # skip sylph for known0
 
 rule generate_communities_bench10:
     input:
@@ -469,7 +464,7 @@ rule generate_community_and_reads_bench10:
 
 # ## bench 11 rankwise novelty
 
-datasets_bench11 = [f"sample{i}" for i in range(4, 6)]
+datasets_bench11 = [f"sample{i}" for i in [0, 4, 5]]
 skew_bench11 = ["low_skew", "high_skew"]
 
 rule bench11:
@@ -499,7 +494,7 @@ skew_known_at = {
     "high_skew": "100 10 5 2 1 0 0"
 }
 
-rule generate_community_and_reads_bench11_low_skew:
+rule generate_community_and_reads_bench11:
     input:
         gtdb_bac_metadata = 'bac120_metadata_r207.tsv',
         gtdb_ar_metadata = 'ar53_metadata_r207.tsv',

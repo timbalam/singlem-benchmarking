@@ -395,8 +395,8 @@ rule generate_community_and_reads_bench9:
 datasets_bench10 = [f"sample{i}" for i in range(4, 6)]
 percent_dominance_bench10 = [10, 50]
 percent_known_bench10 = [0, 10, 50, 70, 100]
-tools_bench10 = ['singlem', 'sylph', 'singlem_dev', 'singlem_joint', 'singlem_inject',
-                 'singlem_nnls', 'singlem_truecov']
+tools_bench10 = ['singlem', 'sylph', 'singlem_dev', 'singlem_joint_ee20bc', 'singlem_inject_ee20bc',
+                 'singlem_nnls_ee20bc', 'singlem_truecov_ee20bc'][:4]
 
 rule bench10:
     input:
@@ -662,31 +662,33 @@ rule singlem_joint_run_renew:
         report="{bench_dir}/output_singlem/singlem/{sample}.sma",
         db=singlem_metapackage
     output:
-        report="{bench_dir}/output_singlem_joint/singlem_joint/{sample}.sma",
-        done=touch("{bench_dir}/output_singlem_joint/singlem_joint/{sample}.sma.done")
+        report="{bench_dir}/output_singlem_joint_{hash}/singlem_joint_{hash}/{sample}.sma",
+        done=touch("{bench_dir}/output_singlem_joint_{hash}/singlem_joint_{hash}/{sample}.sma.done")
     threads:
         8
     log:
-        "{bench_dir}/output_singlem_joint/logs/singlem_joint/{sample}.log"
-    wildcard_constraints:
-        regime3="joint|inject"
+        "{bench_dir}/output_singlem_joint_{hash}/logs/singlem_joint_{hash}/{sample}.log"
     shell:
+        "bash -c 'cd singlem_sylph_condense_regime && " \
+        "git rev-parse HEAD | grep -q ^{wildcards.hash}' && " \
         "pixi run -e singlem-regime3 " \
         "singlem renew --threads {threads} --input-archive-otu-table {input.report} " \
         "--archive-otu-table {output.report} --metapackage {input.db} &> {log}"
 
 rule singlem_joint_run_condense:
     input:
-        report="{bench_dir}/output_singlem_joint/singlem_joint/{sample}.sma",
+        report="{bench_dir}/output_singlem_joint_{hash}/singlem_joint_{hash}/{sample}.sma",
         sylph="{bench_dir}/output_sylph/sylph/{sample}.tax.eff",
-        done="{bench_dir}/output_singlem_joint/singlem_joint/{sample}.sma.done",
+        done="{bench_dir}/output_singlem_joint_{hash}/singlem_joint_{hash}/{sample}.sma.done",
         db=singlem_metapackage
     output:
-        profile="{bench_dir}/output_singlem_joint/singlem_joint/{sample}.profile",
-        done=touch("{bench_dir}/output_singlem_joint/singlem_joint/{sample}.profile.done")
+        profile="{bench_dir}/output_singlem_joint_{hash}/singlem_joint_{hash}/{sample}.profile",
+        done=touch("{bench_dir}/output_singlem_joint_{hash}/singlem_joint_{hash}/{sample}.profile.done")
     log:
-        "{bench_dir}/output_singlem_joint/logs/singlem_joint/{sample}.log"
+        "{bench_dir}/output_singlem_joint_{hash}/logs/singlem_joint_{hash}/{sample}.log"
     shell:
+        "bash -c 'cd singlem_sylph_condense_regime && " \
+        "git rev-parse HEAD | grep -q ^{wildcards.hash}' && " \
         "pixi run -e singlem-regime3 " \
         "singlem condense --input-archive-otu-table {input.report} " \
         "-p {output.profile} --joint " \
@@ -695,16 +697,18 @@ rule singlem_joint_run_condense:
 
 rule singlem_nnls_run_condense:
     input:
-        report="{bench_dir}/output_singlem_joint/singlem_joint/{sample}.sma",
+        report="{bench_dir}/output_singlem_joint_{hash}/singlem_joint_{hash}/{sample}.sma",
         sylph="{bench_dir}/output_sylph/sylph/{sample}.tax.eff",
-        done="{bench_dir}/output_singlem_joint/singlem_joint/{sample}.sma.done",
+        done="{bench_dir}/output_singlem_joint_{hash}/singlem_joint_{hash}/{sample}.sma.done",
         db=singlem_metapackage
     output:
-        profile="{bench_dir}/output_singlem_nnls/singlem_nnls/{sample}.profile",
-        done=touch("{bench_dir}/output_singlem_nnls/singlem_nnls/{sample}.profile.done")
+        profile="{bench_dir}/output_singlem_nnls_{hash}/singlem_nnls_{hash}/{sample}.profile",
+        done=touch("{bench_dir}/output_singlem_nnls_{hash}/singlem_nnls_{hash}/{sample}.profile.done")
     log:
-        "{bench_dir}/output_singlem_nnls/logs/singlem_nnls/{sample}.log"
+        "{bench_dir}/output_singlem_nnls_{hash}/logs/singlem_nnls_{hash}/{sample}.log"
     shell:
+        "bash -c 'cd singlem_sylph_condense_regime && " \
+        "git rev-parse HEAD | grep -q ^{wildcards.hash}' && " \
         "pixi run -e singlem-regime3 " \
         "singlem condense --input-archive-otu-table {input.report} " \
         "-p {output.profile} --joint " \
@@ -718,16 +722,18 @@ rule test_bench9:
 
 rule singlem_truecov_run_condense:
     input:
-        report="{bench_dir}/output_singlem_joint/singlem_joint/{sample}.sma",
+        report="{bench_dir}/output_singlem_joint_{hash}/singlem_joint_{hash}/{sample}.sma",
         sylph="{bench_dir}/output_sylph/sylph/{sample}.tax",
-        done="{bench_dir}/output_singlem_joint/singlem_joint/{sample}.sma.done",
+        done="{bench_dir}/output_singlem_joint_{hash}/singlem_joint_{hash}/{sample}.sma.done",
         db=singlem_metapackage
     output:
-        profile="{bench_dir}/output_singlem_truecov/singlem_truecov/{sample}.profile",
-        done=touch("{bench_dir}/output_singlem_truecov/singlem_truecov/{sample}.profile.done")
+        profile="{bench_dir}/output_singlem_truecov_{hash}/singlem_truecov_{hash}/{sample}.profile",
+        done=touch("{bench_dir}/output_singlem_truecov_{hash}/singlem_truecov_{hash}/{sample}.profile.done")
     log:
-        "{bench_dir}/output_singlem_truecov/logs/singlem_truecov/{sample}.log"
+        "{bench_dir}/output_singlem_truecov_{hash}/logs/singlem_truecov_{hash}/{sample}.log"
     shell:
+        "bash -c 'cd singlem_sylph_condense_regime && " \
+        "git rev-parse HEAD | grep -q ^{wildcards.hash}' && " \
         "pixi run -e singlem-regime3 " \
         "singlem condense --input-archive-otu-table {input.report} " \
         "-p {output.profile} --joint " \
@@ -737,16 +743,18 @@ rule singlem_truecov_run_condense:
 
 rule singlem_inject_run_condense:
     input:
-        report="{bench_dir}/output_singlem_joint/singlem_joint/{sample}.sma",
+        report="{bench_dir}/output_singlem_joint_{hash}/singlem_joint_{hash}/{sample}.sma",
         sylph="{bench_dir}/output_sylph/sylph/{sample}.tax.eff",
-        done="{bench_dir}/output_singlem_joint/singlem_joint/{sample}.sma.done",
+        done="{bench_dir}/output_singlem_joint_{hash}/singlem_joint_{hash}/{sample}.sma.done",
         db=singlem_metapackage
     output:
-        profile="{bench_dir}/output_singlem_inject/singlem_inject/{sample}.profile",
-        done=touch("{bench_dir}/output_singlem_inject/singlem_inject/{sample}.profile.done")
+        profile="{bench_dir}/output_singlem_inject_{hash}/singlem_inject_{hash}/{sample}.profile",
+        done=touch("{bench_dir}/output_singlem_inject_{hash}/singlem_inject_{hash}/{sample}.profile.done")
     log:
-        "{bench_dir}/output_singlem_inject/logs/singlem_inject/{sample}.log"
+        "{bench_dir}/output_singlem_inject/logs/singlem_inject_{hash}/{sample}.log"
     shell:
+        "bash -c 'cd singlem_sylph_condense_regime && " \
+        "git rev-parse HEAD | grep -q ^{wildcards.hash}' && " \
         "pixi run -e singlem-regime3 " \
         "singlem condense --input-archive-otu-table {input.report} " \
         "-p {output.profile} " \

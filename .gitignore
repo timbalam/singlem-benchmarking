@@ -20,7 +20,6 @@ reference_genomes
 __pycache__
 **/__pycache__
 5_small_1novel/debug
-.pixi
 6_zymo_synthetic/ZymoBIOMICS.STD.refseq.v2.zip
 6_zymo_synthetic/ZymoBIOMICS.STD.refseq.v2/
 8_cami2_strain/short_read
@@ -31,3 +30,6 @@ __pycache__
 
 1_novel_strains/fifo_map.mapout.txt
 */generate_communities.done
+# pixi environments
+.pixi/*
+!.pixi/config.toml

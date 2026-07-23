@@ -145,6 +145,10 @@ rule bench8_a:
                sample = datasets_bench8,
                mask = range(5), tunestr = tune_bench8_a)
 
+rule renew_singlem_dev_bench8:
+    input:
+        [f'tuning/output_singlem_dev/singlem_dev/{sample}.sma' for sample in datasets_bench8]
+
 rule generate_communities_bench8:
     input:
         [f'tuning/truths/{sample}.finished' for sample in datasets_bench8],
@@ -191,7 +195,7 @@ rule generate_community_and_reads_bench8:
 
 module run_benchmarks:
     snakefile: "../run_benchmarks.smk"
-    prefix: "experiments/"
+    #prefix: "experiments/"
 
 use rule truth_condensed_to_biobox from run_benchmarks
 

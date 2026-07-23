@@ -3,8 +3,8 @@ import polars as pl
 
 datasets_bench5 = [f'marine{i}' for i in range(1)]
 
-singlem_metapackage = "tool_reference_data/S4.1.0.GTDB_r207.metapackage_20240502.smpkg"
-sylph_package = "tool_reference_data/gtdb_database.syldb"
+singlem_metapackage = join(dirname(workflow.snakefile), "tool_reference_data/S4.1.0.GTDB_r207.metapackage_20240502.smpkg")
+sylph_package = join(dirname(workflow.snakefile), "tool_reference_data/gtdb_database.syldb")
 
 #####################################################################
 
@@ -86,7 +86,7 @@ rule generate_shakya_truth_condensed_format:
 def parse_samples(report_file):
     return pl.read_csv(report_file, separator = "\t", columns = "run_accession").to_series(0)
 
-zymo_samples = parse_samples("6_zymo_synthetic/filereport_read_run_ERP121404_D6300.txt")
+zymo_samples = parse_samples(workflow.source_path("6_zymo_synthetic/filereport_read_run_ERP121404_D6300.txt"))
 
 rule download_zymo:
     input:
@@ -396,7 +396,7 @@ datasets_bench10 = [f"sample{i}" for i in range(4, 6)]
 percent_dominance_bench10 = [10, 50]
 percent_known_bench10 = [0, 10, 50, 70, 100]
 tools_bench10 = ['singlem', 'sylph', 'singlem_dev', 'singlem_joint_ee20bc', 'singlem_inject_ee20bc',
-                 'singlem_nnls_ee20bc', 'singlem_truecov_ee20bc'][:4]
+                 'singlem_nnls_ee20bc', 'singlem_truecov_ee20bc']
 
 rule bench10:
     input:
@@ -751,7 +751,7 @@ rule singlem_inject_run_condense:
         profile="{bench_dir}/output_singlem_inject_{hash}/singlem_inject_{hash}/{sample}.profile",
         done=touch("{bench_dir}/output_singlem_inject_{hash}/singlem_inject_{hash}/{sample}.profile.done")
     log:
-        "{bench_dir}/output_singlem_inject/logs/singlem_inject_{hash}/{sample}.log"
+        "{bench_dir}/output_singlem_inject_{hash}/logs/singlem_inject_{hash}/{sample}.log"
     shell:
         "bash -c 'cd singlem_sylph_condense_regime && " \
         "git rev-parse HEAD | grep -q ^{wildcards.hash}' && " \

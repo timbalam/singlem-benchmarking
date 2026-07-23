@@ -20,7 +20,6 @@ reference_genomes
 __pycache__
 **/__pycache__
 5_novelty/debug
-.pixi
 6_zymo_synthetic/ZymoBIOMICS.STD.refseq.v2.zip
 6_zymo_synthetic/ZymoBIOMICS.STD.refseq.v2/
 8_cami2_strain/short_read
@@ -28,3 +27,6 @@ __pycache__
 8_cami2_strain/strmgCAMI2_setup.tar.gz
 8_cami2_strain/strmgCAMI2_setup-extract.done
 8_cami2_strain/gtdbtk_r207/
+# pixi environments
+.pixi/*
+!.pixi/config.toml

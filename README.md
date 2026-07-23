@@ -18,28 +18,26 @@ To get this repository, git clone with recursive option to get the submodules:
 git clone --recursive https://github.com/timbalam/singlem-benchmarking
 ```
 
-To run a benchmark, first create a conda env
+Software is managed with [pixi](https://pixi.sh). The `pixi.toml` defines a
+default environment (used to drive the Snakemake workflows, plotting and
+notebooks) plus one isolated environment per benchmarked tool. The Snakemake
+rules activate the relevant per-tool environment themselves at runtime via
+`pixi shell-hook`, so there is no longer any need for `--use-conda`.
+
+To run a benchmark, first install the environments (this solves and downloads
+all tool environments up front):
 
 ```bash
 cd singlem-benchmarking
-mamba env create -n singlem-benchmarking -f env.yml
+pixi install --all
 ```
 
-Then activate it
-
-```bash
-conda activate singlem-benchmarking
-```
+You can either prefix commands with `pixi run` (as shown below), or enter the
+default environment once with `pixi shell` and drop the prefix.
 
 First, download the reference databases for each tool
 ```bash
-snakemake --snakefile gather_tool_databases.smk --use-conda -c 8
-```
-
-The Metabuli R207 database is downloaded separately. Download the tar.gz file from https://connectqutedu.sharepoint.com/:u:/s/metabuli_gtdb_207/EYk7N71mp-NAtET5_X_fBDABM6AC_DCbxGiDc2rdVVlNiw?e=Ra5rVZ and put it into a new folder `tool_reference_data/metabuli`. Then extract it with
-
-```bash
-tar -xvf metabuli.tar.gz
+pixi run snakemake --snakefile gather_tool_databases.smk -c 8
 ```
 
 To generate a GTDB v207 database for sylph you will need a folder with all the GTDB v207 genomes (here ALL_GTDBR207_GENOMES_DIR)
@@ -118,3 +116,9 @@ or just download with
 ```bash
 snakemake --snakefile run_benchmarks.smk -c 8 download_bench7
 ```
+
+## Download genomes for benchmark #2
+
+Using the NCBI datasets CLI (provided by the `ncbi-datasets-cli` package in the
+default pixi environment). Either run these inside `pixi shell`, or prefix the
+`datasets` calls with `pixi run`.

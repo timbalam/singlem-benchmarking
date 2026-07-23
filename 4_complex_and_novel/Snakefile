@@ -250,17 +250,9 @@ rule metaphlan_profile:
     output:
         sgb_report=output_dirs_dict['metaphlan'] + "/metaphlan/known{known_percent}/{sample}.sgb_report",
         done=touch(output_dirs_dict['metaphlan'] + "/metaphlan/known{known_percent}/{sample}.profile.done")
-<<<<<<< HEAD
-    #conda:
-    #    "envs/metaphlan.yml"
-||||||| e7d5514
-    conda:
-        "envs/metaphlan.yml"
-=======
->>>>>>> singlem-benchmarking-upstream-merge
     threads: num_threads
     resources:
-        mem_mb=256000,
+        mem_mb=32000,
         runtime='6h'
     params:
         cat_reads = output_dirs_dict['metaphlan'] + "/metaphlan/known{known_percent}/{sample}.cat.fq.gz",
@@ -268,14 +260,8 @@ rule metaphlan_profile:
         output_dirs_dict['metaphlan'] + "/logs/metaphlan/known{known_percent}/{sample}.log"
     shell:
         # Concatenate input files because metaphlan can't handle multiple input files
-<<<<<<< HEAD
-        "rm -f {output.sgb_report} {params.cat_reads}.bowtie2out.txt; cat {input.r1} {input.r2} > {params.cat_reads} && pixi run --environment metaphlan metaphlan {params.cat_reads} --index {metaphlan_index} --nproc {threads} --input_type fastq --bowtie2db {metaphlan_db_local1} -o {output.sgb_report} &> {log}"
-||||||| e7d5514
-        "rm -f {output.sgb_report} {params.cat_reads}.bowtie2out.txt; cat {input.r1} {input.r2} > {params.cat_reads} && metaphlan {params.cat_reads} --index {metaphlan_index} --nproc {threads} --input_type fastq --bowtie2db {metaphlan_db_local1} -o {output.sgb_report} &> {log}"
-=======
         'eval "$(pixi shell-hook -e metaphlan)" && '
         "rm -f {output.sgb_report} {params.cat_reads}.bowtie2out.txt; cat {input.r1} {input.r2} > {params.cat_reads} && metaphlan {params.cat_reads} --index {metaphlan_index} --nproc {threads} --input_type fastq --bowtie2db {metaphlan_db_local1} -o {output.sgb_report} &> {log}"
->>>>>>> singlem-benchmarking-upstream-merge
 
 rule metaphlan_convert_profile_to_GTDB:
     input:
@@ -442,15 +428,6 @@ rule bracken_to_profile:
         truth = truth_dir + "/known{known_percent}/{sample}.condensed.biobox",
     output:
         profile = output_dirs_dict['kraken'] + "/kraken/known{known_percent}/{sample}.profile",
-<<<<<<< HEAD
-    conda:
-        "envs/singlem.yml"
-    #    "singlem-dev"
-||||||| e7d5514
-    conda:
-        "singlem-dev"
-=======
->>>>>>> singlem-benchmarking-upstream-merge
     resources:
         mem_mb=4000,
         runtime='1h'

@@ -65,8 +65,8 @@ rule metaphlan:
     log:
         join(output_directory, 'metaphlan.log')
     shell:
-<<<<<<< HEAD
-        'pixi run --environment metaphlan metaphlan --install --bowtie2db {metaphlan_db} --index {metaphlan_index} &> {log}'
+        'eval "$(pixi shell-hook -e metaphlan)" && '
+        'metaphlan --install --bowtie2db {metaphlan_db} --index {metaphlan_index} &> {log}'
 
 rule metaphlan42:
     output:
@@ -76,12 +76,6 @@ rule metaphlan42:
         join(output_directory, 'metaphlan42.log')
     shell:
         'pixi run --environment metaphlan42 metaphlan --install --db_dir {metaphlan42_db} --index {metaphlan_index} &> {log}' ## metaphlan 4.2.2
-||||||| e7d5514
-        'metaphlan --install --bowtie2db {metaphlan_db} --index {metaphlan_index} &> {log}'
-=======
-        'eval "$(pixi shell-hook -e metaphlan)" && '
-        'metaphlan --install --bowtie2db {metaphlan_db} --index {metaphlan_index} &> {log}'
->>>>>>> singlem-benchmarking-upstream-merge
 
 rule kraken_download:
     output:
@@ -166,33 +160,6 @@ rule kaiju_extract:
 #     shell:
 #         'rm -rf {map2b_checkout_dir} && git clone --branch MAP2Bv1.5 https://github.com/sunzhengCDNM/MAP2B {map2b_checkout_dir} &> {log}'
 
-<<<<<<< HEAD
-rule map2b:
-    input:
-        join(output_directory, 'map2b-checkout.done'),
-    output:
-        done=touch(join(output_directory, 'map2b.done')),
-        map2b_db=directory(map2b_db)
-    #conda:
-    #    "1_novel_strains/envs/MAP2B-20230420-conda.yml"
-    log:
-        join(output_directory, 'map2b.log')
-    shell:
-        'pixi run --environment map2b python3 {map2b_checkout_dir}/scripts/DownloadDB.py -l {map2b_checkout_dir}/config/GTDB.CjePI.database.list -d {map2b_checkout_dir}/database/GTDB &> {log}'
-||||||| e7d5514
-rule map2b:
-    input:
-        join(output_directory, 'map2b-checkout.done'),
-    output:
-        done=touch(join(output_directory, 'map2b.done')),
-        map2b_db=directory(map2b_db)
-    conda:
-        "1_novel_strains/envs/MAP2B-20230420-conda.yml"
-    log:
-        join(output_directory, 'map2b.log')
-    shell:
-        'python3 {map2b_checkout_dir}/scripts/DownloadDB.py -l {map2b_checkout_dir}/config/GTDB.CjePI.database.list -d {map2b_checkout_dir}/database/GTDB &> {log}'
-=======
 # rule map2b:
 #     input:
 #         join(output_directory, 'map2b-checkout.done'),
@@ -204,7 +171,6 @@ rule map2b:
 #     shell:
 #         'eval "$(pixi shell-hook -e map2b)" && '
 #         'python3 {map2b_checkout_dir}/scripts/DownloadDB.py -l {map2b_checkout_dir}/config/GTDB.CjePI.database.list -d {map2b_checkout_dir}/database/GTDB &> {log}'
->>>>>>> singlem-benchmarking-upstream-merge
 
 ## metabuli database download doesn't work because it is via sharepoint, which gives an indirect link.
 # rule metabuli_download:
@@ -438,53 +404,3 @@ rule bench2_genomes_extract:
         """
         cd 2_phylogenetic_novelty && tar -xzf bench2_genomes.tar.gz &> ../{log}
         """
-<<<<<<< HEAD
-
-rule download_zymo_reference_genomes:
-    output:
-        touch("6_zymo/zymo_refseq.v2-download.done"),
-    log:
-        "6_zymo/zymo_refseq.v2-download.log"
-    shell:
-        """
-        cd 6_zymo && wget 'https://zenodo.org/records/3935737/files/ZymoBIOMICS.STD.refseq.v2.zip?download=1' -O ZymoBIOMICS.STD.refseq.v2.zip &> ../{log}
-        """
-
-rule extract_zymo_reference_genomes:
-    input:
-        "6_zymo/zymo_refseq.v2-download.done"
-    output:
-        touch("6_zymo/reference_genomes-extract.done"),
-        d1 = directory("6_zymo/ZymoBIOMICS.STD.refseq.v2/Genomes"),
-    log:
-        "6_zymo/reference_genomes-extract.log"
-    shell:
-        """
-        cd 6_zymo && unzip ZymoBIOMICS.STD.refseq.v2.zip &> ../{log}
-        """
-||||||| e7d5514
-=======
-
-rule download_metabuli:
-    output:
-        metabuli_tar = join(output_directory, 'metabuli', 'metabuli.tar.gz'),
-    log:
-        join(output_directory, 'metabuli.log')
-    shell:
-        """
-        mkdir -p {output_directory}/metabuli
-        wget 'https://connectqutedu.sharepoint.com/:u:/s/metabuli_gtdb_207/IQCJOze9ZqfjQLRE-f1_3wQwATOgAvwwm8Rog3Nq3VVZTYs?e=10gHU1&download=1' -O {output.metabuli_tar} &> {log}
-        """
-
-rule extract_metabuli:
-    input:
-        metabuli_tar = join(output_directory, 'metabuli', 'metabuli.tar.gz'),
-    params:
-        output_directory = join(output_directory, 'metabuli'),
-    output:
-        done=touch(join(output_directory, 'metabuli.done')),
-    log:
-        join(output_directory, 'metabuli-extract.log')
-    shell:
-        'tar -xzf {input.metabuli_tar} -C {params.output_directory} &> {log}'
->>>>>>> singlem-benchmarking-upstream-merge

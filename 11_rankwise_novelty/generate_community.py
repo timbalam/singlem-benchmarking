@@ -226,14 +226,22 @@ if __name__ == '__main__':
     ).with_columns(
         pl.col("max_new").fill_null(strategy="zero")
     )
+    n_known = len(coverages) - n_rank["n_new"].sum()
+
     not_enough = n_rank.filter(pl.col("n_new") > pl.col("max_new"))
     if not_enough.height > 0:
-        ranks_not_enough = ", ".join(not_enough["ranks"])
-        num_needed = ", ".join(not_enough["n_new"])
-        num_not_enough = ", ".join(not_enough["max_new"])
-        raise Exception("Needed {num_needed} novel genomes at ranks {ranks_not_enough} but there are only {num_not_enough}.")
+        # scale sample sizes so there are enough novel genomes
+        # at each rank to preserve the novelty ratios
+        scale = min(
+            n_rank
+            .with_columns(
+                (pl.col("max_new") / pl.col("n_new")).alias("n_scale")
+            )
+            ["n_scale"]
+        )
 
-    n_known = len(coverages) - n_rank["n_new"].sum()
+        n_rank = n_rank.with_columns((pl.col("n_new") * scale).round())
+        n_known = round(n_known * scale)
 
 # %%
     logging.info(f"Choosing {n_rank["n_new"].sum()} novel genomes and {n_known} known genomes.")
@@ -255,7 +263,7 @@ if __name__ == '__main__':
     
     # Add coverage column
     chosen_df = chosen_df.with_columns(
-        pl.lit(coverages['coverage']).shuffle().alias('coverage')
+        pl.lit(coverages['coverage']).sample(pl.len(), shuffle = True).alias('coverage')
     )
     
 

@@ -165,11 +165,11 @@ rule generate_communities_bench8_test:
 
 rule generate_community_and_reads_bench8:
     input:
-        gtdb_bac_metadata = 'bac120_metadata_r207.tsv',
-        gtdb_ar_metadata = 'ar53_metadata_r207.tsv',
-        known_genome_list = '1_novel_strains/shadow_genome_paths.csv',
-        novel_genomes_gtdbtk_output_directory = '4_complex_and_novel/gtdbtk_batchfile.random1000.gtdbtk_r207',
-        novel_genome_list = '4_complex_and_novel/gtdbtk_batchfile.random1000.csv',
+        gtdb_bac_metadata = '../bac120_metadata_r207.tsv',
+        gtdb_ar_metadata = '../ar53_metadata_r207.tsv',
+        known_genome_list = '../1_novel_strains/shadow_genome_paths.csv',
+        novel_genomes_gtdbtk_output_directory = '../4_complex_and_novel/gtdbtk_batchfile.random1000.gtdbtk_r207',
+        novel_genome_list = '../4_complex_and_novel/gtdbtk_batchfile.random1000.csv',
     output:
         r1="tuning/local_reads/marine{coverage_number}novelty{novelty_ratio}.1.fq.gz",
         r2="tuning/local_reads/marine{coverage_number}novelty{novelty_ratio}.2.fq.gz",
@@ -191,6 +191,74 @@ rule generate_community_and_reads_bench8:
         "--output-condensed {output.condensed} " \
         "-1 {output.r1} -2 {output.r2} " \
         "--novelty-ratio {wildcards.novelty_ratio} " \
+        "2> {log}"
+
+ranks_percent_id_by_rank = ["genus", "family", "class", "order"]
+datasets_percent_id_by_rank = [f'sample{i}' for i in range(2)]
+reps_percent_id_by_rank = range(4)
+
+rule renew_singlem_dev_percent_id_by_rank:
+    input:
+        [f'percent_id_by_rank/output_singlem_dev/singlem_dev/{rank}/{sample}-{rep}.sma'
+         for sample in datasets_percent_id_by_rank
+         for rank in ranks_percent_id_by_rank
+         for rep in reps_percent_id_by_rank]
+
+rule generate_communities_percent_id_by_rank:
+    input:
+        [f'percent_id_by_rank/truths/{rank}/{sample}-{rep}.finished'
+         for sample in datasets_percent_id_by_rank
+         for rank in ranks_percent_id_by_rank
+         for rep in reps_percent_id_by_rank],
+        [f'percent_id_by_rank/local_reads/{rank}/{sample}-{rep}.finished'
+         for sample in datasets_percent_id_by_rank
+         for rank in ranks_percent_id_by_rank
+         for rep in reps_percent_id_by_rank],
+        [f'percent_id_by_rank/truths/{rank}/{sample}-{rep}.condensed.biobox'
+         for sample in datasets_percent_id_by_rank
+         for rank in ranks_percent_id_by_rank
+         for rep in reps_percent_id_by_rank],
+    output:
+        done=touch("percent_id_by_rank/generate_communities.done")
+
+# percent-known-at in rank order sgfocpd 
+def percent_known_at_by_rank(wildcards):
+    idx = "gfocpd".index(wildcards.rank[0])
+    known_at = ["0"] * 7
+    known_at[0] = "5" # species
+    known_at[idx+1] = ["5", "5", "5", "5"][idx]
+    return " ".join(known_at)
+
+rule generate_community_and_reads_percent_id_by_rank:
+    input:
+        gtdb_bac_metadata = '../bac120_metadata_r207.tsv',
+        gtdb_ar_metadata = '../ar53_metadata_r207.tsv',
+        known_genome_list = '../1_novel_strains/shadow_genome_paths.csv',
+        novel_genomes_gtdbtk_output_directory = '../4_complex_and_novel/gtdbtk_batchfile.random1000.gtdbtk_r207',
+        novel_genome_list = '../4_complex_and_novel/gtdbtk_batchfile.random1000.csv',
+    output:
+        r1="percent_id_by_rank/local_reads/{rank}/sample{coverage_number}-{rep}.1.fq.gz",
+        r2="percent_id_by_rank/local_reads/{rank}/sample{coverage_number}-{rep}.2.fq.gz",
+        condensed = "percent_id_by_rank/truths/{rank}/sample{coverage_number}-{rep}.condensed",
+        done = touch("percent_id_by_rank/truths/{rank}/sample{coverage_number}-{rep}.finished"),
+        done2 = touch("percent_id_by_rank/local_reads/{rank}/sample{coverage_number}-{rep}.finished"),
+    log: "percent_id_by_rank/local_reads/{rank}/sample{coverage_number}-{rep}.log"
+    threads: 8
+    params:
+        percent_known_at = percent_known_at_by_rank
+    shell:
+        "mkdir -p percent_id_by_rank/truths/{wildcards.rank} percent_id_by_rank/local_reads/{wildcards.rank} && " \
+        "pixi run -e art " \
+        "python3 ../11_rankwise_novelty/generate_community.py --art art_illumina --threads {threads} " \
+        "--coverage-file tuning/coverage_definitions/coverage{wildcards.coverage_number}.tsv " \
+        "--gtdb-bac-metadata {input.gtdb_bac_metadata} " \
+        "--gtdb-ar-metadata {input.gtdb_ar_metadata} " \
+        "--known-genome-list {input.known_genome_list} " \
+        "--novel-genome-gtdbtk-output {input.novel_genomes_gtdbtk_output_directory} " \
+        "--novel-genome-list {input.novel_genome_list} " \
+        "--output-condensed {output.condensed} " \
+        "-1 {output.r1} -2 {output.r2} " \
+        "--percent-known-at {params.percent_known_at} " \
         "2> {log}"
 
 module run_benchmarks:

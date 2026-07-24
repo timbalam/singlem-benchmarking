@@ -541,7 +541,7 @@ rule opal:
     shell:
         "pixi run -e opal " \
         "opal.py -g {params.truth} -o {params.output_opal_dir} {input.biobox} || echo 'expected opal non-zero exit status'; mv {params.output_opal_dir}/results.tsv {output.report} && rm -rf {params.output_opal_dir}"
-  
+
 rule truth_condensed_to_biobox:
     input:
         condensed = "{bench_dir}/truths/{sample}.condensed",
@@ -549,7 +549,8 @@ rule truth_condensed_to_biobox:
         biobox = "{bench_dir}/truths/{sample}.condensed.biobox"
     shell:
         "pixi run -e singlem " \
-        "python3 bin/condensed_profile_to_biobox.py --input-condensed-table {input.condensed} " \
+        "python3 " + workflow.source_path("bin/condensed_profile_to_biobox.py") + " " \
+        "--input-condensed-table {input.condensed} " \
         "--output-biobox {output.biobox}"
 
 rule tool_condensed_to_biobox:

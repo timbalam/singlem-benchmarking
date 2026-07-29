@@ -222,11 +222,11 @@ rule generate_communities_percent_id_by_rank:
         done=touch("percent_id_by_rank/generate_communities.done")
 
 # percent-known-at in rank order sgfocpd 
-def percent_known_at_by_rank(wildcards):
+def percent_known_at_by_rank(wildcards, rank_novelty = 1):
     idx = "gfocpd".index(wildcards.rank[0])
     known_at = ["0"] * 7
-    known_at[0] = "5" # species
-    known_at[idx+1] = ["5", "5", "5", "5"][idx]
+    known_at[0] = "1" # species
+    known_at[idx+1] = str(rank_novelty)
     return " ".join(known_at)
 
 rule generate_community_and_reads_percent_id_by_rank:

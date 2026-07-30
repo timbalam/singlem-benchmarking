@@ -29,7 +29,7 @@ __pycache__
 8_cami2_strain/gtdbtk_r207/
 
 1_novel_strains/fifo_map.mapout.txt
-*/generate_communities.done
+**/generate_communities.done
 # pixi environments
 .pixi/*
 !.pixi/config.toml

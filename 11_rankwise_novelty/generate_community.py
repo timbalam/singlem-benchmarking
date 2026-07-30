@@ -64,6 +64,7 @@ if __name__ == '__main__':
     parent_parser.add_argument('-2', '--read2', required=True, help='Path to output fq.gz file')
     parent_parser.add_argument('--threads', type=int, default=1, help='Number of threads to use')
     parent_parser.add_argument('--art', required=True, help='Path to ART binary (art_illumina)')
+    parent_parser.add_argument('--weight-coverage', action = "store_true", help='Use --percent-known-at to scale coverages at each rank.')
 
     args = parent_parser.parse_args()
 
@@ -252,19 +253,37 @@ if __name__ == '__main__':
         validate = "m:1"
     )
     chosen_df = pl.concat([
-        known_info.sample(n_known),
+        known_info.sample(n_known)
+        .with_columns(
+            known_at = 0,
+            n_new = n_known
+        ),
         novel_info_new
         .with_columns(
             shuff_loc = pl.int_range(pl.len()).shuffle().over(pl.col("known_at"))
         )
         .filter(pl.col("shuff_loc") < pl.col("n_new"))
-        .drop("shuff_loc", "known_at", "n_new")
-    ])
+        .drop("shuff_loc")
+    ], how = "vertical_relaxed")
     
     # Add coverage column
     chosen_df = chosen_df.with_columns(
         pl.lit(coverages['coverage']).sample(pl.len(), shuffle = True).alias('coverage')
     )
+
+    if args.weight_coverage:
+        # scale coverages: 
+        # coverage2_ri = coverage_ri * n_new_r * sum_r(sum_i(coverage_ri)) / sum_i(coverage_ri) * sum_r(n_new_r)
+        # sum_r(sum_i(coverage2_ri)) = sum_r(sum_i(coverage_ri))
+        scale_coverage = chosen_df['coverage'].sum() / (n_known + n_rank['n_new'].sum()) # sum_r(sum_i(coverage_ri)) / sum_r(n_new_r)
+        chosen_df = (
+            chosen_df
+            .with_columns(
+                ((pl.col('coverage') * pl.col('n_new') * pl.lit(scale_coverage)) / pl.col('coverage').sum())
+                .alias('coverage').over(pl.col('known_at'))
+            )
+        )
+    chosen_df = chosen_df.drop('n_new', 'known_at')
     
 
 # %%

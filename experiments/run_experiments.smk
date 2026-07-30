@@ -193,9 +193,9 @@ rule generate_community_and_reads_bench8:
         "--novelty-ratio {wildcards.novelty_ratio} " \
         "2> {log}"
 
-ranks_percent_id_by_rank = ["genus", "family", "class", "order"][:1]
-datasets_percent_id_by_rank = [f'sample{i}' for i in range(2)][:1]
-reps_percent_id_by_rank = range(4)[:1]
+ranks_percent_id_by_rank = ["genus", "family", "class", "order"]
+datasets_percent_id_by_rank = [f'sample{i}' for i in range(2)]
+reps_percent_id_by_rank = range(4)
 
 rule renew_singlem_dev_percent_id_by_rank:
     input:

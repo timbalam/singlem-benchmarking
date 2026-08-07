@@ -350,7 +350,7 @@ rule singlem_dev_run_condense_tune:
         "--rank-penalty-steps {wildcards.ts} {wildcards.tg} {wildcards.tf} {wildcards.to} " \
         "{wildcards.tc} {wildcards.tp} {wildcards.td} {wildcards.tr} " \
         "--mask-otus-file {input.mask} " \
-        "--max-num-steps 5000 "
+        "--max-num-steps 5000 " \
         "--output-loss {output.loss} " \
         "--metapackage {input.db} &> {log}"
 

@@ -37,6 +37,7 @@ scipy = "*"
 pyarrow = "*"
 r-jsonlite = "*"
 r-vegan = "*"
+r-modeest = "*"
 
 #####################################################################
 # Per-tool environments. Each one is isolated (no-default-feature) so that

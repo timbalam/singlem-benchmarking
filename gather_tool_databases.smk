@@ -404,6 +404,7 @@ rule bench2_genomes_extract:
         """
         cd 2_phylogenetic_novelty && tar -xzf bench2_genomes.tar.gz &> ../{log}
         """
+
 rule download_zymo_reference_genomes:
     output:
         touch("6_zymo/zymo_refseq.v2-download.done"),

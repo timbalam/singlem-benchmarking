@@ -40,12 +40,6 @@ First, download the reference databases for each tool
 pixi run snakemake --snakefile gather_tool_databases.smk -c 8
 ```
 
-The Metabuli R207 database is downloaded separately. Download the tar.gz file from https://connectqutedu.sharepoint.com/:u:/s/metabuli_gtdb_207/EYk7N71mp-NAtET5_X_fBDABM6AC_DCbxGiDc2rdVVlNiw?e=Ra5rVZ and put it into a new folder `tool_reference_data/metabuli`. Then extract it with
-
-```bash
-tar -xvf metabuli.tar.gz
-```
-
 To generate a GTDB v207 database for sylph you will need a folder with all the GTDB v207 genomes (here ALL_GTDBR207_GENOMES_DIR)
 ```bash
 #ALL_GTDBR207_GENOMES_DIR=/work/microbiome/db/gtdb/gtdb_release207/genomic_files_reps/gtdb_genomes_reps_r207

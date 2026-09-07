@@ -23,8 +23,12 @@ __pycache__
 5_small_1novel/debug
 6_zymo_synthetic/ZymoBIOMICS.STD.refseq.v2.zip
 6_zymo_synthetic/ZymoBIOMICS.STD.refseq.v2/
+8_cami2_strain/genomes_extract/short_read
+8_cami2_strain/setup_extract/short_read
 8_cami2_strain/short_read
 8_cami2_strain/split_reads
+8_cami2_strain/genomes
+8_cami2_strain/strmgCAMI2_genomes.tar.gz
 8_cami2_strain/strmgCAMI2_setup.tar.gz
 8_cami2_strain/strmgCAMI2_setup-extract.done
 8_cami2_strain/gtdbtk_r207/

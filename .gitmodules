@@ -8,3 +8,6 @@
 [submodule "weebill"]
 	path = weebill
 	url = https://github.com/wwood/weebill.git
+[submodule "taxonomake"]
+	path = taxonomake
+	url = https://github.com/timbalam/taxonomake

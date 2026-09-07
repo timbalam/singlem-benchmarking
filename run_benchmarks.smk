@@ -126,7 +126,11 @@ rule download_cami_strain:
 
 rule split_cami_strain:
     input:
-        [f'8_cami2_strain/split_reads/strain{sample_number}.{dir}.fq.gz' for sample_number in range(100) for dir in [1,2]]
+        #[f"8_cami2_strain/split_reads/strain{sample_number}.{dir}.fq.gz"
+        # for sample_number in range(100)
+        # for dir in [1,2]],
+        [f"8_cami2_strain/coverage_definitions/strain{sample_number}.tsv"
+         for sample_number in range(100)]
 
 rule download_cami_strain_reads:
     output:
@@ -143,7 +147,8 @@ rule extract_cami_strain_reads:
     input:
         "8_cami2_strain/short_read/strmgCAMI2_sample_{sample_number}_reads.tar.gz"
     output:
-        "8_cami2_strain/short_read/short_read/2018.09.07_11.43.52_sample_{sample_number}/reads/anonymous_reads.fq.gz"
+        "8_cami2_strain/short_read/short_read/2018.09.07_11.43.52_sample_{sample_number}/reads/anonymous_reads.fq.gz",
+        "8_cami2_strain/short_read/short_read/2018.09.07_11.43.52_sample_{sample_number}/reads/reads_mapping.tsv.gz"
     log:
         "8_cami2_strain/short_read/strmgCAMI2_sample_{sample_number}_reads-extract.log"
     shell:
@@ -165,6 +170,16 @@ rule split_cami_strain_reads:
         "'mkdir -p 8_cami2_strain/split_reads && zcat {input[0]} | " \
         "bin/deinterleave_fastq.sh {output.r1} {output.r2} compress' &> {log}"
 
+rule extract_cami_strain_read_mapping_counts:
+    input:
+        "8_cami2_strain/short_read/short_read/2018.09.07_11.43.52_sample_{sample_number}/reads/reads_mapping.tsv.gz"
+    output:
+        "8_cami2_strain/read_mapping_counts/strain{sample_number}.tsv"
+    shell:
+        "mkdir -p 8_cami2_strain/read_mapping_counts && "
+        "pigz -cd {input[0]} |cut -f2 |sort |uniq -c "
+        "|sed 's/^  *//g' > {output}"
+
 rule download_cami_strain_genomes:
     output:
         "8_cami2_strain/strmgCAMI2_genomes.tar.gz"
@@ -180,14 +195,25 @@ rule extract_cami_strain_genomes:
     input:
         "8_cami2_strain/strmgCAMI2_genomes.tar.gz"
     output:
-        directory("8_cami2_strain/short_read/source_genomes/")
+        directory("8_cami2_strain/genomes/")
     log:
         "8_cami2_strain/strmgCAMI2_genomes-extract.log"
     shell:
-        "bash -c " \
-        "'cd 8_cami2_strain && " \
-        "tar -xzf strmgCAMI2_genomes.tar.gz' &> {log}"
+        "mkdir -p 8_cami2_strain/genomes_extract && " 
+        "tar -xzf {input[0]} -C 8_cami2_strain/genomes_extract && "
+        "mv 8_cami2_strain/genomes_extract/short_read/source_genomes {output[0]} &> {log}"
 
+rule extract_cami_strain_genome_lengths:
+    input:
+        "8_cami2_strain/genomes/"
+    output:
+        directory("8_cami2_strain/genome_lengths")
+    log:
+        "8_cami2_strain/genome_lengths.log"
+    shell:
+        "parallel 'cut -f1,2 {{}} > {output}/{{/.}}.tsv' ::: {input}/*.fai"
+
+# setup has genome_to_id.tsv and coverage_newXX.tsv
 rule download_cami_strain_setup:
     output:
         "8_cami2_strain/strmgCAMI2_setup.tar.gz",
@@ -202,35 +228,62 @@ rule extract_cami_strain_setup:
     input:
         "8_cami2_strain/strmgCAMI2_setup.tar.gz"
     output:
+        directory("8_cami2_strain/setup_extract/short_read"),
         touch("8_cami2_strain/strmgCAMI2_setup-extract.done")
     log:
         "8_cami2_strain/strmgCAMI2_setup-extract.log"
     shell:
-        "bash -c " \
-        "'cd 8_cami2_strain && " \
-        "tar -xzf strmgCAMI2_setup.tar.gz' &> {log}"
-       
-rule download_cami2_profiles:
-    output:
-        '8_cami2_strain/taxonomic_profiling_cami2.tar.gz'
-    log:
-        '8_cami2_strain/cami2_profiles-download.log'
-    shell:
-        "bash -c 'cd 8_cami2_strain && " \
-        "rm -f taxonomic_profiling_cami2.tar.gz && " \
-        "wget https://zenodo.org/records/5006866/files/taxonomic_profiling_cami2.tar.gz?download=1 -O taxonomic_profiling_cami2.tar.gz' &> {log}"
+        "mkdir -p 8_cami2_strain/setup_extract && " \
+        "tar -xzf {input[0]} -C 8_cami2_strain/setup_extract' &> {log}"
 
-rule extract_cami2_profiles:
+rule copy_cami_strain_coverage_definitions:
     input:
-        "8_cami2_strain/taxonomic_profiling_cami2.tar.gz"
+        setup_dir="8_cami2_strain/setup_extract/short_read"
     output:
-        directory("8_cami2_strain/taxonomic_profiling_cami2/")
-    log:
-        "8_cami2_strain/taxonomic_profiling_cami2-extract.log"
+        "8_cami2_strain/coverage_definitions_2/strain{sample_number}.tsv"
     shell:
-        "bash -c " \
-        "'cd 8_cami2_strain && " \
-        "tar -xzf taxonomic_profiling_cami2.tar.gz' &> {log}"
+        "mkdir -p 8_cami2_strain/coverage_definitions && "
+        "mv {input.setup_dir}/coverage_new{wildcards.sample_number}.tsv "
+        "{output[0]}"
+
+rule generate_cami_strain_coverage_definitions:
+    input:
+        setup_dir="8_cami2_strain/setup_extract/short_read",
+        genome_lengths_directory="8_cami2_strain/genome_lengths",
+        read_mapping_counts="8_cami2_strain/read_mapping_counts/{sample}.tsv"
+    output:
+        "8_cami2_strain/coverage_definitions/{sample}.tsv"
+    log:
+        "8_cami2_strain/logs/generate_coverage_defintions-{sample}.log"
+    shell:
+        "python3 {workflow.basedir}/../bin/cami_coverage_defintions.py "
+        "--genome-to-id {input.setup_dir}/genome_to_id.tsv " 
+        "--genome-lengths-directory {input.genome_lengths_directory} " \
+        "--read-mapping-counts {input.read_mapping_counts} " \
+        "> {output[0]} 2> {log}"
+
+## profiles not useful
+# rule download_cami2_profiles:
+#     output:
+#         '8_cami2_strain/taxonomic_profiling_cami2.tar.gz'
+#     log:
+#         '8_cami2_strain/cami2_profiles-download.log'
+#     shell:
+#         "bash -c 'cd 8_cami2_strain && " \
+#         "rm -f taxonomic_profiling_cami2.tar.gz && " \
+#         "wget https://zenodo.org/records/5006866/files/taxonomic_profiling_cami2.tar.gz?download=1 -O taxonomic_profiling_cami2.tar.gz' &> {log}"
+
+# rule extract_cami2_profiles:
+#     input:
+#         "8_cami2_strain/taxonomic_profiling_cami2.tar.gz"
+#     output:
+#         directory("8_cami2_strain/taxonomic_profiling_cami2/")
+#     log:
+#         "8_cami2_strain/taxonomic_profiling_cami2-extract.log"
+#     shell:
+#         "bash -c " \
+#         "'cd 8_cami2_strain && " \
+#         "tar -xzf taxonomic_profiling_cami2.tar.gz' &> {log}"
 
 rule download_gtdbtk_r207_data:
     output:

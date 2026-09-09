@@ -234,6 +234,18 @@ sqlparse = "*"  # Required indirectly (e.g. taxtastic)
 [feature.singlem-regime3.pypi-dependencies]
 singlem = {path = "singlem_sylph_condense_regime", editable = true}
 
+[feature.taxonomake.dependencies]
+python = ">=3.9"
+snakemake = "9.*" # Current target, v10 not released yet
+snakemake-executor-plugin-cluster-generic = "*"
+"ruamel.yaml" = ">=0.15.99"
+polars = "*"
+pigz = ">=2.6"
+extern = "*"
+
+[feature.taxonomake.pypi-dependencies]
+taxonomake = {path = "taxonomake", editable = true}
+
 [environments]
 singlem = { features = ["singlem"], no-default-feature = true }
 metaphlan = { features = ["metaphlan"], no-default-feature = true }
@@ -258,3 +270,4 @@ meteor2 = { features = ["meteor2"], no-default-feature = true }
 fastexcel = { features = ["fastexcel"], no-default-feature = true }
 gtdbtk = { features = ["gtdbtk"], no-default-feature = true }
 singlem-regime3 = { features = ["singlem-regime3"], no-default-feature = true }
+taxonomake = { features = ["taxonomake"], no-default-feature = true }

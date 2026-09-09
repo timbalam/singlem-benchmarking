@@ -1,0 +1,1 @@
+parallel echo -e "{}'\t'{/.}" ::: genomes/*.fasta > genomes_list.tsv

@@ -126,9 +126,9 @@ rule download_cami_strain:
 
 rule split_cami_strain:
     input:
-        #[f"8_cami2_strain/split_reads/strain{sample_number}.{dir}.fq.gz"
-        # for sample_number in range(100)
-        # for dir in [1,2]],
+        [f"8_cami2_strain/split_reads/strain{sample_number}.{dir}.fq.gz"
+         for sample_number in range(100)
+         for dir in [1,2]],
         [f"8_cami2_strain/coverage_definitions/strain{sample_number}.tsv"
          for sample_number in range(100)]
 
@@ -137,6 +137,7 @@ rule download_cami_strain_reads:
         "8_cami2_strain/short_read/strmgCAMI2_sample_{sample_number}_reads.tar.gz"
     log:
         "8_cami2_strain/short_read/strmgCAMI2_sample_{sample_number}_reads-download.log"
+    localrule: True
     shell:
         "bash -c " \
         "'mkdir -p 8_cami2_strain/short_read && " \
@@ -151,6 +152,7 @@ rule extract_cami_strain_reads:
         "8_cami2_strain/short_read/short_read/2018.09.07_11.43.52_sample_{sample_number}/reads/reads_mapping.tsv.gz"
     log:
         "8_cami2_strain/short_read/strmgCAMI2_sample_{sample_number}_reads-extract.log"
+    localrule: True
     shell:
         "bash -c " \
         "'cd 8_cami2_strain/short_read && " \
@@ -165,6 +167,7 @@ rule split_cami_strain_reads:
         done=touch("8_cami2_strain/split_reads/strain{sample_number}.done")
     log:
         "8_cami2_strain/split_reads/strain{sample_number}.log"
+    localrule: True
     shell:
         "bash -c " \
         "'mkdir -p 8_cami2_strain/split_reads && zcat {input[0]} | " \
@@ -185,6 +188,7 @@ rule download_cami_strain_genomes:
         "8_cami2_strain/strmgCAMI2_genomes.tar.gz"
     log:
         "8_cami2_strain/strmgCAMI2_genomes-download.log"
+    localrule: True
     shell:
         "bash -c " \
         "'mkdir -p 8_cami2_strain && " \
@@ -198,10 +202,13 @@ rule extract_cami_strain_genomes:
         directory("8_cami2_strain/genomes/")
     log:
         "8_cami2_strain/strmgCAMI2_genomes-extract.log"
+    localrule: True
     shell:
         "mkdir -p 8_cami2_strain/genomes_extract && " 
         "tar -xzf {input[0]} -C 8_cami2_strain/genomes_extract && "
-        "mv 8_cami2_strain/genomes_extract/short_read/source_genomes {output[0]} &> {log}"
+        "mv 8_cami2_strain/genomes_extract/short_read/source_genomes {output[0]} && "
+        "rmdir 8_cami2_strain/genomes_extract/short_read && "
+        "rmdir 8_cami2_strain/genomes_extract &> {log}"
 
 rule extract_cami_strain_genome_lengths:
     input:
@@ -211,6 +218,7 @@ rule extract_cami_strain_genome_lengths:
     log:
         "8_cami2_strain/genome_lengths.log"
     shell:
+        "mkdir -p {output} && "
         "parallel 'cut -f1,2 {{}} > {output}/{{/.}}.tsv' ::: {input}/*.fai"
 
 # setup has genome_to_id.tsv and coverage_newXX.tsv
@@ -219,6 +227,7 @@ rule download_cami_strain_setup:
         "8_cami2_strain/strmgCAMI2_setup.tar.gz",
     log:
         '8_cami2_strain/strmgCAMI2_setup-download.log'
+    localrule: True
     shell:
         "bash -c 'cd 8_cami2_strain && " \
         "rm -f strmgCAMI2_setup.tar.gz && " \
@@ -232,6 +241,7 @@ rule extract_cami_strain_setup:
         touch("8_cami2_strain/strmgCAMI2_setup-extract.done")
     log:
         "8_cami2_strain/strmgCAMI2_setup-extract.log"
+    localrule: True
     shell:
         "mkdir -p 8_cami2_strain/setup_extract && " \
         "tar -xzf {input[0]} -C 8_cami2_strain/setup_extract' &> {log}"
@@ -241,6 +251,7 @@ rule copy_cami_strain_coverage_definitions:
         setup_dir="8_cami2_strain/setup_extract/short_read"
     output:
         "8_cami2_strain/coverage_definitions_2/strain{sample_number}.tsv"
+    localrule: True
     shell:
         "mkdir -p 8_cami2_strain/coverage_definitions && "
         "mv {input.setup_dir}/coverage_new{wildcards.sample_number}.tsv "
@@ -255,8 +266,9 @@ rule generate_cami_strain_coverage_definitions:
         "8_cami2_strain/coverage_definitions/{sample}.tsv"
     log:
         "8_cami2_strain/logs/generate_coverage_defintions-{sample}.log"
+    localrule: True
     shell:
-        "python3 {workflow.basedir}/../bin/cami_coverage_defintions.py "
+        "python3 {workflow.basedir}/bin/cami_coverage_definitions.py "
         "--genome-to-id {input.setup_dir}/genome_to_id.tsv " 
         "--genome-lengths-directory {input.genome_lengths_directory} " \
         "--read-mapping-counts {input.read_mapping_counts} " \
@@ -306,6 +318,23 @@ rule extract_gtdbtk_r207_data:
         "bash -c " \
         "'cd tool_reference_data && " \
         "tar -xzf gtdbtk_r207_v2_data.tar.gz' &> {log}"
+
+rule taxonomake_cami_strain:
+    input:
+        coverages=[f"8_cami2_strain/coverage_definitions/strain{sample_number}.tsv"
+                   for sample_number in range(100)],
+        reads1=[f"8_cami2_strain/split_reads/strain{sample_number}.1.fq.gz"
+                for sample_number in range(100)],
+        reads2=[f"8_cami2_strain/split_reads/strain{sample_number}.2.fq.gz"
+                for sample_number in range(100)]
+    output:
+        truth="8_cami2_strain/profile.condensed"
+    log:
+        "8_cami2_strain/taxonomake.log"
+    shell:
+        "pixi run -e taxonomake "
+        "taxonomake 8_cami2_strain/community.yaml &> {log}"
+
 
 def gtdbtk_data_path(wildcards):
     return abspath("tool_reference_data/release207_v2")

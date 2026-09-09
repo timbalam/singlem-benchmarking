@@ -1,0 +1,20 @@
+truth: "truth/profile.condensed"
+
+coverages:
+  strain0: "coverage_definitions/strain0.tsv"
+  strain1: "coverage_definitions/strain1.tsv"
+
+samples:
+  names: ["strain0", "strain1"]
+  reads1: ["split_reads/strain0.1.fq.gz", "split_reads/strain0.2.fq.gz"]
+  reads2: ["split_reads/strain1.1.fq.gz", "split_reads/strain1.2.fq.gz"]
+
+taxonomy: "taxonomy.tsv"
+
+genomes_list: "genomes_list.tsv"
+
+classify:
+  tool: "gtdbtk"
+  release: "207"
+  directory: "gtdbtk_r207"
+  data: "../tool_reference_data/release207_v2"

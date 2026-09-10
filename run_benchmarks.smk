@@ -1,10 +1,18 @@
 from os.path import join, dirname, abspath
 import polars as pl
+import sys
+import os
 
 datasets_bench5 = [f'marine{i}' for i in range(1)]
 
 singlem_metapackage = join(dirname(workflow.snakefile), "tool_reference_data/S4.1.0.GTDB_r207.metapackage_20240502.smpkg")
 sylph_package = join(dirname(workflow.snakefile), "tool_reference_data/gtdb_database.syldb")
+
+PROFILE=(
+    sys.argv[sys.argv.index('--profile') + 1]
+    if '--profile' in sys.argv
+    else os.getenv('SNAKEMAKE_PROFILE', default = '')
+)
 
 #####################################################################
 
@@ -331,9 +339,13 @@ rule taxonomake_cami_strain:
         truth="8_cami2_strain/profile.condensed"
     log:
         "8_cami2_strain/taxonomake.log"
+    localrule: True
     shell:
+        "mkdir -p 8_cami2_strain/taxonomake && "
+        f"SNAKEMAKE_PROFILE={PROFILE} "
         "pixi run -e taxonomake "
-        "taxonomake 8_cami2_strain/community.yaml &> {log}"
+        "taxonomake 8_cami2_strain/community.yaml "
+        "--directory 8_cami2_strain/taxonomkae &> {log}"
 
 
 def gtdbtk_data_path(wildcards):

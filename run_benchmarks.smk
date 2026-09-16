@@ -126,6 +126,13 @@ rule extract_zymo_reference_genomes:
 
 # ## 8 cami2 strain madness
 
+cami_strain_samples = [f"strain{sample_number}" for sample_number in range(100)]
+
+rule bench_cami_strain:
+    input:
+        expand("8_cami2_strain/output_{tool}/opal/{sample}.opal_report",
+               sample = cami_strain_samples, tool = ['singlem', 'sylph', 'singlem_joint_a846591'])
+
 rule download_cami_strain:
     input:
         [f'8_cami2_strain/short_read/short_read/2018.09.07_11.43.52_sample_{sample_number}/reads/anonymous_reads.fq.gz' for sample_number in range(100)],
@@ -134,11 +141,11 @@ rule download_cami_strain:
 
 rule split_cami_strain:
     input:
-        [f"8_cami2_strain/split_reads/strain{sample_number}.{dir}.fq.gz"
-         for sample_number in range(100)
+        [f"8_cami2_strain/local_reads/{sample}.{dir}.fq.gz"
+         for sample in cami_strain_samples
          for dir in [1,2]],
-        [f"8_cami2_strain/coverage_definitions/strain{sample_number}.tsv"
-         for sample_number in range(100)]
+        [f"8_cami2_strain/coverage_definitions/{sample}.tsv"
+         for sample in cami_strain_samples]
 
 rule download_cami_strain_reads:
     output:
@@ -170,15 +177,15 @@ rule split_cami_strain_reads:
     input:
         "8_cami2_strain/short_read/short_read/2018.09.07_11.43.52_sample_{sample_number}/reads/anonymous_reads.fq.gz"
     output:
-        r1="8_cami2_strain/split_reads/strain{sample_number}.1.fq.gz",
-        r2="8_cami2_strain/split_reads/strain{sample_number}.2.fq.gz",
-        done=touch("8_cami2_strain/split_reads/strain{sample_number}.done")
+        r1="8_cami2_strain/local_reads/strain{sample_number}.1.fq.gz",
+        r2="8_cami2_strain/local_reads/strain{sample_number}.2.fq.gz",
+        done=touch("8_cami2_strain/local_reads/strain{sample_number}.done")
     log:
-        "8_cami2_strain/split_reads/strain{sample_number}.log"
+        "8_cami2_strain/local_reads/strain{sample_number}.log"
     localrule: True
     shell:
         "bash -c " \
-        "'mkdir -p 8_cami2_strain/split_reads && zcat {input[0]} | " \
+        "'mkdir -p 8_cami2_strain/local_reads && zcat {input[0]} | " \
         "bin/deinterleave_fastq.sh {output.r1} {output.r2} compress' &> {log}"
 
 rule extract_cami_strain_read_mapping_counts:
@@ -329,23 +336,23 @@ rule extract_gtdbtk_r207_data:
 
 rule taxonomake_cami_strain:
     input:
-        coverages=[f"8_cami2_strain/coverage_definitions/strain{sample_number}.tsv"
-                   for sample_number in range(100)],
-        reads1=[f"8_cami2_strain/split_reads/strain{sample_number}.1.fq.gz"
-                for sample_number in range(100)],
-        reads2=[f"8_cami2_strain/split_reads/strain{sample_number}.2.fq.gz"
-                for sample_number in range(100)]
+        coverages=[f"8_cami2_strain/coverage_definitions/{sample}.tsv"
+                   for sample in cami_strain_samples],
+        reads1=[f"8_cami2_strain/local_reads/{sample}.1.fq.gz"
+                for sample in cami_strain_samples],
+        reads2=[f"8_cami2_strain/local_reads/{sample}.2.fq.gz"
+                for sample in cami_strain_samples]
     output:
-        truth="8_cami2_strain/profile.condensed"
+        truth=[f"8_cami2_strain/truths/{sample}.condensed"
+               for sample in cami_strain_samples]
     log:
         "8_cami2_strain/taxonomake.log"
     localrule: True
     shell:
-        "mkdir -p 8_cami2_strain/taxonomake && "
         f"SNAKEMAKE_PROFILE={PROFILE} "
         "pixi run -e taxonomake "
         "taxonomake 8_cami2_strain/community.yaml "
-        "--directory 8_cami2_strain/taxonomkae &> {log}"
+        "--directory 8_cami2_strain/taxonomake &> {log}"
 
 
 def gtdbtk_data_path(wildcards):

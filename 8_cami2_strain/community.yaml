@@ -1,19 +1,4 @@
-samples:
-  names:
-    - "strain0"
-    - "strain1"
-  reads1:
-    - "split_reads/strain0.1.fq.gz"
-    - "split_reads/strain0.2.fq.gz"
-  reads2:
-    - "split_reads/strain1.1.fq.gz"
-    - "split_reads/strain1.2.fq.gz"
-  coverages:
-    - "coverage_definitions/strain0.tsv"
-    - "coverage_definitions/strain1.tsv"
-  truths:
-    - "truths/strain0.condensed"
-    - "truths/strain1.condensed"
+samples: "samples.tsv"
 
 taxonomy: "taxonomy.tsv"
 

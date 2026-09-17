@@ -68,10 +68,31 @@ To generate a GTDB v207 database for sylph you will need a folder with all the G
 #ALL_GTDBR207_GENOMES_DIR=/work/microbiome/db/gtdb/gtdb_release207/genomic_files_reps/gtdb_genomes_reps_r207
 cd tool_reference_data && {
     find $ALL_GTDBR207_GENOMES_DIR | grep .fna > gtdb_all.txt &&
-        pixi run --environment sylph sylph sketch -l gtdb_all.txt -t 50 -o gtdb_database
+        pixi run -e sylph sylph sketch -l gtdb_all.txt -t 50 -o gtdb_database
     cd ..
 }
 ```
+
+To generate a GTDB v207 database for weebill first build weebill from source
+```bash
+pixi run -e rust 'cd weebill && cargo build --release'
+```
+
+Using the same folder of GTDB v207 genomes as above
+```bash
+#ALL_GTDBR207_GENOMES_DIR=/work/microbiome/db/gtdb/gtdb_release207/genomic_files_reps/gtdb_genomes_reps_r207
+cd tool_reference_data && {
+    find $ALL_GTDBR207_GENOMES_DIR | grep .fna > gtdb_all.txt &&
+        ../weebill/target/release/weebill sketch -l gtdb_all.txt -t 50 -c 100 -o weebill_r207.100
+    cd ..
+}
+```
+
+Covert the weebill database to 2-stage.
+```bash
+pixi run snakemake --snakefile gather_tool_databases.smk -c 8 weebill_db_convert
+```
+
 
 For MetaKSSD clone the repository to obtain shuf files:
 ```bash

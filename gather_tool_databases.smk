@@ -42,6 +42,10 @@ map2b_db = os.path.join(map2b_checkout_dir, 'database/GTDB')
 # metabuli_db_dir = join(output_directory, 'metabuli')
 # metabuli_db = join(metabuli_db_dir, 'gtdb')
 
+weebill_syldb = os.path.join(output_directory, "weebill_r207.100.syldb")
+weebill_db = os.path.join(output_directory, "weebill_r207.100.syl2db")
+weebill_binary = 'weebill/target/release/weebill'
+
 # map2b is excluded: its database is GTDB r202 (a release behind this benchmark's
 # r207) and its DownloadDB.py figshare links currently return empty 202
 # responses, so the download cannot complete. See the commented-out map2b rules
@@ -463,3 +467,17 @@ rule extract_zymo_reference_genomes:
         """
         cd 6_zymo && unzip ZymoBIOMICS.STD.refseq.v2.zip &> ../{log}
         """
+
+rule weebill_db_convert:
+    input:
+        weebill_syl=weebill_syldb
+    output:
+        weebill_syl2db=weebill_db
+    resources:
+        mem_mb=64000,
+        runtime=120
+    log:
+        join(output_directory, "singlem-regime3.weebill.log")
+    shell:
+        f"{weebill_binary} "
+        "db-convert {input.weebill_syl} -o {output.weebill_syl2db} &> {log}"

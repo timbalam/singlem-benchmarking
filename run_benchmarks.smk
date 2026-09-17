@@ -8,6 +8,16 @@ datasets_bench5 = [f'marine{i}' for i in range(1)]
 singlem_metapackage = join(dirname(workflow.snakefile), "tool_reference_data/S4.1.0.GTDB_r207.metapackage_20240502.smpkg")
 sylph_package = join(dirname(workflow.snakefile), "tool_reference_data/gtdb_database.syldb")
 
+weebill_binary = abspath(join('weebill', 'target', 'release', 'weebill'))
+#weebill_db = '/scratch/microbiome/woodcrob/non_sensitive/weebill_dbs/r207.100.syl2db'
+weebill_db = join(dirname(workflow.snakefile), "tool_reference_data/weebill_r207.100.syl2db")
+singlem_regime3_git_base_directory = join(dirname(workflow.snakefile), 'singlem_sylph_condense_regime')
+regime3_weebill_scripts = join(
+    singlem_regime3_git_base_directory, 'extras/singlem_weebill_benchmark/scripts')
+
+singlem_regime3_metapackage_local = singlem_metapackage
+regime3_weebill_mem_mb = 16000
+
 PROFILE=(
     sys.argv[sys.argv.index('--profile') + 1]
     if '--profile' in sys.argv
@@ -131,7 +141,7 @@ cami_strain_samples = [f"strain{sample_number}" for sample_number in range(100)]
 rule bench_cami_strain:
     input:
         expand("8_cami2_strain/output_{tool}/opal/{sample}.opal_report",
-               sample = cami_strain_samples, tool = ['singlem', 'sylph', 'singlem_joint_a846591'])
+               sample = cami_strain_samples, tool = ['singlem', 'sylph', 'singlem_joint_a846591', 'singlem-regime3'])
 
 rule download_cami_strain:
     input:
@@ -724,6 +734,80 @@ rule singlem_run_condense:
         "singlem condense --input-archive-otu-table {input.report} " \
         "--output-after-em-otu-table {output.after_em} " \
         "-p {output.profile} --metapackage {input.db} &> {log}"
+
+rule singlem_regime3_pipe_to_archive:
+    input:
+        r1="{bench_dir}/local_reads/{sample}.1.fq.gz",
+        r2="{bench_dir}/local_reads/{sample}.2.fq.gz",
+        db=singlem_regime3_metapackage_local
+    output:
+        archive="{bench_dir}/output_singlem-regime3/singlem-regime3/{sample}.archive.json",
+        done=touch("{bench_dir}/output_singlem-regime3/singlem-regime3/{sample}.archive.done")
+    threads: 8
+    resources:
+        runtime=180,  # singlem pipe --no-weebill; 3h ceiling
+    log:
+        "{bench_dir}/output_singlem-regime3/logs/singlem-regime3/{sample}.pipe.log",
+    shell:
+        'unset PYTHONPATH && eval "$(pixi shell-hook -e singlem-regime3)" && '
+        "singlem pipe --threads {threads} -1 {input.r1} -2 {input.r2} "
+        "--no-weebill --archive-otu-table {output.archive} --metapackage {input.db} &> {log}"
+
+rule singlem_regime3_weebill_profile:
+    input:
+        r1="{bench_dir}/local_reads/{sample}.1.fq.gz",
+        r2="{bench_dir}/local_reads/{sample}.2.fq.gz",
+        database=weebill_db
+    output:
+        profile="{bench_dir}/output_singlem-regime3/singlem-regime3/{sample}.weebill.tsv",
+        done=touch("{bench_dir}/output_singlem-regime3/singlem-regime3/{sample}.weebill.done"),
+    threads: 8
+    resources:
+        mem_mb=regime3_weebill_mem_mb,
+        runtime=120,  # weebill profile is fast; 2h is ample
+    log:
+        "{bench_dir}/output_singlem-regime3/logs/singlem-regime3/{sample}.weebill.log",
+    shell:
+        "{weebill_binary} "
+        "profile --two-stage -t {threads} -c 100 "
+        "-1 {input.r1} -2 {input.r2} -o {output.profile} {input.database} -u &> {log} && "
+        # weebill writes only a header when nothing is detected; ensure >=1 data row
+        "awk 'END {{ exit NR < 2 }}' {output.profile}"
+
+rule singlem_regime3_annotate_weebill:
+    input:
+        profile="{bench_dir}/output_singlem-regime3/singlem-regime3/{sample}.weebill.tsv",
+        db=singlem_regime3_metapackage_local,
+    output:
+        annotated="{bench_dir}/output_singlem-regime3/singlem-regime3/{sample}.weebill.annotated.tsv",
+    resources:
+        runtime=60,  # trivial annotation step
+    log:
+        "{bench_dir}/output_singlem-regime3/logs/singlem-regime3/{sample}.annotate.log",
+    shell:
+        'unset PYTHONPATH && eval "$(pixi shell-hook -e singlem-regime3)" && '
+        "PYTHONPATH={singlem_regime3_git_base_directory} python3 {regime3_weebill_scripts}/annotate_weebill.py "
+        "--profile {input.profile} --metapackage {input.db} --output {output.annotated} &> {log}"
+
+rule singlem_regime3_condense_joint:
+    input:
+        archive="{bench_dir}/output_singlem-regime3/singlem-regime3/{sample}.archive.json",
+        weebill_profile="{bench_dir}/output_singlem-regime3/singlem-regime3/{sample}.weebill.annotated.tsv",
+        db=singlem_regime3_metapackage_local,
+    output:
+        profile="{bench_dir}/output_singlem-regime3/singlem-regime3/{sample}.profile",
+        done=touch("{bench_dir}/output_singlem-regime3/singlem-regime3/{sample}.profile.done"),
+    threads: 1
+    resources:
+        runtime=60,  # condense is quick
+    log:
+        "{bench_dir}/output_singlem-regime3/logs/singlem-regime3/{sample}.condense.log",
+    shell:
+        'unset PYTHONPATH && eval "$(pixi shell-hook -e singlem-regime3)" && '
+        "singlem condense --input-archive-otu-table {input.archive} --metapackage {input.db} "
+        "--weebill-profile {input.weebill_profile} --joint --taxonomic-profile {output.profile} "
+        "--joint-pin-weebill-species --joint-novel-budget --alpha 1 "
+        "&> {log}"
 
 rule singlem_dev_run_renew:
     input:

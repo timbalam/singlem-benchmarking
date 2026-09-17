@@ -267,6 +267,10 @@ extern = "*"
 [feature.taxonomake.pypi-dependencies]
 taxonomake = {path = "taxonomake", editable = true}
 
+[feature.rust.dependencies]
+rust = "*"
+cmake = "*"
+
 [environments]
 singlem = { features = ["singlem"], no-default-feature = true }
 metaphlan = { features = ["metaphlan"], no-default-feature = true }
@@ -294,3 +298,4 @@ fastexcel = { features = ["fastexcel"], no-default-feature = true }
 gtdbtk = { features = ["gtdbtk"], no-default-feature = true }
 singlem-regime3 = { features = ["singlem-regime3"], no-default-feature = true }
 taxonomake = { features = ["taxonomake"], no-default-feature = true }
+rust = { features = ["rust"], no-default-feature = true }

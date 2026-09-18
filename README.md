@@ -73,6 +73,9 @@ cd tool_reference_data && {
 }
 ```
 
+GTDB v207 genomes can be downloaded from
+<https://data.gtdb.ecogenomic.org/releases/release207/207.0/genomic_files_reps/gtdb_genomes_reps_r207.tar.gz>
+
 To generate a GTDB v207 database for weebill first build weebill from source
 ```bash
 pixi run -e rust 'cd weebill && cargo build --release'
@@ -91,6 +94,14 @@ cd tool_reference_data && {
 Covert the weebill database to 2-stage.
 ```bash
 pixi run snakemake --snakefile gather_tool_databases.smk -c 8 weebill_db_convert
+```
+
+Create concatenated genomes fasta file for coverm.
+```bash
+cd tool_reference_data && {
+    find $ALL_GTDBR207_GENOMES_DIR -name '*.fna' -exec cat {} \; > gtdb_r207_genomes.fna
+    cd ..
+}
 ```
 
 

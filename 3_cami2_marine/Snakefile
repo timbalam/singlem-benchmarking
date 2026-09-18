@@ -14,7 +14,7 @@ from tool_reference_data import *
 num_threads = config['benchmarking_threads']
 
 # Comparison set + coverm (strobealign) for this run.
-tools = ['singlem', 'sylph', 'singlem-regime3', 'metaphlan', 'coverm']
+tools = ['singlem', 'sylph', 'singlem-regime3', 'metaphlan', 'coverm'][:4]
 
 output_prefix = 'output_'
 # output_dirs_dict covers every tool the shared rules might reference at parse
@@ -80,7 +80,7 @@ localrules:
     truth_condensed_to_biobox,
     tool_condensed_to_biobox,
     sylph_report_to_condensed,
-    coverm_to_condensed,
+#    coverm_to_condensed,
 
 rule all:
     input:
@@ -108,5 +108,5 @@ include: "../rules/common.smk"
 include: "../rules/singlem_run.smk"
 include: "../rules/metaphlan_run.smk"
 include: "../rules/sylph_run.smk"
-include: "../rules/coverm_run.smk"
+#include: "../rules/coverm_run.smk"
 include: "../rules/singlem_regime3_run.smk"

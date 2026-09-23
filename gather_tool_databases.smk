@@ -481,3 +481,32 @@ rule weebill_db_convert:
     shell:
         f"{weebill_binary} "
         "db-convert {input.weebill_syl} -o {output.weebill_syl2db} &> {log}"
+
+rule download_metax_profiles:
+    output:
+        touch("18_metax_gut/metax_profiles-download.done"),
+    log:
+        "18_metax_gut/metax_profiles-download.log"
+    shell:
+        "cd 18_metax_gut && "
+        "wget 'https://zenodo.org/records/20128301/files/metax_benchmark_profiles.zip?download=1' "
+        "-O metax_benchmark_profiles.zip &> ../{log}"
+
+rule download_metax_gut:
+    output:
+        touch("18_metax_gut/metax_gut-download.done"),
+    log:
+        "18_metax_gut/metax_gut-download.log"
+    shell:
+        "cd 18_metax_gut && "
+        "wget 'https://research.bifo.helmholtz-hzi.de/downloads/metax/benchmark_datasets/gut/' "
+        "-r -np -R \"index.html*\" -P gut_dataset &> ../{log}"
+        
+rule download_cami2_accession2taxid:
+    output:
+        touch("18_metax_gut/ncbi_accession2taxid-download.done"),
+    log:
+        "18_metax_gut/ncbi_accession2taxid-download.log"
+    shell:
+        "wget 'https://openstack.cebitec.uni-bielefeld.de:8080/swift/v1/CAMI_2_DATABASES/ncbi_taxonomy_accession2taxid.tar' "
+        "-P 18_metax_gut &> {log}"

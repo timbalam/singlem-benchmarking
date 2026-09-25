@@ -510,3 +510,12 @@ rule download_cami2_accession2taxid:
     shell:
         "wget 'https://openstack.cebitec.uni-bielefeld.de:8080/swift/v1/CAMI_2_DATABASES/ncbi_taxonomy_accession2taxid.tar' "
         "-P 18_metax_gut &> {log}"
+
+rule download_cami2_refseqdb:
+    output:
+        touch("18_metax_gut/ncbi_refseqdb-download.done"),
+    log:
+        "18_metax_gut/ncbi_refseqdb-download.log"
+    shell:
+        "wget 'https://openstack.cebitec.uni-bielefeld.de:8080/swift/v1/CAMI_2_DATABASES/RefSeq_genomic_20190108.tar' "
+        "-P 18_metax_gut &> {log}"

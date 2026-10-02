@@ -488,9 +488,8 @@ rule download_metax_profiles:
     log:
         "18_metax_gut/metax_profiles-download.log"
     shell:
-        "cd 18_metax_gut && "
         "wget 'https://zenodo.org/records/20128301/files/metax_benchmark_profiles.zip?download=1' "
-        "-O metax_benchmark_profiles.zip &> ../{log}"
+        "-O 18_metax_gut/metax_benchmark_profiles.zip &> {log}"
 
 rule download_metax_gut:
     output:
@@ -498,9 +497,8 @@ rule download_metax_gut:
     log:
         "18_metax_gut/metax_gut-download.log"
     shell:
-        "cd 18_metax_gut && "
         "wget 'https://research.bifo.helmholtz-hzi.de/downloads/metax/benchmark_datasets/gut/' "
-        "-r -np -R \"index.html*\" -P gut_dataset &> ../{log}"
+        "-r -np -R \"index.html*\" -P 18_metax_gut/gut_dataset &> {log}"
         
 rule download_cami2_accession2taxid:
     output:
@@ -519,3 +517,34 @@ rule download_cami2_refseqdb:
     shell:
         "wget 'https://openstack.cebitec.uni-bielefeld.de:8080/swift/v1/CAMI_2_DATABASES/RefSeq_genomic_20190108.tar' "
         "-P 18_metax_gut &> {log}"
+
+rule download_cami3_taxdump:
+    output:
+        touch("18_metax_gut/cami3_taxdump-download.done")
+    log:
+        "18_metax_gut/cami3_taxdump-download.log"
+    shell:
+        "wget 'https://s3.bi.denbi.de/cami3__human-gut-challenge/databases/taxdmp_2026-07-01.zip?AWSAccessKeyId=d4098cac781f4b079ab33853731fcc30&Signature=fl9Y128uTIjqbZLi2ZO5BqFCDHk%3D&Expires=1815734514' "
+        "-O 18_metax_gut/taxdmp_2026-07-01.zip &> {log}"
+
+rule extract_cami3_taxdump:
+    input:
+        "18_metax_gut/cami3_taxdump-download.done"
+    output:
+        touch("18_metax_gut/cami3_taxdump-extract.done"),
+        d1 = directory("18_metax_gut/.taxonkit"),
+    log:
+        "18_metax_gut/cami3_taxdump-extract.log"
+    shell:
+        "mkdir -p {output.d1} && "
+        "unzip 18_metax_gut/taxdump_2026-07-01.zip -d {output.d1} &> {log}"
+
+rule download_ncbi_prot_accession2taxid:
+    output:
+        touch("18_metax_gut/ncbi_prot.accession2taxid-download.done")
+    log:
+        "18_metax_gut/ncbi_prot.accession2taxid-download.log"
+    shell:
+        "wget 'ftp://ftp.ncbi.nih.gov/pub/taxonomy/accession2taxid/prot.accession2taxid.gz' "
+        "-O 18_metax_gut/prot.accession2taxid.gz &> {log}"
+

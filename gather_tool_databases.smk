@@ -482,14 +482,54 @@ rule weebill_db_convert:
         f"{weebill_binary} "
         "db-convert {input.weebill_syl} -o {output.weebill_syl2db} &> {log}"
 
+# metax benchmarks
 rule download_metax_profiles:
     output:
-        touch("18_metax_gut/metax_profiles-download.done"),
+        done = touch("18_metax_gut/metax_profiles-download.done"),
+        zip = "18_metax_gut/metax_benchmark_profiles.zip"
     log:
         "18_metax_gut/metax_profiles-download.log"
     shell:
         "wget 'https://zenodo.org/records/20128301/files/metax_benchmark_profiles.zip?download=1' "
-        "-O 18_metax_gut/metax_benchmark_profiles.zip &> {log}"
+        "-O {output.zip} &> {log}"
+
+rule extract_metax_profiles:
+    input:
+        zip = "18_metax_gut/metax_benchmark_profiles.zip"
+    output:
+        done = touch("18_metax_gut/metax_profiles-extract.done"),
+        dir = directory("18_metax_gut/metax_benchmark_profiles")
+    log:
+        "18_metax_gut/metax_profiles-extract.log"
+    shell:
+        "unzip {input.zip} -d 18_metax_gut &> {log}"
+
+rule metax_profiles_to_condensed:
+    input:
+        dir = "18_metax_gut/metax_benchmark_profiles"
+    output:
+        directory("18_metax_gut/condensed")
+    log:
+        "18_metax_gut/metax_profiles_to_condensed.log"
+    shell:
+        "mkdir -p {output} && "
+        "pixi run -e taxonkit "
+        "python3 bin/biobox_to_condensed_profiles.py "
+        "--profile {input.dir}/gut/Gold_standard.profile "
+        "--outdir {output} &> {log}"
+
+rule metax_extract_taxids:
+    input:
+        directory("18_metax_gut/condensed")
+    output:
+        "18_metax_gut/taxids.txt"
+    shell:
+        ": > {output} && "
+        "for f in {input}/*; do "
+        "  cat $f | " 
+        "  pixi run -e taxonkit csvtk cut -t -f taxonomy | "
+        "  sed 1d > {output} "
+        "done"
 
 rule download_metax_gut:
     output:
@@ -499,15 +539,30 @@ rule download_metax_gut:
     shell:
         "wget 'https://research.bifo.helmholtz-hzi.de/downloads/metax/benchmark_datasets/gut/' "
         "-r -np -R \"index.html*\" -P 18_metax_gut/gut_dataset &> {log}"
-        
+
+# don't need? datasets takes taxon ids directly     
 rule download_cami2_accession2taxid:
     output:
-        touch("18_metax_gut/ncbi_accession2taxid-download.done"),
+        done = touch("18_metax_gut/ncbi_accession2taxid-download.done"),
+        tar = "18_metax_gut/ncbi_taxonomy_accession2taxid.tar"
     log:
         "18_metax_gut/ncbi_accession2taxid-download.log"
     shell:
         "wget 'https://openstack.cebitec.uni-bielefeld.de:8080/swift/v1/CAMI_2_DATABASES/ncbi_taxonomy_accession2taxid.tar' "
         "-P 18_metax_gut &> {log}"
+        #"wget 'ftp://ftp.ncbi.nih.gov/pub/taxonomy/accession2taxid/prot.accession2taxid.gz' "
+
+# don't need?
+rule extract_cami2_accession2taxid:
+    input:
+        "18_metax_gut/ncbi_taxonomy_accession2taxid.tar"
+    output:
+        touch("18_metax_gut/ncbi-accession2taxid-extract.done"),
+        d1 = directory("18_metax_gut/ncbi-accession2taxid"),
+    log:
+        "18_metax_gut/ncbi-accession2taxid-extract.log"
+    shell:
+        "tar -xf {input} -C 18_metax_gut &> {log}"
 
 rule download_cami2_refseqdb:
     output:
@@ -538,13 +593,3 @@ rule extract_cami3_taxdump:
     shell:
         "mkdir -p {output.d1} && "
         "unzip 18_metax_gut/taxdump_2026-07-01.zip -d {output.d1} &> {log}"
-
-rule download_ncbi_prot_accession2taxid:
-    output:
-        touch("18_metax_gut/ncbi_prot.accession2taxid-download.done")
-    log:
-        "18_metax_gut/ncbi_prot.accession2taxid-download.log"
-    shell:
-        "wget 'ftp://ftp.ncbi.nih.gov/pub/taxonomy/accession2taxid/prot.accession2taxid.gz' "
-        "-O 18_metax_gut/prot.accession2taxid.gz &> {log}"
-

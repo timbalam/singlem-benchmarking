@@ -273,11 +273,12 @@ cmake = "*"
 
 [feature.taxonkit.dependencies]
 taxonkit = "*"
-
-[feature.bb2cov.pypi-dependencies]
 cami-opal = "*"
+csvtk = "*"
+pigz = "*"
+ncbi-datasets-cli = "*"
 
-[feature.bb2cov.dependencies]
+[feature.taxonkit.pypi-dependencies]
 cami-opal = "*"
 
 [environments]
@@ -308,5 +309,4 @@ gtdbtk = { features = ["gtdbtk"], no-default-feature = true }
 singlem-regime3 = { features = ["singlem-regime3"], no-default-feature = true }
 taxonomake = { features = ["taxonomake"], no-default-feature = true }
 rust = { features = ["rust"], no-default-feature = true }
-taxonkit = { features = ["taxonkit"], no-default-feature = true }
-bb2cov = { features = ["bb2cov"], no-default-feature = true }
+taxonkit = { features = ["taxonkit", "singlem"], no-default-feature = true }

@@ -1,0 +1,11 @@
+names	reads1	reads2	truths	coverages
+sample0	split_reads/sample0.1.fq.gz	split_reads/sample0.2.fq.gz	truths/sample0.tsv	coverages/sample_0.tsv
+sample1	split_reads/sample1.1.fq.gz	split_reads/sample1.2.fq.gz	truths/sample1.tsv	coverages/sample_1.tsv
+sample2	split_reads/sample2.1.fq.gz	split_reads/sample2.2.fq.gz	truths/sample2.tsv	coverages/sample_2.tsv
+sample3	split_reads/sample3.1.fq.gz	split_reads/sample3.2.fq.gz	truths/sample3.tsv	coverages/sample_3.tsv
+sample4	split_reads/sample4.1.fq.gz	split_reads/sample4.2.fq.gz	truths/sample4.tsv	coverages/sample_4.tsv
+sample5	split_reads/sample5.1.fq.gz	split_reads/sample5.2.fq.gz	truths/sample5.tsv	coverages/sample_5.tsv
+sample6	split_reads/sample6.1.fq.gz	split_reads/sample6.2.fq.gz	truths/sample6.tsv	coverages/sample_6.tsv
+sample7	split_reads/sample7.1.fq.gz	split_reads/sample7.2.fq.gz	truths/sample7.tsv	coverages/sample_7.tsv
+sample8	split_reads/sample8.1.fq.gz	split_reads/sample8.2.fq.gz	truths/sample8.tsv	coverages/sample_8.tsv
+sample9	split_reads/sample9.1.fq.gz	split_reads/sample9.2.fq.gz	truths/sample9.tsv	coverages/sample_9.tsv

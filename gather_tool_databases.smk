@@ -504,41 +504,60 @@ rule extract_metax_profiles:
     shell:
         "unzip {input.zip} -d 18_metax_gut &> {log}"
 
-rule metax_profiles_to_condensed:
+rule metax_profiles_to_coverages:
     input:
         dir = "18_metax_gut/metax_benchmark_profiles"
     output:
-        directory("18_metax_gut/condensed")
+        directory("18_metax_gut/coverages")
     log:
         "18_metax_gut/metax_profiles_to_condensed.log"
     shell:
         "mkdir -p {output} && "
-        "pixi run -e taxonkit "
-        "python3 bin/biobox_to_condensed_profiles.py "
+        "pixi run -e cami-opal-lib "
+        "python3 bin/biobox_to_coverages.py "
         "--profile {input.dir}/gut/Gold_standard.profile "
         "--outdir {output} &> {log}"
 
-rule metax_extract_taxids:
+rule metax_coverages_to_genomes_list:
     input:
-        directory("18_metax_gut/condensed")
+        [f"18_metax_gut/coverages/sample_{sample_number}.tsv" for sample_number in range(10)]
     output:
-        "18_metax_gut/taxids.txt"
+        "18_metax_gut/genomes_to_ids.txt"
     shell:
-        ": > {output} && "
-        "for f in {input}/*; do "
-        "  cat $f | " 
-        "  pixi run -e taxonkit csvtk cut -t -f taxonomy | "
-        "  sed 1d > {output} "
-        "done"
+        """
+        : > {output} && 
+        for f in {input}; do
+          cut -f1 "$f" | sed 's/\(.*\)/genomes/\1.fasta\t\1/' >> {output}
+        done
+        """
 
-rule download_metax_gut:
+rule download_metax_gut_reads:
     output:
-        touch("18_metax_gut/metax_gut-download.done"),
+        done = touch("18_metax_gut/metax_gut_reads-download.done"),
+        dir = directory("18_metax_gut/gut_dataset")
     log:
-        "18_metax_gut/metax_gut-download.log"
+        "18_metax_gut/metax_gut_reads-download.log"
     shell:
         "wget 'https://research.bifo.helmholtz-hzi.de/downloads/metax/benchmark_datasets/gut/' "
         "-r -np -R \"index.html*\" -P 18_metax_gut/gut_dataset &> {log}"
+
+rule all_metax_gut_reads:
+    input:
+        r1=[f"18_metax_gut/split_reads/sample_{sample_number}.1.fq.gz" for sample_number in range(10)],
+        r2=[f"18_metax_gut/split_reads/sample_{sample_number}.2.fq.gz" for sample_number in range(10)]
+
+rule split_metax_gut_reads:
+    input:
+        "18_metax_gut/gut_dataset/research.bifo.helmholtz-hzi.de/downloads/metax/benchmark_datasets/gut/sample_{sample_number}/reads/anonymous_reads.fq.gz"
+    output:
+        r1="18_metax_gut/split_reads/sample_{sample_number}.1.fq.gz",
+        r2="18_metax_gut/split_reads/sample_{sample_number}.2.fq.gz",
+        done=touch("18_metax_gut/split_reads/sample_{sample_number}.done")
+    log:
+        "18_metax_gut/split_reads/sample_{sample_number}.log"
+    shell:
+        "mkdir -p 18_metax_gut/split_reads && "
+        "zcat {input[0]} |./bin/deinterleave_fastq.sh {output.r1} {output.r2} compress &> {log}"
 
 # don't need? datasets takes taxon ids directly     
 rule download_cami2_accession2taxid:
@@ -564,6 +583,7 @@ rule extract_cami2_accession2taxid:
     shell:
         "tar -xf {input} -C 18_metax_gut &> {log}"
 
+# don't need?
 rule download_cami2_refseqdb:
     output:
         touch("18_metax_gut/ncbi_refseqdb-download.done"),

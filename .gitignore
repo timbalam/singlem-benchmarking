@@ -64,6 +64,7 @@ novel_r214_genomes/
 16_phylogenetic_novelty_hifi/reads/
 
 18_metax_gut/gut_dataset
+18_metax_gut/split_reads
 18_metax_gut/metax_benchmark_profiles
 18_metax_gut/metax_benchmark_profiles.zip
 18_metax_gut/metax_gut-download.done

@@ -518,6 +518,25 @@ rule metax_profiles_to_coverages:
         "--profile {input.dir}/gut/Gold_standard.profile "
         "--outdir {output} &> {log}"
 
+rule metax_coverages_to_taxids:
+    input:
+        [f"18_metax_gut/coverages/sample_{sample_number}.tsv" for sample_number in range(10)]
+    output:
+        "18_metax_gut/taxids.txt"
+    shell:
+        'cat {input} | cut -f1 | sed "s/\..\+$//" > {output}'
+
+rule metax_taxids_to_genome_accessions:
+    input:
+        "18_metax_gut/taxids.txt"
+    output:
+        "18_metax_gut/taxids_to_genome_accessions.txt"
+    log:
+        "18_metax_gut/taxids_to_genome_accessions.log"
+    shell:
+        'datasets summary genome taxon --inputfile {input} --assembly-level complete --as-json-lines | '
+        'dataformat tsv genome --fields accession,assminfo-refseq-category,assminfo-name,organism-tax-id,assminfo-biosample-description-organism-tax-id 2> {log} > {output}'
+
 rule metax_coverages_to_genomes_list:
     input:
         [f"18_metax_gut/coverages/sample_{sample_number}.tsv" for sample_number in range(10)]

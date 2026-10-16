@@ -632,3 +632,49 @@ rule extract_cami3_taxdump:
     shell:
         "mkdir -p {output.d1} && "
         "unzip 18_metax_gut/taxdump_2026-07-01.zip -d {output.d1} &> {log}"
+
+# 19 clinical stool
+rule download_clinical_stool_samples:
+    output:
+        done=touch("19_clinical_stool/local_reads.done"),
+        dir=directory("19_clinical_stool/local_reads")
+    log:
+        "19_clinical_stool/samples-download.log"
+    threads:
+        1
+    localrule: True
+    shell:
+        "pixi run -e kingfisher " \
+        "kingfisher get -p PRJNA786578 " \
+        "--output_directory {output.dir} " \
+        "-m ena-ftp prefetch -f fastq.gz " \
+        "&> {log}"
+
+rule annotate_clinical_stool_samples:
+    output:
+        "19_clinical_stool/PRJNA786578_annotate.tsv"
+    log:
+        "19_clinical_stool/samples-annotate.log"
+    shell:
+        "pixi run -e kingfisher " \
+        "kingfisher annotate -p PRJNA786578 " \
+        "--output-file {output} --output-format tsv &> {log}"
+
+# can't wget from this url
+rule download_clinical_stool_metadata:
+    output:
+        zip="19_clinical_stool/microorganisms-10-00441-s001.zip"
+    log:
+        "19_clinical_stool/metadata-download.log"
+    shell:
+        "wget -O {output.zip} https://pmc.ncbi.nlm.nih.gov/articles/instance/8880012/bin/microorganisms-10-00441-s001.zip &> {log}"
+
+rule extract_clinical_stool_metadata:
+    input:
+        zip="19_clinical_stool/microorganisms-10-00441-s001.zip"
+    output:
+        dir=directory("19_clinical_stool/metadata")
+    log:
+        "19_clinical_stool/metadata-extract.log"
+    shell:
+        "unzip {input.zip} -d {output.dir} &> {log}"

@@ -537,6 +537,34 @@ rule metax_taxids_to_genome_accessions:
         'datasets summary genome taxon --inputfile {input} --assembly-level complete --as-json-lines | '
         'dataformat tsv genome --fields accession,assminfo-refseq-category,assminfo-name,organism-tax-id,assminfo-biosample-description-organism-tax-id 2> {log} > {output}'
 
+# convert ncbi to gtdb
+rule metax_download_ncbi_to_gtdb_bacteria_translation:
+    output:
+        "18_metax_gut/ncbi_vs_gtdb_r232_bacteria.xlsx"
+    shell:
+        "wget https://data.gtdb.ecogenomic.org/releases/release232/232.0/auxillary_files/ncbi_vs_gtdb_r232_bacteria.xlsx "
+        "-O 18_metax_gut"
+
+rule metax_download_ncbi_to_gtdb_archaea_translation:
+    output:
+        "18_metax_gut/ncbi_vs_gtdb_r232_archaea.xlsx"
+    shell:
+        "wget https://data.gtdb.ecogenomic.org/releases/release232/232.0/auxillary_files/ncbi_vs_gtdb_r232_archaea.xlsx "
+        "-O 18_metax_gut"
+
+rule metax_ncbi_to_gtdb_translation:
+    input:
+        bac = "18_metax_gut/ncbi_vs_gtdb_r232_bacteria.xlsx",
+        ar = "18_metax_gut/ncbi_vs_gtdb_r232_archaea.xlsx"
+    output:
+        "18_metax_gut/ncbi_to_gtdb_r232_mapping.tsv"
+    log:
+        "18_metax_gut/ncbi_to_gtdb_translation.log"
+    shell:
+        "pixi run -e fastexcel "
+        "python3 bin/ncbi_to_gtdb_translation.py --bac {input.bac} --ar {input.ar} "
+        "--output-file {output} &> {log}"
+
 rule metax_coverages_to_genomes_list:
     input:
         [f"18_metax_gut/coverages/sample_{sample_number}.tsv" for sample_number in range(10)]

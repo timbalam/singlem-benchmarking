@@ -38,6 +38,7 @@ pyarrow = "*"
 r-jsonlite = "*"
 r-vegan = "*"
 r-modeest = "*"
+unzip = "*"
 
 #####################################################################
 # Per-tool environments. Each one is isolated (no-default-feature) so that

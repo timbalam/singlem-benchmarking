@@ -2,6 +2,7 @@ from os.path import join, dirname, abspath
 import polars as pl
 import sys
 import os
+from ruamel.yaml import YAML
 
 datasets_bench5 = [f'marine{i}' for i in range(1)]
 
@@ -24,9 +25,39 @@ PROFILE=(
     else os.getenv('SNAKEMAKE_PROFILE', default = '')
 )
 
+# from taxonomake.modules.common
+def _make_absolute(dir, *paths):
+    return os.path.normpath(os.path.join(dir, *paths))
+
+# from taxonomake.modules.common
+def read_samples(path):
+    dir = os.path.dirname(path)
+    return (
+        pl.read_csv(path, separator = '\t')
+        .with_columns(
+            pl.col("reads1", "reads2", "truths", "coverages")
+            .map_elements(lambda path: _make_absolute(dir, path))
+        )
+        .to_dict(as_series = False)
+    )
+
+yaml = YAML()
+with open("8_cami2_strain/community.yaml") as f:
+    cami_conf = yaml.load(f)
+
+cami_strain_samples = [f"strain{sample_number}" for sample_number in range(100)]
+cami_strain_samples_data = read_samples(_make_absolute("8_cami2_strain", cami_conf["samples"]))
+cami_strain_reads1 = cami_strain_samples_data["reads1"]
+cami_strain_reads2 = cami_strain_samples_data["reads2"]
+cami_strain_truths = cami_strain_samples_data["truth"]
+cami_strain_coverage_definitions = cami_strain_samples_data["coverage"]
+cami_strain_genomes_list = _make_absolute("8_cami2_strain", cami_conf["genomes_list"])
+cami_strain_gtdbtk_data = _make_absolute("8_cami2_strain", cami_conf["classify"]["data"])
+
+
 #####################################################################
 
-# ## bench 5 novelty
+# data simulation
 
 rule bench5:
     input:
@@ -77,12 +108,6 @@ rule generate_community_and_reads_bench5:
         "2> {log}"
 
 # ## bench 7
-
-rule download_shakya:
-    input:
-        [f'7_shakya_synthetic/local_reads/{sample}.1.fq.gz' for sample in ['SRR606249', 'SRR606245']],
-        [f'7_shakya_synthetic/local_reads/{sample}.2.fq.gz' for sample in ['SRR606249', 'SRR606245']],
-
 rule generate_shakya_truth_condensed_format:
     input:
         sup_xlsx = "7_shakya_synthetic/emi12086-sup-0010-tables1.xlsx",
@@ -99,262 +124,21 @@ rule generate_shakya_truth_condensed_format:
         "--bac-tax {input.gtdb_bac_tax} " \
         "--arc-tax {input.gtdb_ar_tax} > {output.profile} 2> {log}"
 
-# ## 6 zymo
-
-def parse_samples(report_file):
-    return pl.read_csv(report_file, separator = "\t", columns = "run_accession").to_series(0)
-
-zymo_samples = parse_samples(workflow.source_path("6_zymo_synthetic/filereport_read_run_ERP121404_D6300.txt"))
-
-rule download_zymo:
-    input:
-        [f'6_zymo_synthetic/local_reads/{sample}.1.fq.gz' for sample in zymo_samples],
-        [f'6_zymo_synthetic/local_reads/{sample}.2.fq.gz' for sample in zymo_samples],
-
-rule download_zymo_reference_genomes:
-    output:
-        "6_zymo_synthetic/ZymoBIOMICS.STD.refseq.v2.zip"
-    log:
-        "6_zymo_synthetic/ZymoBIOMICS.STD.refseq.v2-download.log"
-    shell:
-        "bash -c " \
-        "'mkdir -p 6_zymo_synthetic && " \
-        "cd 6_zymo_synthetic && " \
-        "wget https://s3.amazonaws.com/zymo-files/BioPool/ZymoBIOMICS.STD.refseq.v2.zip' &> {log}"
-
-rule extract_zymo_reference_genomes:
-    input:
-        "6_zymo_synthetic/ZymoBIOMICS.STD.refseq.v2.zip"
-    output:
-        directory("6_zymo_synthetic/ZymoBIOMICS.STD.refseq.v2")
-    log:
-        "6_zymo_synthetic/ZymoBIOMICS.STD.refseq.v2-extract.log"
-    shell:
-        "bash -c " \
-        "'cd 6_zymo_synthetic && " \
-        "tar -xzf ZymoBIOMICS.STD.refseq.v2.zip' &> {log}"
-
 # ## 8 cami2 strain madness
-
-cami_strain_samples = [f"strain{sample_number}" for sample_number in range(100)]
-
 rule bench_cami_strain:
     input:
         expand("8_cami2_strain/output_{tool}/opal/{sample}.opal_report",
                sample = cami_strain_samples, tool = ['singlem', 'sylph', 'singlem_joint_a846591', 'singlem-regime3'])
 
-rule download_cami_strain:
-    input:
-        [f'8_cami2_strain/short_read/short_read/2018.09.07_11.43.52_sample_{sample_number}/reads/anonymous_reads.fq.gz' for sample_number in range(100)],
-        "8_cami2_strain/strmgCAMI2_setup-extract.done",
-        "8_cami2_strain/short_read/source_genomes/"
-
-rule split_cami_strain:
-    input:
-        [f"8_cami2_strain/local_reads/{sample}.{dir}.fq.gz"
-         for sample in cami_strain_samples
-         for dir in [1,2]],
-        [f"8_cami2_strain/coverage_definitions/{sample}.tsv"
-         for sample in cami_strain_samples]
-
-rule download_cami_strain_reads:
-    output:
-        "8_cami2_strain/short_read/strmgCAMI2_sample_{sample_number}_reads.tar.gz"
-    log:
-        "8_cami2_strain/short_read/strmgCAMI2_sample_{sample_number}_reads-download.log"
-    localrule: True
-    shell:
-        "bash -c " \
-        "'mkdir -p 8_cami2_strain/short_read && " \
-        "cd 8_cami2_strain/short_read && " \
-        "wget https://frl.publisso.de/data/frl:6425521/strain/short_read/strmgCAMI2_sample_{wildcards.sample_number}_reads.tar.gz' &> {log}"
-
-rule extract_cami_strain_reads:
-    input:
-        "8_cami2_strain/short_read/strmgCAMI2_sample_{sample_number}_reads.tar.gz"
-    output:
-        "8_cami2_strain/short_read/short_read/2018.09.07_11.43.52_sample_{sample_number}/reads/anonymous_reads.fq.gz",
-        "8_cami2_strain/short_read/short_read/2018.09.07_11.43.52_sample_{sample_number}/reads/reads_mapping.tsv.gz"
-    log:
-        "8_cami2_strain/short_read/strmgCAMI2_sample_{sample_number}_reads-extract.log"
-    localrule: True
-    shell:
-        "bash -c " \
-        "'cd 8_cami2_strain/short_read && " \
-        "tar -xzf strmgCAMI2_sample_{wildcards.sample_number}_reads.tar.gz' &> {log}"
-
-rule split_cami_strain_reads:
-    input:
-        "8_cami2_strain/short_read/short_read/2018.09.07_11.43.52_sample_{sample_number}/reads/anonymous_reads.fq.gz"
-    output:
-        r1="8_cami2_strain/local_reads/strain{sample_number}.1.fq.gz",
-        r2="8_cami2_strain/local_reads/strain{sample_number}.2.fq.gz",
-        done=touch("8_cami2_strain/local_reads/strain{sample_number}.done")
-    log:
-        "8_cami2_strain/local_reads/strain{sample_number}.log"
-    localrule: True
-    shell:
-        "bash -c " \
-        "'mkdir -p 8_cami2_strain/local_reads && zcat {input[0]} | " \
-        "bin/deinterleave_fastq.sh {output.r1} {output.r2} compress' &> {log}"
-
-rule extract_cami_strain_read_mapping_counts:
-    input:
-        "8_cami2_strain/short_read/short_read/2018.09.07_11.43.52_sample_{sample_number}/reads/reads_mapping.tsv.gz"
-    output:
-        "8_cami2_strain/read_mapping_counts/strain{sample_number}.tsv"
-    shell:
-        "mkdir -p 8_cami2_strain/read_mapping_counts && "
-        "pigz -cd {input[0]} |cut -f2 |sort |uniq -c "
-        "|sed 's/^  *//g' > {output}"
-
-rule download_cami_strain_genomes:
-    output:
-        "8_cami2_strain/strmgCAMI2_genomes.tar.gz"
-    log:
-        "8_cami2_strain/strmgCAMI2_genomes-download.log"
-    localrule: True
-    shell:
-        "bash -c " \
-        "'mkdir -p 8_cami2_strain && " \
-        "cd 8_cami2_strain && " \
-        "wget https://frl.publisso.de/data/frl:6425521/strain/strmgCAMI2_genomes.tar.gz' &> {log}"
-
-rule extract_cami_strain_genomes:
-    input:
-        "8_cami2_strain/strmgCAMI2_genomes.tar.gz"
-    output:
-        directory("8_cami2_strain/genomes/")
-    log:
-        "8_cami2_strain/strmgCAMI2_genomes-extract.log"
-    localrule: True
-    shell:
-        "mkdir -p 8_cami2_strain/genomes_extract && " 
-        "tar -xzf {input[0]} -C 8_cami2_strain/genomes_extract && "
-        "mv 8_cami2_strain/genomes_extract/short_read/source_genomes {output[0]} && "
-        "rmdir 8_cami2_strain/genomes_extract/short_read && "
-        "rmdir 8_cami2_strain/genomes_extract &> {log}"
-
-rule extract_cami_strain_genome_lengths:
-    input:
-        "8_cami2_strain/genomes/"
-    output:
-        directory("8_cami2_strain/genome_lengths")
-    log:
-        "8_cami2_strain/genome_lengths.log"
-    shell:
-        "mkdir -p {output} && "
-        "parallel 'cut -f1,2 {{}} > {output}/{{/.}}.tsv' ::: {input}/*.fai"
-
-# setup has genome_to_id.tsv and coverage_newXX.tsv
-rule download_cami_strain_setup:
-    output:
-        "8_cami2_strain/strmgCAMI2_setup.tar.gz",
-    log:
-        '8_cami2_strain/strmgCAMI2_setup-download.log'
-    localrule: True
-    shell:
-        "bash -c 'cd 8_cami2_strain && " \
-        "rm -f strmgCAMI2_setup.tar.gz && " \
-        "wget https://frl.publisso.de/data/frl:6425521/strain/short_read/strmgCAMI2_setup.tar.gz' &> {log}"
- 
-rule extract_cami_strain_setup:
-    input:
-        "8_cami2_strain/strmgCAMI2_setup.tar.gz"
-    output:
-        directory("8_cami2_strain/setup_extract/short_read"),
-        touch("8_cami2_strain/strmgCAMI2_setup-extract.done")
-    log:
-        "8_cami2_strain/strmgCAMI2_setup-extract.log"
-    localrule: True
-    shell:
-        "mkdir -p 8_cami2_strain/setup_extract && " \
-        "tar -xzf {input[0]} -C 8_cami2_strain/setup_extract' &> {log}"
-
-rule copy_cami_strain_coverage_definitions:
-    input:
-        setup_dir="8_cami2_strain/setup_extract/short_read"
-    output:
-        "8_cami2_strain/coverage_definitions_2/strain{sample_number}.tsv"
-    localrule: True
-    shell:
-        "mkdir -p 8_cami2_strain/coverage_definitions && "
-        "mv {input.setup_dir}/coverage_new{wildcards.sample_number}.tsv "
-        "{output[0]}"
-
-rule generate_cami_strain_coverage_definitions:
-    input:
-        setup_dir="8_cami2_strain/setup_extract/short_read",
-        genome_lengths_directory="8_cami2_strain/genome_lengths",
-        read_mapping_counts="8_cami2_strain/read_mapping_counts/{sample}.tsv"
-    output:
-        "8_cami2_strain/coverage_definitions/{sample}.tsv"
-    log:
-        "8_cami2_strain/logs/generate_coverage_defintions-{sample}.log"
-    localrule: True
-    shell:
-        "python3 {workflow.basedir}/bin/cami_coverage_definitions.py "
-        "--genome-to-id {input.setup_dir}/genome_to_id.tsv " 
-        "--genome-lengths-directory {input.genome_lengths_directory} " \
-        "--read-mapping-counts {input.read_mapping_counts} " \
-        "> {output[0]} 2> {log}"
-
-## profiles not useful
-# rule download_cami2_profiles:
-#     output:
-#         '8_cami2_strain/taxonomic_profiling_cami2.tar.gz'
-#     log:
-#         '8_cami2_strain/cami2_profiles-download.log'
-#     shell:
-#         "bash -c 'cd 8_cami2_strain && " \
-#         "rm -f taxonomic_profiling_cami2.tar.gz && " \
-#         "wget https://zenodo.org/records/5006866/files/taxonomic_profiling_cami2.tar.gz?download=1 -O taxonomic_profiling_cami2.tar.gz' &> {log}"
-
-# rule extract_cami2_profiles:
-#     input:
-#         "8_cami2_strain/taxonomic_profiling_cami2.tar.gz"
-#     output:
-#         directory("8_cami2_strain/taxonomic_profiling_cami2/")
-#     log:
-#         "8_cami2_strain/taxonomic_profiling_cami2-extract.log"
-#     shell:
-#         "bash -c " \
-#         "'cd 8_cami2_strain && " \
-#         "tar -xzf taxonomic_profiling_cami2.tar.gz' &> {log}"
-
-rule download_gtdbtk_r207_data:
-    output:
-        'tool_reference_data/gtdbtk_r207_v2_data.tar.gz'
-    log:
-        "tool_reference_data/gtdbtk_r207_data-download.log"
-    shell:
-        "bash -c "\
-        "'cd tool_reference_data && "\
-        "wget https://data.gtdb.ecogenomic.org/releases/release207/207.0/auxillary_files/gtdbtk_r207_v2_data.tar.gz' &> {log}"
-
-rule extract_gtdbtk_r207_data:
-    input:
-        "tool_reference_data/gtdbtk_r207_v2_data.tar.gz"
-    output:
-        directory("tool_reference_data/release207_v2/")
-    log:
-        "tool_reference_data/gtdbtk_r207_v2_data-extract.log"
-    shell:
-        "bash -c " \
-        "'cd tool_reference_data && " \
-        "tar -xzf gtdbtk_r207_v2_data.tar.gz' &> {log}"
-
 rule taxonomake_cami_strain:
     input:
-        coverages=[f"8_cami2_strain/coverage_definitions/{sample}.tsv"
-                   for sample in cami_strain_samples],
-        reads1=[f"8_cami2_strain/local_reads/{sample}.1.fq.gz"
-                for sample in cami_strain_samples],
-        reads2=[f"8_cami2_strain/local_reads/{sample}.2.fq.gz"
-                for sample in cami_strain_samples]
+        coverages = cami_strain_coverage_definitions,
+        reads1 = cami_strain_reads1,
+        reads2 = cami_strain_reads2,
+        gtdbtk_data = cami_strain_gtdbtk_data,
+        genomes_list = cami_strain_genomes_list
     output:
-        truth=[f"8_cami2_strain/truths/{sample}.condensed"
-               for sample in cami_strain_samples]
+        truth = cami_strain_truths
     log:
         "8_cami2_strain/taxonomake.log"
     localrule: True
@@ -364,77 +148,87 @@ rule taxonomake_cami_strain:
         "taxonomake 8_cami2_strain/community.yaml "
         "--directory 8_cami2_strain/taxonomake &> {log}"
 
-
-def gtdbtk_data_path(wildcards):
-    return abspath("tool_reference_data/release207_v2")
-
-rule gtdbtk_identify:
+rule generate_cami_genomes_list:
     input:
-        fa="8_cami2_strain/short_read/source_genomes",
-        data_path=gtdbtk_data_path
+        "8_cami2_strain/genomes/"
     output:
-        output_dir=directory("8_cami2_strain/gtdbtk_r207/identify")
-    log:
-        "8_cami2_strain/gtdbtk_r207/identify.log"
+        cami_strain_genomes_list
     shell:
-        "GTDBTK_DATA_PATH={input.data_path} " \
-        "pixi run -e gtdbtk " \
-        "gtdbtk identify --genome_dir {input.fa} " \
-        "--out_dir {output.output_dir} " \
-        "--extension .fasta " \
-        "&> {log}"
+        """
+        parallel echo -e "{{}}'\t'{/.}" ::: {input}/*.fasta > {output}
+        """
 
-rule gtdbtk_align:
-    input:
-        id="8_cami2_strain/gtdbtk_r207/identify",
-        data_path=gtdbtk_data_path
-    output:
-        output_dir=directory("8_cami2_strain/gtdbtk_r207/align")
-    log:
-        "8_cami2_strain/gtdbtk_r207/align.log"
-    shell:
-        "GTDBTK_DATA_PATH={input.data_path} " \
-        "pixi run -e gtdbtk " \
-        "gtdbtk align --identify_dir {input.id} " \
-        "--out_dir {output.output_dir} " \
-        "&> {log}"
+# # classifying done by taxonomake
+# def gtdbtk_data_path(wildcards):
+#     return abspath("tool_reference_data/release207_v2")
 
-rule gtdbtk_classify:
-    input:
-        fa="8_cami2_strain/short_read/source_genomes",
-        al="8_cami2_strain/gtdbtk_r207/align",
-        data_path=gtdbtk_data_path
-    output:
-        output_dir=directory("8_cami2_strain/gtdbtk_r207/classify"),
-        done=touch("8_cami2_strain/gtdbtk_r207/classify.done")
-    log:
-        "8_cami2_strain/gtdbtk_r207/classify.log"
-    resources:
-        mem_mb=64000
-    shell:
-        "GTDBTK_DATA_PATH={input.data_path} " \
-        "pixi run -e gtdbtk " \
-        "gtdbtk classify --genome_dir {input.fa} " \
-        "--align_dir {input.al} " \
-        "--extension .fasta " \
-        #"--scratch_data " \
-        "--out_dir {output.output_dir} " \
-        "&> {log}"
+# rule gtdbtk_identify:
+#     input:
+#         fa="8_cami2_strain/short_read/source_genomes",
+#         data_path=gtdbtk_data_path
+#     output:
+#         output_dir=directory("8_cami2_strain/gtdbtk_r207/identify")
+#     log:
+#         "8_cami2_strain/gtdbtk_r207/identify.log"
+#     shell:
+#         "GTDBTK_DATA_PATH={input.data_path} " \
+#         "pixi run -e gtdbtk " \
+#         "gtdbtk identify --genome_dir {input.fa} " \
+#         "--out_dir {output.output_dir} " \
+#         "--extension .fasta " \
+#         "&> {log}"
 
-rule gtdbtk_classify_wf:
-    input:
-        fa="8_cami2_strain/short_read/source_genomes",
-        data_path=gtdbtk_data_path
-    output:
-        output_dir=directory("8_cami2_strain/gtdbtk_r207_wf")
-    log:
-        "8_cami2_strain/gtdb_r207_wf/classify_wf.log"
-    shell:
-        "GTDBTK_DATA_PATH={input.data_path} " \
-        "pixi run -e gtdbtk " \
-        "gtdbtk classify_wf --genome-dir {input.fa} " \
-        "--out_dir {output.output_dir} " \
-        "&> {log}"
+# rule gtdbtk_align:
+#     input:
+#         id="8_cami2_strain/gtdbtk_r207/identify",
+#         data_path=gtdbtk_data_path
+#     output:
+#         output_dir=directory("8_cami2_strain/gtdbtk_r207/align")
+#     log:
+#         "8_cami2_strain/gtdbtk_r207/align.log"
+#     shell:
+#         "GTDBTK_DATA_PATH={input.data_path} " \
+#         "pixi run -e gtdbtk " \
+#         "gtdbtk align --identify_dir {input.id} " \
+#         "--out_dir {output.output_dir} " \
+#         "&> {log}"
+
+# rule gtdbtk_classify:
+#     input:
+#         fa="8_cami2_strain/short_read/source_genomes",
+#         al="8_cami2_strain/gtdbtk_r207/align",
+#         data_path=gtdbtk_data_path
+#     output:
+#         output_dir=directory("8_cami2_strain/gtdbtk_r207/classify"),
+#         done=touch("8_cami2_strain/gtdbtk_r207/classify.done")
+#     log:
+#         "8_cami2_strain/gtdbtk_r207/classify.log"
+#     resources:
+#         mem_mb=64000
+#     shell:
+#         "GTDBTK_DATA_PATH={input.data_path} " \
+#         "pixi run -e gtdbtk " \
+#         "gtdbtk classify --genome_dir {input.fa} " \
+#         "--align_dir {input.al} " \
+#         "--extension .fasta " \
+#         #"--scratch_data " \
+#         "--out_dir {output.output_dir} " \
+#         "&> {log}"
+
+# rule gtdbtk_classify_wf:
+#     input:
+#         fa="8_cami2_strain/short_read/source_genomes",
+#         data_path=gtdbtk_data_path
+#     output:
+#         output_dir=directory("8_cami2_strain/gtdbtk_r207_wf")
+#     log:
+#         "8_cami2_strain/gtdb_r207_wf/classify_wf.log"
+#     shell:
+#         "GTDBTK_DATA_PATH={input.data_path} " \
+#         "pixi run -e gtdbtk " \
+#         "gtdbtk classify_wf --genome-dir {input.fa} " \
+#         "--out_dir {output.output_dir} " \
+#         "&> {log}"
 
 # ## bench 9 related
 
@@ -637,6 +431,12 @@ rule generate_community_and_reads_bench11:
         "--percent-known-at {params.percent_known_at} " \
         "2> {log}"
 
+rule bench19:
+    input:
+        expand("19_clinical_stool/output_{tool}/{tool}/{sample}.profile",
+               tool = ["singlem_regime3", "sylph"],
+               sample = ["sample{sample_number}" for sample_number in range(10)])
+
 # utils
 
 rule opal:
@@ -674,26 +474,6 @@ rule tool_condensed_to_biobox:
         "pixi run -e singlem " \
         "python3 bin/condensed_profile_to_biobox.py --input-condensed-table {input.profile} " \
         "--output-biobox {output.biobox} --template-biobox {input.truth} "
-
-rule download_fastq:
-    output:
-        r1="{bench_dir}/local_reads/{sample}.1.fq.gz",
-        r2="{bench_dir}/local_reads/{sample}.2.fq.gz",
-        done=touch("{bench_dir}/local_reads/{sample}.done")
-    log:
-        "{bench_dir}/local_reads/{sample}.log"
-    threads:
-        1
-    wildcard_constraints:
-        bench_dir="^7_.+"
-    shell:
-        "pixi run -e kingfisher " \
-        "kingfisher get -r {wildcards.sample} " \
-        "--output_directory {wildcards.bench_dir}/local_reads " \
-        "-m ena-ftp prefetch -f fastq.gz " \
-	    "&& mv {wildcards.bench_dir}/local_reads/{wildcards.sample}_1.fastq.gz {output.r1} " \
-        "&& mv {wildcards.bench_dir}/local_reads/{wildcards.sample}_2.fastq.gz {output.r2} " \
-        "&> {log}"
 
 ###############################################################################################
 ###############################################################################################

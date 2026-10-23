@@ -1,6 +1,7 @@
 import os.path
 from os.path import join, abspath
 import os
+import polars as pl
 
 output_directory = 'tool_reference_data'
 # mkdir
@@ -28,14 +29,6 @@ kaiju_db_original_progenomes_fmi = kaiju_db_original_dir + '/kaiju_db_progenomes
 kaiju_db_original_progenomes_nodes = kaiju_db_original_dir + '/nodes.dmp'
 kaiju_db_original_progenomes_names = kaiju_db_original_dir + '/names.dmp'
 
-# Benchmarks 8 and 9's novel-in-r214 community members, fetched from NCBI rather
-# than from the Zenodo shadow pool; see bench89_novel_genomes_download.
-novel_r214_genome_accessions_file = 'novel_r214_genome_accessions.txt'
-with open(novel_r214_genome_accessions_file) as f:
-    novel_r214_genome_accessions = [line.strip() for line in f if line.strip()]
-novel_r214_genome_fastas = expand("novel_r214_genomes/{accession}.fna",
-                                  accession=novel_r214_genome_accessions)
-
 map2b_checkout_dir = join(output_directory, 'MAP2B-checkout')
 map2b_db = os.path.join(map2b_checkout_dir, 'database/GTDB')
 
@@ -53,24 +46,77 @@ weebill_binary = 'weebill/target/release/weebill'
 ## metabuli download is not scripted because it is via sharepoint, which gives an indirect link.
 tools = ['singlem', 'metaphlan', 'motus', 'kraken', 'sourmash', 'kaiju', 'metaphlan42']
 
+all_tools_input = [join(output_directory, f'{tool}.done') for tool in tools]
+
+# Benchmarks 8 and 9's novel-in-r214 community members, fetched from NCBI rather
+# than from the Zenodo shadow pool; see bench89_novel_genomes_download.
+novel_r214_genome_accessions_file = 'novel_r214_genome_accessions.txt'
+with open(novel_r214_genome_accessions_file) as f:
+    novel_r214_genome_accessions = [line.strip() for line in f if line.strip()]
+novel_r214_genome_fastas = expand("novel_r214_genomes/{accession}.fna",
+                                  accession=novel_r214_genome_accessions)
+
+cami2_marine_reads = [
+    "3_cami2_marine/split_reads/marine{sample_number}.done".format(sample_number=sample_number)
+    for sample_number in range(10)
+]
+
+def parse_zymo_report_samples(report_file):
+    return pl.read_csv(report_file, separator = "\t", columns = "run_accession").to_series(0)
+
+zymo_samples = parse_zymo_report_samples(workflow.source_path("6_zymo_synthetic/filereport_read_run_ERP121404_D6300.txt"))
+
+zymo_reads = [
+    f'6_zymo_synthetic/local_reads/{sample}.{dir}.fq.gz' for sample in zymo_samples
+    for dir in [1, 2]
+]
+
+shakya_reads = [
+    f'7_shakya_synthetic/local_reads/{sample}.{dir}.fq.gz'
+    for sample in ['SRR606249', 'SRR606245']
+    for dir in [1, 2]
+]
+
+cami_strain_reads = [
+    f"8_cami2_strain/local_reads/strain{sample_number}.{dir}.fq.gz"
+    for sample_number in range(100)
+    for dir in [1,2]
+]
+cami_strain_coverage_definitions = [
+    f"8_cami2_strain/coverage_definitions/strain{sample_number}.tsv"
+    for sample_number in range(100)
+]
+metax_gut_reads = [
+    f"18_metax_gut/split_reads/sample_{sample_number}.{dir}.fq.gz"
+    for sample_number in range(10)
+    for dir in [1, 2]
+]
+
+all_benchmarks_datasets = [
+    join(output_directory, 'shadow-genomes.done'),
+    cami2_marine_reads,
+    "2_phylogenetic_novelty/genomes",
+    "2_phylogenetic_novelty/genome_pairs",
+    # benchmarks 8 and 9's novel-in-r214 members; see the rule at the bottom.
+    novel_r214_genome_fastas,
+    zymo_reads,
+    "6_zymo_synthetic/ZymoBIOMICS.STD.refseq.v2/Genomes",
+    shakya_reads,
+    cami_strain_reads,
+    cami_strain_coverage_definitions,
+    "8_cami2_strain/genomes",
+    metax_gut_reads
+]
+
 rule all:
     input:
-        [join(output_directory, f'{tool}.done') for tool in tools],
-#        join(output_directory, 'gtdb.done'),
-#        join(output_directory, 'gtdb-ar.done'),
-        join(output_directory, 'shadow-genomes.done'),
-        ["3_cami2_marine/split_reads/marine{sample_number}.done".format(sample_number=sample_number) for sample_number in range(10)],
-        "2_phylogenetic_novelty/genomes",
-        "2_phylogenetic_novelty/genome_pairs",
-        # benchmarks 8 and 9's novel-in-r214 members; see the rule at the bottom.
-        novel_r214_genome_fastas,
-        "9_zymo/zymo_refseq.v2-download.done"
+        all_tools_input,
+        all_benchmarks_datasets
 
-rule dev:
+# tools
+rule all_tools:
     input:
-        [join(output_directory, f'{tool}.done') for tool in ['singlem', 'sylph']],
-        join(output_directory, 'gtdb.done'),
-        join(output_directory, 'gtdb-ar.done'),
+        all_tools_input
 
 rule metaphlan:
     output:
@@ -78,24 +124,32 @@ rule metaphlan:
         metaphlan_db=directory(metaphlan_db)
     log:
         join(output_directory, 'metaphlan.log')
+    localrule:
+        True
     shell:
         'eval "$(pixi shell-hook -e metaphlan)" && '
         'metaphlan --install --bowtie2db {metaphlan_db} --index {metaphlan_index} &> {log}'
 
+## metaphlan 4.2.2
 rule metaphlan42:
     output:
         done=touch(join(output_directory, 'metaphlan42.done')),
         metaphlan_db=directory(metaphlan42_db)
     log:
         join(output_directory, 'metaphlan42.log')
+    localrule:
+        True
     shell:
-        'pixi run --environment metaphlan42 metaphlan --install --db_dir {metaphlan42_db} --index {metaphlan_index} &> {log}' ## metaphlan 4.2.2
+        'pixi run --environment metaphlan42 '
+        'metaphlan --install --db_dir {metaphlan42_db} --index {metaphlan_index} &> {log}'
 
 rule kraken_download:
     output:
         done=touch(join(output_directory, 'kraken.done')),
     log:
         abspath(join(output_directory, 'kraken-download.log'))
+    localrule:
+        True
     shell:
         "mkdir -pv {kraken_db} && cd {kraken_db} && wget --no-directories -r -np -c --progress=dot:mega -e robots=off http://ftp.tue.mpg.de/ebio/projects/struo2/GTDB_release207/kraken2/ &> {log}"
 
@@ -105,6 +159,8 @@ rule sourmash:
         join(output_directory, 'sourmash-tax.done'),
     output:
         done=touch(join(output_directory, 'sourmash.done')),
+    localrule:
+        True
 
 rule sourmash_sigs:
     output:
@@ -112,8 +168,8 @@ rule sourmash_sigs:
         sourmash_dna=sourmash_db_dna,
     log:
         join(output_directory, 'sourmash-sigs-download.log')
-    params:
-        db = os.path.basename(sourmash_db_dna)
+    localrule:
+        True
     shell:
         'wget -O {output.sourmash_dna} https://farm.cse.ucdavis.edu/~ctbrown/sourmash-db/gtdb-rs207/gtdb-rs207.genomic-reps.dna.k31.zip &> {log}'
 
@@ -123,6 +179,8 @@ rule sourmash_tax_download:
         sourmash_taxonomy=join(output_directory, 'sourmash', 'gtdb-rs207.taxonomy.reps.csv.gz'),
     log:
         join(output_directory, 'sourmash-tax-download.log')
+    localrule:
+        True
     shell:
         'wget -O {output.sourmash_taxonomy} https://farm.cse.ucdavis.edu/~ctbrown/sourmash-db/gtdb-rs207/gtdb-rs207.taxonomy.reps.csv.gz &> {log}'
 
@@ -141,11 +199,16 @@ rule sourmash_tax_convert:
 
 rule kaiju_download:
     output:
-        done=touch(join(output_directory, 'kaiju-download.done')),
+        done=touch(join(output_directory, 'kaiju-download.done'))
     log:
         abspath(join(output_directory, 'kaiju-download.log'))
+    localrule:
+        True
     shell:
-        'mkdir -p {kaiju_db_original_dir} && cd {kaiju_db_original_dir} && wget https://kaiju-idx.s3.eu-central-1.amazonaws.com/2023/kaiju_db_progenomes_2023-05-25.tgz -O kaiju_db_progenomes_2023-05-25.tgz &> {log}'
+        'mkdir -p {kaiju_db_original_dir} && '
+        'cd {kaiju_db_original_dir} && '
+        'wget https://kaiju-idx.s3.eu-central-1.amazonaws.com/2023/kaiju_db_progenomes_2023-05-25.tgz '
+        '-O kaiju_db_progenomes_2023-05-25.tgz &> {log}'
 
 rule kaiju_extract:
     input:
@@ -211,6 +274,8 @@ rule motus_db:
         done=touch(join(output_directory, 'motus-download.done')),
     log:
         abspath(join(output_directory, 'motus-download.log'))
+    localrule:
+        True
     shell:
         'eval "$(pixi shell-hook -e motus)" && '
         'motus downloadDB &> {log}'
@@ -234,15 +299,20 @@ rule motus_gtdb:
         motus_gtdb_tsv=motus_gtdb_tsv,
     log:
         join(output_directory, 'motus-gtdb.log')
+    localrule:
+        True
     shell:
-        'wget https://sunagawalab.ethz.ch/share/MOTU_GTDB/mOTUs_3.0.0_GTDB_tax.tsv -O {motus_gtdb_tsv} &> {log}'
+        'wget https://sunagawalab.ethz.ch/share/MOTU_GTDB/mOTUs_3.0.0_GTDB_tax.tsv '
+        '-O {motus_gtdb_tsv} &> {log}'
 
 rule motus:
     input:
         join(output_directory, 'motus-db.done'),
         join(output_directory, 'motus-gtdb.done'),
     output:
-        done=touch(join(output_directory, 'motus.done')),
+        done=touch(join(output_directory, 'motus.done'))
+    localrule:
+        True
 
 rule singlem_download:
     output:
@@ -250,9 +320,12 @@ rule singlem_download:
         singlem_metapackage_tgz=singlem_metapackage_tgz
     log:
         join(output_directory, 'singlem-download.log')
+    localrule:
+        True
     shell:
         'eval "$(pixi shell-hook -e singlem)" && '
-        "wget 'https://zenodo.org/records/11107165/files/S4.1.0.GTDB_r207.metapackage_20240502.smpkg.zb.tar.gz?download=1' -O {output.singlem_metapackage_tgz} &> {log}"
+        "wget 'https://zenodo.org/records/11107165/files/S4.1.0.GTDB_r207.metapackage_20240502.smpkg.zb.tar.gz?download=1' "
+        "-O {output.singlem_metapackage_tgz} &> {log}"
 
 rule singlem_extract:
     input:
@@ -266,7 +339,47 @@ rule singlem_extract:
     params:
         singlem_metapackage_basename = os.path.basename(singlem_metapackage)
     shell:
-        "bash -c 'cd {output_directory} && tar -xzf {params.singlem_metapackage_basename}.zb.tar.gz && mv -v {params.singlem_metapackage_basename}.zb/payload_directory ../{output.singlem_metapackage}' &> {log}"
+        "bash -c 'cd {output_directory} && "
+        "tar -xzf {params.singlem_metapackage_basename}.zb.tar.gz && "
+        "mv -v {params.singlem_metapackage_basename}.zb/payload_directory ../{output.singlem_metapackage}' &> {log}"
+
+rule weebill_db_convert:
+    input:
+        weebill_syl=weebill_syldb
+    output:
+        weebill_syl2db=weebill_db
+    resources:
+        mem_mb=64000,
+        runtime=120
+    log:
+        join(output_directory, "singlem-regime3.weebill.log")
+    shell:
+        f"{weebill_binary} "
+        "db-convert {input.weebill_syl} -o {output.weebill_syl2db} &> {log}"
+        
+rule metax_download:
+    output:
+        zip = join(output_directory, "taxdmp_2026-07-01.zip"),
+        done = touch(join(output_directory, "metax-download.done"))
+    log:
+        join(output_directory, "metax-download.log")
+    localrule:
+        True
+    shell:
+        "wget 'https://s3.bi.denbi.de/cami3__human-gut-challenge/databases/taxdmp_2026-07-01.zip?AWSAccessKeyId=d4098cac781f4b079ab33853731fcc30&Signature=fl9Y128uTIjqbZLi2ZO5BqFCDHk%3D&Expires=1815734514' "
+        "-O {output.zip} &> {log}"
+
+rule metax_extract:
+    input:
+        join(output_directory, "taxdmp_2026-07-01.zip")
+    output:
+        touch(join(output_directory, "metax.done")),
+        d1 = directory(join(output_directory, ".taxonkit")),
+    log:
+        join(output_directory, "metax-extract.log")
+    shell:
+        "mkdir -p {output.d1} && "
+        "unzip {input} -d {output.d1} &> {log}"
 
 #rule gtdb_download_bac120:
 #    output:
@@ -308,13 +421,19 @@ rule singlem_extract:
 #    shell:
 #        'tar -xzf {input.tar} &> {log}'
 
+# benchmark datasets
 rule shadow_genomes_download:
     output:
         done=touch(join(output_directory, 'shadow-genomes-download.done')),
     log:
         join(output_directory, 'shadow-genomes-download.log')
+    localrule:
+        True
     shell:
-        "rm -f reference_genomes.tar.gz && bash -c 'cd {output_directory} && wget 'https://zenodo.org/records/11002998/files/reference_genomes.tar.gz?download=1' -O reference_genomes.tar.gz' &> {log}"
+        "rm -f reference_genomes.tar.gz && "
+        "bash -c 'cd {output_directory} && "
+        "wget 'https://zenodo.org/records/11002998/files/reference_genomes.tar.gz?download=1' "
+        "-O reference_genomes.tar.gz' &> {log}"
         
 rule shadow_genomes_extract:
     input:
@@ -333,43 +452,81 @@ rule reference_genomes_link:
         done=touch(join(output_directory, 'shadow-genomes.done')),
     log:
         join(output_directory, 'reference-genomes-link.log')
+    localrule:
+        True
     shell:
-        "bash -c 'ln -sf {output_directory}/reference_genomes && cd {output_directory} && ln -sf reference_genomes/shadow . && ln -sf reference_genomes/new_in_r214 .' &> {log}"
+        "bash -c 'ln -sf {output_directory}/reference_genomes && "
+        "cd {output_directory} && "
+        "ln -sf reference_genomes/shadow . && "
+        "ln -sf reference_genomes/new_in_r214 .' &> {log}"
+
+rule genome_pairs_fst_download:
+    output:
+        done=touch(join(output_directory, 'genome-pairs-fst-download.done')),
+    log:
+        join(output_directory, 'genome-pairs-fst-download.log')
+    localrule:
+        True
+    shell:
+        "bash -c 'cd 2_phylogenetic_novelty/genomes && "
+        "datasets download genome accession --inputfile ../genome_accessions.txt' &> {log}"
+
+rule genome_pairs_fst_extract:
+    output: 
+        done=touch(join(output_directory, 'genome-pairs-fst-extract.done'))
+    log:
+        join(output_directory, 'genome-pairs-fst-extract.log')
+    shell:
+        "bash -c 'cd 2_phylogenetic_novelty/genomes && "
+        "unzip ncbi_dataset.zip && "
+        # Rename files to simple names (e.g. GCA_000508305.1_genomic.fna)
+        "parallel --col-sep \"\t\" cp {{1}} {{2}} :::: ../genome_ncbi_names.tsv' &> {log}"
+
+rule genome_pairs_snd_download:
+    output:
+        done=touch(join(output_directory, 'genome-pairs-snd-download.done')),
+    log:
+        join(output_directory, 'genome-pairs-snd-download.log')
+    localrule:
+        True
+    shell:
+        "bash -c 'cd 2_phylogenetic_novelty/genome_pairs && "
+        "datasets download genome accession --inputfile ../genome_pairs_accessions.txt' &> {log}"
+
+rule genome_pairs_snd_extract:
+    output: 
+        done=touch(join(output_directory, 'genome-pairs-snd-extract.done'))
+    log:
+        join(output_directory, 'genome-pairs-snd-extract.log')
+    shell:
+        "bash -c 'cd 2_phylogenetic_novelty/genome_pairs && "
+        "unzip ncbi_dataset.zip && "
+        # Rename files to simple names (e.g. GCA_000508305.1_genomic.fna)
+        "parallel --col-sep \"\t\" cp {{1}} {{2}} :::: ../genome_pairs_ncbi_names.tsv' &> {log}"
 
 rule genome_pairs_download:
+    input:
+        fst = join(output_directory, 'genome-pairs-fst-extract.done'),
+        snd = join(output_directory, 'genome-pairs-snd-extract.done')
     output:
         done=touch(join(output_directory, 'genome-pairs-download.done')),
-    log:
-        join(output_directory, 'genome-pairs-download.log')
-    shell:
-        """
-        cd 2_phylogenetic_novelty
-        cd genomes
-        datasets download genome accession --inputfile ../genome_accessions.txt
-        unzip ncbi_dataset.zip
+    localrule:
+        True
 
-        # Rename files to simple names (e.g. GCA_000508305.1_genomic.fna)
-        parallel --col-sep "\t" cp {1} {2} :::: ../genome_ncbi_names.tsv
-
-        cd ../genome_pairs
-        datasets download genome accession --inputfile ../genome_pairs_accessions.txt
-        unzip ncbi_dataset.zip
-
-        # Rename files to simple names (e.g. GCA_000508305.1_genomic.fna)
-        parallel --col-sep "\t" cp {1} {2} :::: ../genome_pairs_ncbi_names.tsv
-        """
-
-rule download_cami_reads:
+rule download_cami_marine_reads:
     output:
         "3_cami2_marine/simulation_short_read/marmgCAMI2_sample_{sample_number}_reads.tar.gz"
     log:
         "3_cami2_marine/simulation_short_read/marmgCAMI2_sample_{sample_number}_reads-download.log"
+    localrule:
+        True
     shell:
-        """
-        bash -c 'mkdir -p 3_cami2_marine/simulation_short_read && cd 3_cami2_marine/simulation_short_read && rm -f marmgCAMI2_sample_{wildcards.sample_number}_reads.tar.gz && wget https://frl.publisso.de/data/frl:6425521/marine/short_read/marmgCAMI2_sample_{wildcards.sample_number}_reads.tar.gz' &> {log}
-        """
+        "bash -c 'mkdir -p 3_cami2_marine/simulation_short_read && "
+        "cd 3_cami2_marine/simulation_short_read && "
+        "rm -f marmgCAMI2_sample_{wildcards.sample_number}_reads.tar.gz && "
+        "wget https://frl.publisso.de/data/frl:6425521/marine/short_read/marmgCAMI2_sample_{wildcards.sample_number}_reads.tar.gz' &> {log}"
 
-rule extract_cami_reads:
+rule extract_cami_marine_reads:
     input:
         "3_cami2_marine/simulation_short_read/marmgCAMI2_sample_{sample_number}_reads.tar.gz"
     output:
@@ -377,11 +534,10 @@ rule extract_cami_reads:
     log:
         "3_cami2_marine/simulation_short_read/marmgCAMI2_sample_{sample_number}_reads-extract.log"
     shell:
-        """
-        bash -c 'cd 3_cami2_marine/simulation_short_read && tar -xzf marmgCAMI2_sample_{wildcards.sample_number}_reads.tar.gz' &> {log}
-        """
+        "bash -c 'cd 3_cami2_marine/simulation_short_read && "
+        "tar -xzf marmgCAMI2_sample_{wildcards.sample_number}_reads.tar.gz' &> {log}"
 
-rule split_cami_reads:
+rule split_cami_marine_reads:
     input:
         "3_cami2_marine/simulation_short_read/simulation_short_read/2018.08.15_09.49.32_sample_{sample_number}/reads/anonymous_reads.fq.gz"
     output:
@@ -391,19 +547,20 @@ rule split_cami_reads:
     log:
         "3_cami2_marine/split_reads/marine{sample_number}.log"
     shell:
-        """
-        bash -c 'mkdir -p 3_cami2_marine/split_reads && zcat {input[0]} |./bin/deinterleave_fastq.sh {output.r1} {output.r2} compress' &> {log}
-        """
+        "bash -c 'mkdir -p 3_cami2_marine/split_reads && "
+        "zcat {input[0]} |./bin/deinterleave_fastq.sh {output.r1} {output.r2} compress' &> {log}"
 
 rule bench2_genomes_download:
     output:
         touch("2_phylogenetic_novelty/reference_genomes-download.done"),
     log:
         "2_phylogenetic_novelty/reference_genomes-download.log"
+    localrule:
+        True
     shell:
-        """
-        cd 2_phylogenetic_novelty && wget 'https://zenodo.org/records/12525852/files/bench2_genomes.tar.gz?download=1' -O bench2_genomes.tar.gz &> ../{log}
-        """
+        "cd 2_phylogenetic_novelty && "
+        "wget 'https://zenodo.org/records/12525852/files/bench2_genomes.tar.gz?download=1' "
+        "-O bench2_genomes.tar.gz &> ../{log}"
 
 rule bench2_genomes_extract:
     input:
@@ -445,44 +602,250 @@ rule bench89_novel_genomes_download:
         while read acc; do cp ncbi_dataset/data/$acc/*.fna $acc.fna; done < ../{input.accessions}' &> {log}
         """
 
+rule download_zymo_reads:
+    input:
+        zymo_reads
+
 rule download_zymo_reference_genomes:
     output:
-        touch("6_zymo/zymo_refseq.v2-download.done"),
+        done = touch("6_zymo_synthetic/zymo_refseq.v2-download.done"),
+        zip = "6_zymo_synthetic/ZymoBIOMICS.STD.refseq.v2.zip"
     log:
-        "6_zymo/zymo_refseq.v2-download.log"
+        "6_zymo_synthetic/reference_genomes-download.log"
     shell:
-        """
-        cd 6_zymo && wget 'https://zenodo.org/records/3935737/files/ZymoBIOMICS.STD.refseq.v2.zip?download=1' -O ZymoBIOMICS.STD.refseq.v2.zip &> ../{log}
-        """
+        "mkdir -p 6_zymo_synthetic && "
+        "wget 'https://zenodo.org/records/3935737/files/ZymoBIOMICS.STD.refseq.v2.zip?download=1' "
+        "-O {output.zip} &> {log}"
 
 rule extract_zymo_reference_genomes:
     input:
-        "6_zymo/zymo_refseq.v2-download.done"
+        "6_zymo_synthetic/ZymoBIOMICS.STD.refseq.v2.zip"
     output:
-        touch("6_zymo/reference_genomes-extract.done"),
-        d1 = directory("6_zymo/ZymoBIOMICS.STD.refseq.v2/Genomes"),
+        touch("6_zymo_synthetic/reference_genomes-extract.done"),
+        d1 = directory("6_zymo_synthetic/ZymoBIOMICS.STD.refseq.v2/Genomes"),
     log:
-        "6_zymo/reference_genomes-extract.log"
+        "6_zymo_synthetic/reference_genomes-extract.log"
     shell:
         """
-        cd 6_zymo && unzip ZymoBIOMICS.STD.refseq.v2.zip &> ../{log}
+        unzip {input} -d 6_zymo_synthetic/ &> {log}
         """
 
-rule weebill_db_convert:
+rule download_shakya:
     input:
-        weebill_syl=weebill_syldb
-    output:
-        weebill_syl2db=weebill_db
-    resources:
-        mem_mb=64000,
-        runtime=120
-    log:
-        join(output_directory, "singlem-regime3.weebill.log")
-    shell:
-        f"{weebill_binary} "
-        "db-convert {input.weebill_syl} -o {output.weebill_syl2db} &> {log}"
+        shakya_reads
 
-# metax benchmarks
+rule download_fastq:
+    output:
+        r1="7_shakya_synthetic/local_reads/{sample}.1.fq.gz",
+        r2="7_shakya_synthetic/local_reads/{sample}.2.fq.gz",
+        done=touch("7_shakya_synthetic/local_reads/{sample}.done")
+    log:
+        "7_shakya_synthetic/local_reads/{sample}.log"
+    threads:
+        1
+    shell:
+        "pixi run -e kingfisher "
+        "kingfisher get -r {wildcards.sample} "
+        "--output_directory 7_shakya_synthetic/local_reads "
+        "-m ena-ftp prefetch -f fastq.gz "
+        "&& mv 7_shakya_synthetic/local_reads/{wildcards.sample}_1.fastq.gz {output.r1} "
+        "&& mv 7_shakya_synthetic/local_reads/{wildcards.sample}_2.fastq.gz {output.r2} "
+        "&> {log}"
+
+rule download_cami_strain:
+    input:
+        cami_strain_reads,
+        cami_strain_coverage_definitions,
+        "8_cami2_strain/genomes/"
+
+rule download_cami_strain_reads:
+    output:
+        "8_cami2_strain/short_read/strmgCAMI2_sample_{sample_number}_reads.tar.gz"
+    log:
+        "8_cami2_strain/short_read/strmgCAMI2_sample_{sample_number}_reads-download.log"
+    localrule: True
+    shell:
+        "bash -c " \
+        "'mkdir -p 8_cami2_strain/short_read && " \
+        "cd 8_cami2_strain/short_read && " \
+        "wget https://frl.publisso.de/data/frl:6425521/strain/short_read/strmgCAMI2_sample_{wildcards.sample_number}_reads.tar.gz' &> {log}"
+
+rule extract_cami_strain_reads:
+    input:
+        "8_cami2_strain/short_read/strmgCAMI2_sample_{sample_number}_reads.tar.gz"
+    output:
+        "8_cami2_strain/short_read/short_read/2018.09.07_11.43.52_sample_{sample_number}/reads/anonymous_reads.fq.gz",
+        "8_cami2_strain/short_read/short_read/2018.09.07_11.43.52_sample_{sample_number}/reads/reads_mapping.tsv.gz"
+    log:
+        "8_cami2_strain/short_read/strmgCAMI2_sample_{sample_number}_reads-extract.log"
+    localrule: True
+    shell:
+        "bash -c " \
+        "'cd 8_cami2_strain/short_read && " \
+        "tar -xzf strmgCAMI2_sample_{wildcards.sample_number}_reads.tar.gz' &> {log}"
+
+rule split_cami_strain_reads:
+    input:
+        "8_cami2_strain/short_read/short_read/2018.09.07_11.43.52_sample_{sample_number}/reads/anonymous_reads.fq.gz"
+    output:
+        r1="8_cami2_strain/local_reads/strain{sample_number}.1.fq.gz",
+        r2="8_cami2_strain/local_reads/strain{sample_number}.2.fq.gz",
+        done=touch("8_cami2_strain/local_reads/strain{sample_number}.done")
+    log:
+        "8_cami2_strain/local_reads/strain{sample_number}.log"
+    localrule: True
+    shell:
+        "bash -c " \
+        "'mkdir -p 8_cami2_strain/local_reads && zcat {input[0]} | " \
+        "bin/deinterleave_fastq.sh {output.r1} {output.r2} compress' &> {log}"
+
+rule extract_cami_strain_read_mapping_counts:
+    input:
+        "8_cami2_strain/short_read/short_read/2018.09.07_11.43.52_sample_{sample_number}/reads/reads_mapping.tsv.gz"
+    output:
+        "8_cami2_strain/read_mapping_counts/strain{sample_number}.tsv"
+    shell:
+        "mkdir -p 8_cami2_strain/read_mapping_counts && "
+        "pigz -cd {input[0]} |cut -f2 |sort |uniq -c "
+        "|sed 's/^  *//g' > {output}"
+
+rule download_cami_strain_genomes:
+    output:
+        "8_cami2_strain/strmgCAMI2_genomes.tar.gz"
+    log:
+        "8_cami2_strain/strmgCAMI2_genomes-download.log"
+    localrule: True
+    shell:
+        "bash -c " \
+        "'mkdir -p 8_cami2_strain && " \
+        "cd 8_cami2_strain && " \
+        "wget https://frl.publisso.de/data/frl:6425521/strain/strmgCAMI2_genomes.tar.gz' &> {log}"
+
+rule extract_cami_strain_genomes:
+    input:
+        "8_cami2_strain/strmgCAMI2_genomes.tar.gz"
+    output:
+        directory("8_cami2_strain/genomes/")
+    log:
+        "8_cami2_strain/strmgCAMI2_genomes-extract.log"
+    localrule: True
+    shell:
+        "mkdir -p 8_cami2_strain/genomes_extract && " 
+        "tar -xzf {input[0]} -C 8_cami2_strain/genomes_extract && "
+        "mv 8_cami2_strain/genomes_extract/short_read/source_genomes {output[0]} && "
+        "rmdir 8_cami2_strain/genomes_extract/short_read && "
+        "rmdir 8_cami2_strain/genomes_extract &> {log}"
+
+rule extract_cami_strain_genome_lengths:
+    input:
+        "8_cami2_strain/genomes/"
+    output:
+        directory("8_cami2_strain/genome_lengths")
+    log:
+        "8_cami2_strain/genome_lengths.log"
+    shell:
+        "mkdir -p {output} && "
+        "parallel 'cut -f1,2 {{}} > {output}/{{/.}}.tsv' ::: {input}/*.fai"
+
+# setup has genome_to_id.tsv and coverage_newXX.tsv
+rule download_cami_strain_setup:
+    output:
+        "8_cami2_strain/strmgCAMI2_setup.tar.gz",
+    log:
+        '8_cami2_strain/strmgCAMI2_setup-download.log'
+    localrule: True
+    shell:
+        "bash -c 'cd 8_cami2_strain && " \
+        "rm -f strmgCAMI2_setup.tar.gz && " \
+        "wget https://frl.publisso.de/data/frl:6425521/strain/short_read/strmgCAMI2_setup.tar.gz' &> {log}"
+ 
+rule extract_cami_strain_setup:
+    input:
+        "8_cami2_strain/strmgCAMI2_setup.tar.gz"
+    output:
+        directory("8_cami2_strain/setup_extract/short_read"),
+        touch("8_cami2_strain/strmgCAMI2_setup-extract.done")
+    log:
+        "8_cami2_strain/strmgCAMI2_setup-extract.log"
+    localrule: True
+    shell:
+        "mkdir -p 8_cami2_strain/setup_extract && " \
+        "tar -xzf {input[0]} -C 8_cami2_strain/setup_extract' &> {log}"
+
+# # regenerate coverage definitions instead of using these ones in setup
+# rule copy_cami_strain_coverage_definitions:
+#     input:
+#         setup_dir="8_cami2_strain/setup_extract/short_read"
+#     output:
+#         "8_cami2_strain/coverage_definitions_2/strain{sample_number}.tsv"
+#     localrule: True
+#     shell:
+#         "mkdir -p 8_cami2_strain/coverage_definitions && "
+#         "mv {input.setup_dir}/coverage_new{wildcards.sample_number}.tsv "
+#         "{output[0]}"
+
+rule generate_cami_strain_coverage_definitions:
+    input:
+        setup_dir="8_cami2_strain/setup_extract/short_read",
+        genome_lengths_directory="8_cami2_strain/genome_lengths",
+        read_mapping_counts="8_cami2_strain/read_mapping_counts/{sample}.tsv"
+    output:
+        "8_cami2_strain/coverage_definitions/{sample}.tsv"
+    log:
+        "8_cami2_strain/logs/generate_coverage_defintions-{sample}.log"
+    localrule: True
+    shell:
+        "python3 {workflow.basedir}/bin/cami_coverage_definitions.py "
+        "--genome-to-id {input.setup_dir}/genome_to_id.tsv " 
+        "--genome-lengths-directory {input.genome_lengths_directory} " \
+        "--read-mapping-counts {input.read_mapping_counts} " \
+        "> {output[0]} 2> {log}"
+
+## profiles not useful
+# rule download_cami2_profiles:
+#     output:
+#         '8_cami2_strain/taxonomic_profiling_cami2.tar.gz'
+#     log:
+#         '8_cami2_strain/cami2_profiles-download.log'
+#     shell:
+#         "bash -c 'cd 8_cami2_strain && " \
+#         "rm -f taxonomic_profiling_cami2.tar.gz && " \
+#         "wget https://zenodo.org/records/5006866/files/taxonomic_profiling_cami2.tar.gz?download=1 -O taxonomic_profiling_cami2.tar.gz' &> {log}"
+
+# rule extract_cami2_profiles:
+#     input:
+#         "8_cami2_strain/taxonomic_profiling_cami2.tar.gz"
+#     output:
+#         directory("8_cami2_strain/taxonomic_profiling_cami2/")
+#     log:
+#         "8_cami2_strain/taxonomic_profiling_cami2-extract.log"
+#     shell:
+#         "bash -c " \
+#         "'cd 8_cami2_strain && " \
+#         "tar -xzf taxonomic_profiling_cami2.tar.gz' &> {log}"
+
+rule download_gtdbtk_r207_data:
+    output:
+        join(output_directory, 'gtdbtk_r207_v2_data.tar.gz')
+    log:
+        join(output_directory, "gtdbtk_r207_data-download.log")
+    shell:
+        "bash -c "
+        f"'cd {output_directory} && "
+        "wget https://data.gtdb.ecogenomic.org/releases/release207/207.0/auxillary_files/gtdbtk_r207_v2_data.tar.gz' &> {log}"
+
+rule extract_gtdbtk_r207_data:
+    input:
+        join(output_directory, "gtdbtk_r207_v2_data.tar.gz")
+    output:
+        directory(join(output_directory, "release207_v2/"))
+    log:
+        join(output_directory, "gtdbtk_r207_v2_data-extract.log")
+    shell:
+        "bash -c " \
+        f"'cd {output_directory} && " \
+        "tar -xzf gtdbtk_r207_v2_data.tar.gz' &> {log}"
+
 rule download_metax_profiles:
     output:
         done = touch("18_metax_gut/metax_profiles-download.done"),
@@ -578,6 +941,10 @@ rule metax_coverages_to_genomes_list:
         done
         """
 
+rule all_metax_gut_reads:
+    input:
+        metax_gut_reads
+
 rule download_metax_gut_reads:
     output:
         done = touch("18_metax_gut/metax_gut_reads-download.done"),
@@ -587,11 +954,6 @@ rule download_metax_gut_reads:
     shell:
         "wget 'https://research.bifo.helmholtz-hzi.de/downloads/metax/benchmark_datasets/gut/' "
         "-r -np -R \"index.html*\" -P 18_metax_gut/gut_dataset &> {log}"
-
-rule all_metax_gut_reads:
-    input:
-        r1=[f"18_metax_gut/split_reads/sample_{sample_number}.1.fq.gz" for sample_number in range(10)],
-        r2=[f"18_metax_gut/split_reads/sample_{sample_number}.2.fq.gz" for sample_number in range(10)]
 
 rule split_metax_gut_reads:
     input:
@@ -606,60 +968,39 @@ rule split_metax_gut_reads:
         "mkdir -p 18_metax_gut/split_reads && "
         "zcat {input[0]} |./bin/deinterleave_fastq.sh {output.r1} {output.r2} compress &> {log}"
 
-# don't need? datasets takes taxon ids directly     
-rule download_cami2_accession2taxid:
-    output:
-        done = touch("18_metax_gut/ncbi_accession2taxid-download.done"),
-        tar = "18_metax_gut/ncbi_taxonomy_accession2taxid.tar"
-    log:
-        "18_metax_gut/ncbi_accession2taxid-download.log"
-    shell:
-        "wget 'https://openstack.cebitec.uni-bielefeld.de:8080/swift/v1/CAMI_2_DATABASES/ncbi_taxonomy_accession2taxid.tar' "
-        "-P 18_metax_gut &> {log}"
-        #"wget 'ftp://ftp.ncbi.nih.gov/pub/taxonomy/accession2taxid/prot.accession2taxid.gz' "
+# # don't need? datasets takes taxon ids directly     
+# rule download_cami2_accession2taxid:
+#     output:
+#         done = touch("18_metax_gut/ncbi_accession2taxid-download.done"),
+#         tar = "18_metax_gut/ncbi_taxonomy_accession2taxid.tar"
+#     log:
+#         "18_metax_gut/ncbi_accession2taxid-download.log"
+#     shell:
+#         "wget 'https://openstack.cebitec.uni-bielefeld.de:8080/swift/v1/CAMI_2_DATABASES/ncbi_taxonomy_accession2taxid.tar' "
+#         "-P 18_metax_gut &> {log}"
+#         #"wget 'ftp://ftp.ncbi.nih.gov/pub/taxonomy/accession2taxid/prot.accession2taxid.gz' "
 
-# don't need?
-rule extract_cami2_accession2taxid:
-    input:
-        "18_metax_gut/ncbi_taxonomy_accession2taxid.tar"
-    output:
-        touch("18_metax_gut/ncbi-accession2taxid-extract.done"),
-        d1 = directory("18_metax_gut/ncbi-accession2taxid"),
-    log:
-        "18_metax_gut/ncbi-accession2taxid-extract.log"
-    shell:
-        "tar -xf {input} -C 18_metax_gut &> {log}"
+# # don't need?
+# rule extract_cami2_accession2taxid:
+#     input:
+#         "18_metax_gut/ncbi_taxonomy_accession2taxid.tar"
+#     output:
+#         touch("18_metax_gut/ncbi-accession2taxid-extract.done"),
+#         d1 = directory("18_metax_gut/ncbi-accession2taxid"),
+#     log:
+#         "18_metax_gut/ncbi-accession2taxid-extract.log"
+#     shell:
+#         "tar -xf {input} -C 18_metax_gut &> {log}"
 
-# don't need?
-rule download_cami2_refseqdb:
-    output:
-        touch("18_metax_gut/ncbi_refseqdb-download.done"),
-    log:
-        "18_metax_gut/ncbi_refseqdb-download.log"
-    shell:
-        "wget 'https://openstack.cebitec.uni-bielefeld.de:8080/swift/v1/CAMI_2_DATABASES/RefSeq_genomic_20190108.tar' "
-        "-P 18_metax_gut &> {log}"
-
-rule download_cami3_taxdump:
-    output:
-        touch("18_metax_gut/cami3_taxdump-download.done")
-    log:
-        "18_metax_gut/cami3_taxdump-download.log"
-    shell:
-        "wget 'https://s3.bi.denbi.de/cami3__human-gut-challenge/databases/taxdmp_2026-07-01.zip?AWSAccessKeyId=d4098cac781f4b079ab33853731fcc30&Signature=fl9Y128uTIjqbZLi2ZO5BqFCDHk%3D&Expires=1815734514' "
-        "-O 18_metax_gut/taxdmp_2026-07-01.zip &> {log}"
-
-rule extract_cami3_taxdump:
-    input:
-        "18_metax_gut/cami3_taxdump-download.done"
-    output:
-        touch("18_metax_gut/cami3_taxdump-extract.done"),
-        d1 = directory("18_metax_gut/.taxonkit"),
-    log:
-        "18_metax_gut/cami3_taxdump-extract.log"
-    shell:
-        "mkdir -p {output.d1} && "
-        "unzip 18_metax_gut/taxdump_2026-07-01.zip -d {output.d1} &> {log}"
+# # don't need?
+# rule download_cami2_refseqdb:
+#     output:
+#         touch("18_metax_gut/ncbi_refseqdb-download.done"),
+#     log:
+#         "18_metax_gut/ncbi_refseqdb-download.log"
+#     shell:
+#         "wget 'https://openstack.cebitec.uni-bielefeld.de:8080/swift/v1/CAMI_2_DATABASES/RefSeq_genomic_20190108.tar' "
+#        "-P 18_metax_gut &> {log}"
 
 # 19 clinical stool
 rule download_clinical_stool_samples:
@@ -688,14 +1029,14 @@ rule annotate_clinical_stool_samples:
         "kingfisher annotate -p PRJNA786578 " \
         "--output-file {output} --output-format tsv &> {log}"
 
-# can't wget from this url
-rule download_clinical_stool_metadata:
-    output:
-        zip="19_clinical_stool/microorganisms-10-00441-s001.zip"
-    log:
-        "19_clinical_stool/metadata-download.log"
-    shell:
-        "wget -O {output.zip} https://pmc.ncbi.nlm.nih.gov/articles/instance/8880012/bin/microorganisms-10-00441-s001.zip &> {log}"
+# # can't wget from this url
+# rule download_clinical_stool_metadata:
+#     output:
+#         zip="19_clinical_stool/microorganisms-10-00441-s001.zip"
+#     log:
+#         "19_clinical_stool/metadata-download.log"
+#     shell:
+#         "wget -O {output.zip} https://pmc.ncbi.nlm.nih.gov/articles/instance/8880012/bin/microorganisms-10-00441-s001.zip &> {log}"
 
 rule extract_clinical_stool_metadata:
     input:

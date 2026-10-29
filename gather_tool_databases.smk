@@ -92,6 +92,17 @@ metax_gut_reads = [
     for dir in [1, 2]
 ]
 
+def parse_clinical_stool_samples(report_file):
+    return pl.read_csv(report_file, separator = "\t", columns = "run").to_series(0)
+
+clinical_stool_samples = parse_clinical_stool_samples(workflow.source_path("19_clinical_stool/PRJNA786578_annotate.tsv"))
+
+clinical_stool_reads = [
+    f"19_clinical_stool/local_reads/{sample}.{dir}.fq.gz"
+    for sample in clinical_stool_samples
+    for dir in [1, 2]
+]
+
 all_benchmarks_datasets = [
     join(output_directory, 'shadow-genomes.done'),
     cami2_marine_reads,
@@ -478,7 +489,7 @@ rule genome_pairs_fst_extract:
         join(output_directory, 'genome-pairs-fst-extract.log')
     shell:
         "bash -c 'cd 2_phylogenetic_novelty/genomes && "
-        "unzip ncbi_dataset.zip && "
+        "{{ rm -r ncbi_dataset/data README.md md5sum.txt; unzip ncbi_dataset.zip; }} && "
         # Rename files to simple names (e.g. GCA_000508305.1_genomic.fna)
         "parallel --col-sep \"\t\" cp {{1}} {{2}} :::: ../genome_ncbi_names.tsv' &> {log}"
 
@@ -500,7 +511,7 @@ rule genome_pairs_snd_extract:
         join(output_directory, 'genome-pairs-snd-extract.log')
     shell:
         "bash -c 'cd 2_phylogenetic_novelty/genome_pairs && "
-        "unzip ncbi_dataset.zip && "
+        "{{ rm -r ncbi_dataset/data README.md md5sum.txt; unzip ncbi_dataset.zip; }} && "
         # Rename files to simple names (e.g. GCA_000508305.1_genomic.fna)
         "parallel --col-sep \"\t\" cp {{1}} {{2}} :::: ../genome_pairs_ncbi_names.tsv' &> {log}"
 
@@ -636,20 +647,24 @@ rule download_shakya:
 
 rule download_fastq:
     output:
-        r1="7_shakya_synthetic/local_reads/{sample}.1.fq.gz",
-        r2="7_shakya_synthetic/local_reads/{sample}.2.fq.gz",
-        done=touch("7_shakya_synthetic/local_reads/{sample}.done")
+        r1="<bench_dir>/local_reads/{sample}.1.fq.gz",
+        r2="<bench_dir>/local_reads/{sample}.2.fq.gz",
+        done=touch("<bench_dir>/local_reads/{sample}.done")
     log:
-        "7_shakya_synthetic/local_reads/{sample}.log"
+        "<bench_dir>/local_reads/{sample}.log"
     threads:
         1
+    pathvars:
+        bench_dir = "7_shakya_synthetic"
+    params:
+        reads_dir = lambda wildcards, input, output: os.path.dirname(output.r1)
     shell:
         "pixi run -e kingfisher "
         "kingfisher get -r {wildcards.sample} "
-        "--output_directory 7_shakya_synthetic/local_reads "
+        "--output_directory {params.reads_dir} "
         "-m ena-ftp prefetch -f fastq.gz "
-        "&& mv 7_shakya_synthetic/local_reads/{wildcards.sample}_1.fastq.gz {output.r1} "
-        "&& mv 7_shakya_synthetic/local_reads/{wildcards.sample}_2.fastq.gz {output.r2} "
+        "&& mv {params.reads_dir}/{wildcards.sample}_1.fastq.gz {output.r1} "
+        "&& mv {params.reads_dir}/{wildcards.sample}_2.fastq.gz {output.r2} "
         "&> {log}"
 
 rule download_cami_strain:
@@ -1003,31 +1018,23 @@ rule split_metax_gut_reads:
 #        "-P 18_metax_gut &> {log}"
 
 # 19 clinical stool
-rule download_clinical_stool_samples:
-    output:
-        done=touch("19_clinical_stool/local_reads.done"),
-        dir=directory("19_clinical_stool/local_reads")
-    log:
-        "19_clinical_stool/samples-download.log"
-    threads:
-        1
-    localrule: True
-    shell:
-        "pixi run -e kingfisher " \
-        "kingfisher get -p PRJNA786578 " \
-        "--output_directory {output.dir} " \
-        "-m ena-ftp prefetch -f fastq.gz " \
-        "&> {log}"
+rule download_clinical_stool_reads:
+    input:
+        clinical_stool_reads
 
-rule annotate_clinical_stool_samples:
-    output:
-        "19_clinical_stool/PRJNA786578_annotate.tsv"
-    log:
-        "19_clinical_stool/samples-annotate.log"
-    shell:
-        "pixi run -e kingfisher " \
-        "kingfisher annotate -p PRJNA786578 " \
-        "--output-file {output} --output-format tsv &> {log}"
+# rule annotate_clinical_stool_samples:
+# output:
+#     "19_clinical_stool/PRJNA786578_annotate.tsv"
+# log:
+#     "19_clinical_stool/samples-annotate.log"
+# shell:
+#     "pixi run -e kingfisher " \
+#     "kingfisher annotate -p PRJNA786578 " \
+#      "--output-file {output} --output-format tsv &> {log}"
+
+use rule download_fastq as download_clinical_stool_sample with:
+    pathvars:
+        bench_dir = "19_clinical_stool"
 
 # # can't wget from this url
 # rule download_clinical_stool_metadata:

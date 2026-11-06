@@ -49,11 +49,18 @@ cami_strain_samples = [f"strain{sample_number}" for sample_number in range(100)]
 cami_strain_samples_data = read_samples(_make_absolute("8_cami2_strain", cami_conf["samples"]))
 cami_strain_reads1 = cami_strain_samples_data["reads1"]
 cami_strain_reads2 = cami_strain_samples_data["reads2"]
-cami_strain_truths = cami_strain_samples_data["truth"]
-cami_strain_coverage_definitions = cami_strain_samples_data["coverage"]
+cami_strain_truths = cami_strain_samples_data["truths"]
+cami_strain_coverage_definitions = cami_strain_samples_data["coverages"]
 cami_strain_genomes_list = _make_absolute("8_cami2_strain", cami_conf["genomes_list"])
 cami_strain_gtdbtk_data = _make_absolute("8_cami2_strain", cami_conf["classify"]["data"])
 
+def parse_clinical_stool_samples(report_file):
+    return pl.read_csv(report_file, separator = "\t", columns = "run").to_series(0)
+
+clinical_stool_samples = parse_clinical_stool_samples(workflow.source_path("19_clinical_stool/PRJNA786578_annotate.tsv"))
+
+metax_package = join(dirname(workflow.snakefile), "tool_reference_data/metax_db/metax_bavfph/metax_db.json")
+metax_taxdmp = join(dirname(workflow.snakefile), "tool_reference_data/.taxonkit")
 
 #####################################################################
 
@@ -431,11 +438,13 @@ rule generate_community_and_reads_bench11:
         "--percent-known-at {params.percent_known_at} " \
         "2> {log}"
 
+
+# ## bench19 clinical stool
 rule bench19:
     input:
         expand("19_clinical_stool/output_{tool}/{tool}/{sample}.profile",
-               tool = ["singlem_regime3", "sylph"],
-               sample = ["sample{sample_number}" for sample_number in range(10)])
+               tool = ["singlem-regime3", "sylph", "metax"],
+               sample = clinical_stool_samples)
 
 # utils
 
@@ -816,3 +825,47 @@ rule sylph_tax:
         eff="(\.eff)?"
     shell:
         "sed '1s/coverage/Eff_cov/' {input.profile} > {output.tax}"
+
+###############################################################################################
+###############################################################################################
+###############################################################################################
+######### metax
+
+rule metax_profile:
+    input:
+        r1 = "{bench_dir}/local_reads/{sample}.1.fq.gz",
+        r2 = "{bench_dir}/local_reads/{sample}.2.fq.gz",
+        db = metax_package,
+        dump_dir = metax_taxdmp
+    output:
+        report="{bench_dir}/output_metax/metax/{sample}.profile.txt",
+        done=touch("{bench_dir}/output_metax/metax/{sample}.done")
+    threads: 8
+    resources:
+        mem_mb=128000
+    log:
+        "{bench_dir}/output_metax/logs/metax/{sample}.profile.log"
+    params:
+        prefix = lambda wildcards: f"{wildcards.bench_dir}/output_metax/metax/{wildcards.sample}"
+    shell:
+        "pixi run -e metax "
+        "metax profile --dmp-dir {input.dump_dir} "
+        "--db {input.db} "
+        "-i {input.r1},{input.r2} "
+        "-p "
+        "-o {params.prefix} "
+        "-t {threads} 2> {log}"
+
+rule metax_report_to_condensed:
+    input:
+        report = "{bench_dir}/output_metax/metax/{sample}.profile.txt",
+        dump_dir = metax_taxdmp
+    output:
+        profile = "{bench_dir}/output_metax/metax/{sample}.profile",
+        done=touch("{bench_dir}/output_metax/metax/{sample}.profile.done")
+    shell:
+        "echo -e 'coverage\ttaxonomy\tsample' > {output.profile} && "
+        "cut -f2,5 {input.report} | "
+        "pixi run -e taxonkit taxonkit reformat2 -I 1 -f 'd__{{domain|acellular root|superkingdom}};p__{{phylum}};c__{{class}};o__{{order}};f__{{family}};g__{{genus}};s__{{species}}' | "
+        "sed 's/$/\t{wildcards.sample}/' | "
+        "cut -f2- >> {output.profile}"

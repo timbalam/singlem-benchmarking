@@ -44,7 +44,7 @@ weebill_binary = 'weebill/target/release/weebill'
 # responses, so the download cannot complete. See the commented-out map2b rules
 # below.s
 ## metabuli download is not scripted because it is via sharepoint, which gives an indirect link.
-tools = ['singlem', 'metaphlan', 'motus', 'kraken', 'sourmash', 'kaiju', 'metaphlan42']
+tools = ['singlem', 'metaphlan', 'motus', 'kraken', 'sourmash', 'kaiju', 'metaphlan42', 'metax']
 
 all_tools_input = [join(output_directory, f'{tool}.done') for tool in tools]
 
@@ -367,30 +367,59 @@ rule weebill_db_convert:
     shell:
         f"{weebill_binary} "
         "db-convert {input.weebill_syl} -o {output.weebill_syl2db} &> {log}"
-        
+
 rule metax_download:
+    input:
+        taxdmp = join(output_directory, "metax_taxdmp.done"),
+        db = join(output_directory, "metax_db.done")
+    output:
+        join(output_directory, "metax.done")
+
+rule metax_taxdmp_download:
     output:
         zip = join(output_directory, "taxdmp_2026-07-01.zip"),
-        done = touch(join(output_directory, "metax-download.done"))
+        done = touch(join(output_directory, "metax_taxdmp-download.done"))
     log:
-        join(output_directory, "metax-download.log")
+        join(output_directory, "metax_taxdmp-download.log")
     localrule:
         True
     shell:
         "wget 'https://s3.bi.denbi.de/cami3__human-gut-challenge/databases/taxdmp_2026-07-01.zip?AWSAccessKeyId=d4098cac781f4b079ab33853731fcc30&Signature=fl9Y128uTIjqbZLi2ZO5BqFCDHk%3D&Expires=1815734514' "
         "-O {output.zip} &> {log}"
 
-rule metax_extract:
+rule metax_taxdmp_extract:
     input:
         join(output_directory, "taxdmp_2026-07-01.zip")
     output:
-        touch(join(output_directory, "metax.done")),
-        d1 = directory(join(output_directory, ".taxonkit")),
+        touch(join(output_directory, "metax_taxdmp.done")),
+        d1 = directory(join(output_directory, ".taxonkit"))
     log:
-        join(output_directory, "metax-extract.log")
+        join(output_directory, "metax_taxdmp-extract.log")
     shell:
         "mkdir -p {output.d1} && "
         "unzip {input} -d {output.d1} &> {log}"
+
+rule metax_db_download:
+    output:
+        tar = join(output_directory, "metax_db.tar.xz"),
+        done = touch(join(output_directory, "metax_db-download.done"))
+    log:
+        join(output_directory, "metax_db-download.log")
+    shell:
+        "wget https://research.bifo.helmholtz-hzi.de/downloads/metax/metax_db.tar.xz "
+        "-O {output.tar} &> {log}"
+
+rule metax_db_extract:
+    input:
+        join(output_directory, "metax_db.tar.xz")
+    output:
+        touch(join(output_directory, "metax_db.done")),
+        d1 = directory(join(output_directory, "metax_db")),
+    log:
+        join(output_directory, "metax_db-extract.log")
+    shell:
+        "mkdir -p {output.d1} && "
+        "tar -xf {input} -C {output.d1} &> {log}"
 
 #rule gtdb_download_bac120:
 #    output:
@@ -1054,3 +1083,51 @@ rule extract_clinical_stool_metadata:
         "19_clinical_stool/metadata-extract.log"
     shell:
         "unzip {input.zip} -d {output.dir} &> {log}"
+
+
+# ## winnow-tax
+rule winnow_tax_pull_image:
+    output:
+        join(output_directory, "winnow-tax.sif")
+    log:
+        join(output_directory, 'winnow-tax-download.log')
+    localrule:
+        True
+    shell:
+        "singularity pull {output} docker://shansun1809/winnow-tax:latest &> {log}"
+
+rule gtdb_download_bac120_taxonomy_r226:
+    output:
+        done=touch(join(output_directory, 'gtdb-download-bac-tax-r226.done')),
+        gz = 'bac120_taxonomy_r226.tsv.gz'
+    log:
+        join(output_directory, 'gtdb-download-bac-tax-r226.log')
+    localrule:
+            True
+    shell:
+        'wget https://data.gtdb.ecogenomic.org/releases/release226/226.0/bac120_taxonomy_r226.tsv.gz '
+        '-O {output.gz} &> {log}'
+
+rule gtdb_download_ar53_taxonomy_r226:
+    output:
+        done=touch(join(output_directory, 'gtdb-download-ar-tax-r226.done')),
+        gz = 'ar53_metadata_r207.tar.gz'
+    log:
+        join(output_directory, 'gtdb-ar.log')
+    localrule:
+        True
+    shell:
+        'wget https://data.gtdb.ecogenomic.org/releases/release226/226.0/ar53_taxonomy_r226.tsv.gz '
+        '-O {output.gz} &> {log}'
+
+rule gtdb_download_genomes_reps_r226:
+    output:
+        done=touch(join(output_directory, 'gtdb-download-genomes-reps-r226.done')),
+        tar = 'gtdb_genomes_reps_r226.tar.gz'
+    log:
+        join(output_directory, 'gtdb-ar.log')
+    shell:
+        'wget https://data.gtdb.ecogenomic.org/releases/release226/226.0/genomic_files_reps/gtdb_genomes_reps_r226.tar.gz '
+        '-O {output.tar} &> {log}'
+
+

@@ -39,6 +39,8 @@ r-jsonlite = "*"
 r-vegan = "*"
 r-modeest = "*"
 unzip = "*"
+"ruamel.yaml" = ">=0.15.99"
+r-readxl = "*"
 
 #####################################################################
 # Per-tool environments. Each one is isolated (no-default-feature) so that
@@ -284,6 +286,11 @@ cami-opal = "*"
 [feature.cami-opal-lib.pypi-dependencies]
 cami-opal = "*"
 
+[feature.metax]
+dependencies = {metax = "==0.9.23"}
+channels = ["https://conda.anaconda.org/zldeng", "conda-forge", "bioconda"]
+
+
 [environments]
 singlem = { features = ["singlem"], no-default-feature = true }
 metaphlan = { features = ["metaphlan"], no-default-feature = true }
@@ -314,3 +321,4 @@ taxonomake = { features = ["taxonomake"], no-default-feature = true }
 rust = { features = ["rust"], no-default-feature = true }
 cami-opal-lib = { features = ["cami-opal-lib"], no-default-feature = true }
 taxonkit = { features = ["taxonkit"], no-default-feature = true }
+metax = { features = ["metax"], no-default-feature = true }

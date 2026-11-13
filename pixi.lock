@@ -4238,6 +4238,17 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/libgcc-15.2.0-h767d61c_7.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/libgomp-15.2.0-h767d61c_7.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/libstdcxx-15.2.0-h8f9b012_7.conda
+  sylph-update:
+    channels:
+    - url: https://conda.anaconda.org/conda-forge/
+    - url: https://conda.anaconda.org/bioconda/
+    packages:
+      linux-64:
+      - conda: https://conda.anaconda.org/bioconda/linux-64/sylph-1.0.0-hb42e459_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/linux-64/_openmp_mutex-4.5-20_gnu.conda
+      - conda: https://conda.anaconda.org/conda-forge/linux-64/libgcc-16.2.0-ha9f2e26_7.conda
+      - conda: https://conda.anaconda.org/conda-forge/linux-64/libgomp-16.2.0-he0feb66_7.conda
+      - conda: https://conda.anaconda.org/conda-forge/linux-64/libstdcxx-16.2.0-h934c35e_7.conda
   taxonkit:
     channels:
     - url: https://conda.anaconda.org/conda-forge/
@@ -5724,6 +5735,19 @@ packages:
   purls: []
   size: 692682
   timestamp: 1760387701277
+- conda: https://conda.anaconda.org/bioconda/linux-64/sylph-1.0.0-hb42e459_0.conda
+  sha256: 967c905c1701f1516adae9021f4fcf25f30fc108cbda26780c52c0fad159326f
+  md5: 46fcda7970633a7f78c230cad25f26f1
+  depends:
+  - __glibc >=2.17,<3.0.a0
+  - libgcc >=14
+  - libstdcxx >=14
+  constrains:
+  - __glibc >=2.17
+  license: MIT
+  license_family: MIT
+  size: 785378
+  timestamp: 1789360879346
 - conda: https://conda.anaconda.org/bioconda/linux-64/tabixpp-1.1.2-hbefcdb2_4.tar.bz2
   sha256: 0a5296a402841f5a567db78eacc7d3438ab9e727530086b9fcedd68a6a0421c0
   md5: ea888f422da5ac75fee9030b552c908c

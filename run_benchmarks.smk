@@ -59,8 +59,8 @@ def parse_clinical_stool_samples(report_file):
 
 clinical_stool_samples = parse_clinical_stool_samples(workflow.source_path("19_clinical_stool/PRJNA786578_annotate.tsv"))
 
-metax_package = join(dirname(workflow.snakefile), "tool_reference_data/metax_db/metax_bavfph/metax_db.json")
-metax_taxdmp = join(dirname(workflow.snakefile), "tool_reference_data/.taxonkit")
+metax_cami3_package = join(dirname(workflow.snakefile), "tool_reference_data/metax_cami3_db/metax_bavfph/metax_db.json")
+metax_cami3_taxdmp = join(dirname(workflow.snakefile), "tool_reference_data/metax_cami3_taxdmp")
 
 #####################################################################
 
@@ -443,8 +443,17 @@ rule generate_community_and_reads_bench11:
 rule bench19:
     input:
         expand("19_clinical_stool/output_{tool}/{tool}/{sample}.profile",
-               tool = ["singlem-regime3", "sylph", "metax"],
-               sample = clinical_stool_samples)
+               tool = ["singlem-regime3", "sylph", "metax_cami3"],
+               sample = ['SRR17233267'])
+               #sample = clinical_stool_samples)
+
+
+rule bench19_test:
+    input:
+        expand("19_clinical_stool/output_{tool}/{tool}/{sample}.profile",
+               tool = ["singlem-regime3", "sylph", "metax_cami3"][2:],
+               sample = ['SRR17298983'])
+
 
 # utils
 
@@ -750,7 +759,7 @@ rule sylph_sketch:
         r2 = "{bench_dir}/local_reads/{sample}.2.fq.gz"
     output:
         sp="{bench_dir}/output_sylph/sylph/{sample}.paired.sylsp",
-        done=touch("{bench_dir}/output_sylph/sylph/{sample}.paired.slysp.done")
+        done=touch("{bench_dir}/output_sylph/sylph/{sample}.paired.sylsp.done")
     threads: 8
     resources:
         mem_mb=32000
@@ -831,22 +840,22 @@ rule sylph_tax:
 ###############################################################################################
 ######### metax
 
-rule metax_profile:
+rule metax_cami3_profile:
     input:
         r1 = "{bench_dir}/local_reads/{sample}.1.fq.gz",
         r2 = "{bench_dir}/local_reads/{sample}.2.fq.gz",
-        db = metax_package,
-        dump_dir = metax_taxdmp
+        db = metax_cami3_package,
+        dump_dir = metax_cami3_taxdmp
     output:
-        report="{bench_dir}/output_metax/metax/{sample}.profile.txt",
-        done=touch("{bench_dir}/output_metax/metax/{sample}.done")
+        report="{bench_dir}/output_metax_cami3/metax_cami3/{sample}.profile.txt",
+        done=touch("{bench_dir}/output_metax_cami3/metax_cami3/{sample}.done")
     threads: 8
     resources:
         mem_mb=128000
     log:
-        "{bench_dir}/output_metax/logs/metax/{sample}.profile.log"
+        "{bench_dir}/output_metax_cami3/logs/metax_cami3/{sample}.profile.log"
     params:
-        prefix = lambda wildcards: f"{wildcards.bench_dir}/output_metax/metax/{wildcards.sample}"
+        prefix = lambda wildcards: f"{wildcards.bench_dir}/output_metax_cami3/metax_cami3/{wildcards.sample}"
     shell:
         "pixi run -e metax "
         "metax profile --dmp-dir {input.dump_dir} "
@@ -856,13 +865,13 @@ rule metax_profile:
         "-o {params.prefix} "
         "-t {threads} 2> {log}"
 
-rule metax_report_to_condensed:
+rule metax_cami3_report_to_condensed:
     input:
-        report = "{bench_dir}/output_metax/metax/{sample}.profile.txt",
-        dump_dir = metax_taxdmp
+        report = "{bench_dir}/output_metax_cami3/metax_cami3/{sample}.profile.txt",
+        dump_dir = metax_cami3_taxdmp
     output:
-        profile = "{bench_dir}/output_metax/metax/{sample}.profile",
-        done=touch("{bench_dir}/output_metax/metax/{sample}.profile.done")
+        profile = "{bench_dir}/output_metax_cami3/metax_cami3/{sample}.profile",
+        done=touch("{bench_dir}/output_metax_cami3/metax_cami3/{sample}.profile.done")
     shell:
         "echo -e 'coverage\ttaxonomy\tsample' > {output.profile} && "
         "cut -f2,5 {input.report} | "

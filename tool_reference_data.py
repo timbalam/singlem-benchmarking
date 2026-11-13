@@ -50,8 +50,8 @@ metakssd_markerdb = join(output_directory, "GTDBr207_genomes_L3K11_sketch_marker
 # standard r207 SingleM metapackage, but its --joint condense also needs a sylph
 # profile, which is produced by the `weebill` sylph fork (built from the weebill
 # submodule) against a GTDB r207 two-stage sylph database built at -c 100.
-weebill_binary = abspath(join('..', 'weebill', 'target', 'release', 'weebill'))
-weebill_db = '/scratch/microbiome/woodcrob/non_sensitive/weebill_dbs/r207.100.syl2db'
+#weebill_binary = abspath(join('..', 'weebill', 'target', 'release', 'weebill'))
+#weebill_db = '/scratch/microbiome/woodcrob/non_sensitive/weebill_dbs/r207.100.syl2db'
 
 # ---------------------------------------------------------------------------
 # GTDB r232-backed databases (benchmark 7). Everything above targets GTDB r207;
@@ -63,9 +63,9 @@ singlem_metapackage_r232 = join(
     output_directory, 'singlem_data_r232', 'S6.5.0.GTDB_r232.metapackage_20260319.smpkg.zb')
 # Standalone sylph db, sketched at c=100 (sylph's -c is ignored for pre-sketched
 # databases, so it profiles fine against the default c=200 query sketch).
-sylph_db_r232 = '/scratch/microbiome/woodcrob/non_sensitive/weebill_dbs/r232.100.syldb'
+sylph_db_r232 = join(output_directory, 'weebill_r232.100.syldb')
 # weebill (sylph fork) two-stage r232 db, the -c 100 analogue of weebill_db above.
-weebill_db_r232 = '/scratch/microbiome/woodcrob/non_sensitive/weebill_dbs/r232.100.syl2db'
+weebill_db_r232 = join(output_directory, 'weebill_r232.100.syl2db')
 # r232 GTDB taxonomy / metadata, staged to the repo root next to the r207 copies.
 gtdb_bac_taxonomy_r232 = '../bac120_taxonomy_r232.tsv'
 gtdb_ar_taxonomy_r232 = '../ar53_taxonomy_r232.tsv'

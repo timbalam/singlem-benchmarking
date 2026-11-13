@@ -142,6 +142,9 @@ metaphlan = "==4.2.2"
 [feature.sylph.dependencies]
 sylph = "==0.8.1"
 
+[feature.sylph-update.dependencies]
+sylph = "*"
+
 [feature.art-dev.dependencies]
 ipykernel = "*"
 pip = "*"
@@ -309,6 +312,7 @@ coverm = { features = ["coverm"], no-default-feature = true }
 map2b = { features = ["map2b"], no-default-feature = true }
 metaphlan42 = { features = ["metaphlan42"], no-default-feature = true }
 sylph = { features = ["sylph"], no-default-feature = true }
+sylph-update = { features = ["sylph-update"], no-default-feature = true }
 art-dev = { features = ["art", "art-dev"], no-default-feature = true }
 singlem-dev = { features = ["singlem-dev"], no-default-feature = true }
 kingfisher = { features = ["kingfisher"], no-default-feature = true }

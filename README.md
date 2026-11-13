@@ -91,6 +91,27 @@ cd tool_reference_data && {
 }
 ```
 
+For GTDB v226
+```bash
+#ALL_GTDBR226_GENOMES_DIR=/work/microbiome/db/gtdb/gtdb_release226/genomic_files_reps/gtdb_genomes_reps_r226
+cd tool_reference_data && {
+    find $ALL_GTDBR226_GENOMES_DIR | grep .fna > gtdb_r226_all.txt &&
+        ../weebill/target/release/weebill sketch -l gtdb_r226_all.txt -t 50 -c 100 -o weebill_r226.100
+    cd ..
+}
+```
+
+For GTDB v232
+```bash
+#ALL_GTDBR232_GENOMES_DIR=/work/microbiome/db/gtdb/gtdb_release232/genomic_files_reps/gtdb_genomes_reps_r232
+cd tool_reference_data && {
+    find $ALL_GTDBR232_GENOMES_DIR | grep .fna > gtdb_r232_all.txt &&
+        ../weebill/target/release/weebill sketch -l gtdb_r232_all.txt -t 50 -c 100 -o weebill_r232.100
+    cd ..
+}
+```
+
+
 Covert the weebill database to 2-stage.
 ```bash
 pixi run snakemake --snakefile gather_tool_databases.smk -c 8 weebill_db_convert

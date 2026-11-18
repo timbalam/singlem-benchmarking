@@ -1172,11 +1172,51 @@ rule download_gtdb_ar53_taxonomy_r226:
 rule download_gtdb_genomes_reps_r226:
     output:
         done=touch(join(output_directory, 'gtdb_genomes_reps_r226-download.done')),
-        tar = 'gtdb_genomes_reps_r226.tar.gz'
+        tar = join(output_directory, 'gtdb_genomes_reps_r226.tar.gz')
     log:
         join(output_directory, 'gtdb_genomes_reps_r226-download.log')
     shell:
         'wget https://data.gtdb.ecogenomic.org/releases/release226/226.0/genomic_files_reps/gtdb_genomes_reps_r226.tar.gz '
         '-O {output.tar} &> {log}'
 
+rule gtdb_reps_accessions_r226:
+    input:
+        tar = join(output_directory, 'gtdb_genomes_reps_r226.tar.gz')
+    output:
+        join(output_directory, 'gtdb_genomes_reps_accessions_r226.txt')
+    shell:
+        "tar -tzf {input.tar} | "
+        "sed s/.*\/\(GC[AF]_[0-9]\{{9\}}\)\(\.[0-9]\+\)?_genomic\.fna\(\.gz\)?$/\\1/ | "
+        "sort -u > {output}"
 
+rule gtdb_r226_accessions:
+    input:
+        bac = 'bac120_taxonomy_r226.tsv.gz'
+        ar = 'ar53_taxonomy_r226.tar.gz'
+    output:
+        join(output_directory, 'gtdb_accessions_r226.txt')
+    shell:
+        "zcat {input.bac} {input.ar} | "
+        "pixi run -e taxonkit csvtk cut -H -t -f1 | "
+        "sed 's/^.*\(GC[AF]_[0-9]\{{9\}}\).*/\\1/' | "
+        "sort -u }> {output}"
+
+rule gtdb_r226_accessions_comm:
+    input:
+        acc = join(output_directory, 'gtdb_accessions_r226.txt')
+        rep_acc = join(output_directory, 'gtdb_genomes_reps_accessions_r226.txt')
+    output:
+        join(output_directory, 'gtdb_accessions_r226_comm.txt')
+    shell:
+        "comm -12 {input.acc} {input.rep_acc}> {output}"
+
+rule winnow_tax_acc2taxid_r226:
+    input:
+        acc = join(output_directory, 'gtdb_accessions_r226_comm.txt')
+    output:
+        join(output_directory, 'acc2taxid_r226.txt')
+    shell:
+        "pixi run -e taxonkit "
+        "datasets summary genome accession --inputfile {input.acc} --as-json-lines | "
+        "pixi run -e taxonkit "
+        "dataformat tsv genome --elide-header --fields accession,organism-tax-id > {output}"    

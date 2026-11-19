@@ -1196,17 +1196,34 @@ rule metax_coverages_to_genomes_list:
         """
         : > {output} && 
         for f in {input}; do
-          cut -f1 "$f" | sed 's/\(.*\)/genomes\/\1.fasta\t\1/' >> {output}
+          cut -f1 "$f" | sed 's/\(.*\)/genomes\/\\1.fasta\t\\1/' >> {output}
         done
         """
 
-rule taxonomake_metax_gut:
+rule taxonomake_metax_gut_download:
     input:
         coverages = metax_gut_coverage_definitions,
         reads = metax_gut_reads,
         genomes_list = metax_gut_genomes_list
     output:
-        gtdbtk_data = metax_gut_gtdbtk_data,
+        gtdbtk_data = metax_gut_gtdbtk_data
+    log:
+        "18_metax_gut/taxonomake-download.log"
+    localrule: True
+    shell:
+        f"SNAKEMAKE_PROFILE={PROFILE} "
+        "pixi run -e taxonomake "
+        "taxonomake 18_metax_gut/community.yaml "
+        "--download "
+        "--directory 18_metax_gut/taxonomake &> {log}"
+
+rule taxonomake_metax_gut:
+    input:
+        coverages = metax_gut_coverage_definitions,
+        reads = metax_gut_reads,
+        genomes_list = metax_gut_genomes_list,
+        gtdbtk_data = metax_gut_gtdbtk_data
+    output:
         truth = metax_gut_truths
     log:
         "18_metax_gut/taxonomake.log"
@@ -1495,5 +1512,5 @@ rule build_ktaxonomy:
     log:
         join(output_directory, 'build_ktaxonomy.log')
     shell:
-        'python3 -u {workflow.basedir}/build_kraken2_gtdb_r226_scripts/build_ktaxonomy.py '
+        'python3 -u {workflow.basedir}/kraken2_gtdb_r226_build_scripts/build_ktaxonomy.py '
         '{input.dir} {output} &> {log}'

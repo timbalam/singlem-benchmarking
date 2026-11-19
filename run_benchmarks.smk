@@ -18,7 +18,7 @@ regime3_weebill_scripts = join(
 
 singlem_regime3_metapackage_local = singlem_metapackage
 regime3_weebill_mem_mb = 16000
-
+singlem_ncbi_metapackage_local = join(dirname(workflow.snakefile), "tool_reference_data", "ncbi_names.GTDB_r232.metapackage_20261106.smpkg.zb.tar.gz")
 cami_strain_samples = [f"strain{sample_number}" for sample_number in range(100)]
 
 def parse_clinical_stool_samples(report_file):
@@ -28,6 +28,8 @@ clinical_stool_samples = parse_clinical_stool_samples(workflow.source_path("19_c
 
 metax_cami3_package = join(dirname(workflow.snakefile), "tool_reference_data/metax_cami3_db/metax_bavfph/metax_db.json")
 metax_cami3_taxdmp = join(dirname(workflow.snakefile), "tool_reference_data/metax_cami3_taxdmp")
+
+metax_gut_samples = [f"sample_{sample_number}" for sample_number in range(10)]
 
 #####################################################################
 
@@ -322,6 +324,12 @@ rule bench19_test:
                tool = ["singlem-regime3", "sylph", "metax_cami3"][2:],
                sample = ['SRR17298983'])
 
+# ## bench20 metax gut ncbi
+rule bench20:
+    input:
+        expand("20_metax_gut_ncbi/output_{tool}/opal/{sample}.opal_report",
+               tool = ["metax-ncbi", "singlem-ncbi"][1:],
+               sample = metax_gut_samples[:1])
 
 # utils
 
@@ -401,23 +409,45 @@ rule singlem_run_condense:
         "--output-after-em-otu-table {output.after_em} " \
         "-p {output.profile} --metapackage {input.db} &> {log}"
 
+READS_SEP = {
+    '18_metax_gut': '_',
+    '20_metax_gut_ncbi': '_'
+}
+def singlem_regime3_input(wildcards):
+    reads_path = READS_PATH.get(wildcards.bench_dir, 'local_reads')
+    reads_sep = READS_SEP.get(wildcards.bench_dir, '.')
+    reads_pref = f"{wildcards.bench_dir}/{reads_path}/{wildcards.sample}{reads_sep}"
+    return {
+        'r1': f"{reads_pref}1.fq.gz",
+        'r2': f"{reads_pref}2.fq.gz",
+        'db': singlem_regime3_metapackage_local
+    }
 rule singlem_regime3_pipe_to_archive:
-    input:
-        r1="{bench_dir}/local_reads/{sample}.1.fq.gz",
-        r2="{bench_dir}/local_reads/{sample}.2.fq.gz",
-        db=singlem_regime3_metapackage_local
+    input: unpack(singlem_regime3_input)
     output:
-        archive="{bench_dir}/output_singlem-regime3/singlem-regime3/{sample}.archive.json",
-        done=touch("{bench_dir}/output_singlem-regime3/singlem-regime3/{sample}.archive.done")
+        archive="{bench_dir}/output_<tool>/<tool>/{sample}.archive.json",
+        done=touch("{bench_dir}/output_<tool>/<tool>/{sample}.archive.done")
     threads: 8
+    pathvars:
+        tool = 'singlem-regime3'
     resources:
         runtime=180,  # singlem pipe --no-weebill; 3h ceiling
     log:
-        "{bench_dir}/output_singlem-regime3/logs/singlem-regime3/{sample}.pipe.log",
+        "{bench_dir}/output_<tool>/logs/<tool>/{sample}.pipe.log",
     shell:
         'unset PYTHONPATH && eval "$(pixi shell-hook -e singlem-regime3)" && '
         "singlem pipe --threads {threads} -1 {input.r1} -2 {input.r2} "
         "--no-weebill --archive-otu-table {output.archive} --metapackage {input.db} &> {log}"
+
+def singlem_ncbi_input(wildcards):
+    inp = singlem_regime3_input(wildcards)
+    inp["db"] = singlem_ncbi_metapackage_local
+    return inp
+
+use rule singlem_regime3_pipe_to_archive as singlem_ncbi_pipe_to_archive with:
+    input: unpack(singlem_ncbi_input)
+    pathvars:
+        tool = 'singlem_ncbi'
 
 rule singlem_regime3_weebill_profile:
     input:
@@ -425,14 +455,16 @@ rule singlem_regime3_weebill_profile:
         r2="{bench_dir}/local_reads/{sample}.2.fq.gz",
         database=weebill_db
     output:
-        profile="{bench_dir}/output_singlem-regime3/singlem-regime3/{sample}.weebill.tsv",
-        done=touch("{bench_dir}/output_singlem-regime3/singlem-regime3/{sample}.weebill.done"),
+        profile="{bench_dir}/output_<tool>/<tool>/{sample}.weebill.tsv",
+        done=touch("{bench_dir}/output_<tool>/<tool>/{sample}.weebill.done"),
+    pathvars:
+        tool = "singlem-regime3"
     threads: 8
     resources:
         mem_mb=regime3_weebill_mem_mb,
         runtime=120,  # weebill profile is fast; 2h is ample
     log:
-        "{bench_dir}/output_singlem-regime3/logs/singlem-regime3/{sample}.weebill.log",
+        "{bench_dir}/output_<tool>/logs/<tool>/{sample}.weebill.log",
     shell:
         "{weebill_binary} "
         "profile --two-stage -t {threads} -c 100 "
@@ -440,29 +472,48 @@ rule singlem_regime3_weebill_profile:
         # weebill writes only a header when nothing is detected; ensure >=1 data row
         "awk 'END {{ exit NR < 2 }}' {output.profile}"
 
+use rule singlem_regime3_weebill_profile as singlem_ncbi_weebill_profile with:
+    input:
+        r1 = "{bench_dir}/local_reads/{sample}.1.fq.gz",
+        r2 = "{bench_dir}/local_reads/{sample}.2.fq.gz",
+        database = weebill_db
+    pathvars:
+        tool = 'singlem_ncbi'
+
 rule singlem_regime3_annotate_weebill:
     input:
-        profile="{bench_dir}/output_singlem-regime3/singlem-regime3/{sample}.weebill.tsv",
+        profile="{bench_dir}/output_<tool>/<tool>/{sample}.weebill.tsv",
         db=singlem_regime3_metapackage_local,
     output:
-        annotated="{bench_dir}/output_singlem-regime3/singlem-regime3/{sample}.weebill.annotated.tsv",
+        annotated="{bench_dir}/output_<tool>/<tool>/{sample}.weebill.annotated.tsv",
+    pathvars:
+        tool = "singlem-regime3"
     resources:
         runtime=60,  # trivial annotation step
     log:
-        "{bench_dir}/output_singlem-regime3/logs/singlem-regime3/{sample}.annotate.log",
+        "{bench_dir}/output_<tool>/logs/<tool>/{sample}.annotate.log",
     shell:
         'unset PYTHONPATH && eval "$(pixi shell-hook -e singlem-regime3)" && '
         "PYTHONPATH={singlem_regime3_git_base_directory} python3 {regime3_weebill_scripts}/annotate_weebill.py "
         "--profile {input.profile} --metapackage {input.db} --output {output.annotated} &> {log}"
 
+use rule singlem_regime3_annotate_weebill as singlem_ncbi_annotate_weebill with:
+    input:
+        profile="{bench_dir}/output_<tool>/<tool>/{sample}.weebill.tsv",
+        db = singlem_ncbi_metapackage_local
+    pathvars:
+        tool = 'singlem_ncbi'
+
 rule singlem_regime3_condense_joint:
     input:
-        archive="{bench_dir}/output_singlem-regime3/singlem-regime3/{sample}.archive.json",
-        weebill_profile="{bench_dir}/output_singlem-regime3/singlem-regime3/{sample}.weebill.annotated.tsv",
+        archive="{bench_dir}/output_<tool>/<tool>/{sample}.archive.json",
+        weebill_profile="{bench_dir}/output_<tool>/<tool>/{sample}.weebill.annotated.tsv",
         db=singlem_regime3_metapackage_local,
     output:
-        profile="{bench_dir}/output_singlem-regime3/singlem-regime3/{sample}.profile",
-        done=touch("{bench_dir}/output_singlem-regime3/singlem-regime3/{sample}.profile.done"),
+        profile="{bench_dir}/output_<tool>/<tool>/{sample}.profile",
+        done=touch("{bench_dir}/output_<tool>/<tool>/{sample}.profile.done")
+    pathvars:
+        tool = "singlem-regime3"
     threads: 1
     resources:
         runtime=60,  # condense is quick
@@ -474,6 +525,14 @@ rule singlem_regime3_condense_joint:
         "--weebill-profile {input.weebill_profile} --joint --taxonomic-profile {output.profile} "
         "--joint-pin-weebill-species --joint-novel-budget --alpha 1 "
         "&> {log}"
+
+use rule singlem_regime3_condense_joint as singlem_ncbi_condense_joint with:
+    input:
+        archive="{bench_dir}/output_<tool>/<tool>/{sample}.archive.json",
+        weebill_profile="{bench_dir}/output_<tool>/<tool>/{sample}.weebill.annotated.tsv",
+        db=singlem_ncbi_metapackage_local
+    pathvars:
+        tool = 'singlem_ncbi'
 
 rule singlem_dev_run_renew:
     input:

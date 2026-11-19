@@ -63,9 +63,10 @@ novel_r214_genomes/
 15_phylogenetic_novelty_nanopore/reads/
 16_phylogenetic_novelty_hifi/reads/
 
-18_metax_gut/gut_dataset
-18_metax_gut/split_reads
+18_metax_gut/gut_dataset/
+18_metax_gut/split_reads/
 18_metax_gut/metax_gut_reads-download.done
+18_metax_gut/taxonomake/
 20_metax_gut_ncbi/metax_benchmark_profiles
 20_metax_gut_ncbi/metax_benchmark_profiles.zip
 20_metax_gut_ncbi/metax_profiles-download.done

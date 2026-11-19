@@ -9,4 +9,4 @@ classify:
   tool: "gtdbtk"
   release: "226"
   directory: "genomes.gtdbtk_r226"
-  data: "../tool_reference/gtdbtk_r226_data"
+  data: "../tool_reference_data/gtdbtk_r226_data"

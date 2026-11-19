@@ -65,7 +65,7 @@ novel_r214_genomes/
 
 18_metax_gut/gut_dataset
 18_metax_gut/split_reads
-18_metax_gut/metax_benchmark_profiles
-18_metax_gut/metax_benchmark_profiles.zip
-18_metax_gut/metax_gut-download.done
-18_metax_gut/metax_profiles-download.done
+18_metax_gut/metax_gut_reads-download.done
+20_metax_gut_ncbi/metax_benchmark_profiles
+20_metax_gut_ncbi/metax_benchmark_profiles.zip
+20_metax_gut_ncbi/metax_profiles-download.done

@@ -19,40 +19,7 @@ regime3_weebill_scripts = join(
 singlem_regime3_metapackage_local = singlem_metapackage
 regime3_weebill_mem_mb = 16000
 
-PROFILE=(
-    sys.argv[sys.argv.index('--profile') + 1]
-    if '--profile' in sys.argv
-    else os.getenv('SNAKEMAKE_PROFILE', default = '')
-)
-
-# from taxonomake.modules.common
-def _make_absolute(dir, *paths):
-    return os.path.normpath(os.path.join(dir, *paths))
-
-# from taxonomake.modules.common
-def read_samples(path):
-    dir = os.path.dirname(path)
-    return (
-        pl.read_csv(path, separator = '\t')
-        .with_columns(
-            pl.col("reads1", "reads2", "truths", "coverages")
-            .map_elements(lambda path: _make_absolute(dir, path))
-        )
-        .to_dict(as_series = False)
-    )
-
-yaml = YAML()
-with open("8_cami2_strain/community.yaml") as f:
-    cami_conf = yaml.load(f)
-
 cami_strain_samples = [f"strain{sample_number}" for sample_number in range(100)]
-cami_strain_samples_data = read_samples(_make_absolute("8_cami2_strain", cami_conf["samples"]))
-cami_strain_reads1 = cami_strain_samples_data["reads1"]
-cami_strain_reads2 = cami_strain_samples_data["reads2"]
-cami_strain_truths = cami_strain_samples_data["truths"]
-cami_strain_coverage_definitions = cami_strain_samples_data["coverages"]
-cami_strain_genomes_list = _make_absolute("8_cami2_strain", cami_conf["genomes_list"])
-cami_strain_gtdbtk_data = _make_absolute("8_cami2_strain", cami_conf["classify"]["data"])
 
 def parse_clinical_stool_samples(report_file):
     return pl.read_csv(report_file, separator = "\t", columns = "run").to_series(0)
@@ -136,106 +103,6 @@ rule bench_cami_strain:
     input:
         expand("8_cami2_strain/output_{tool}/opal/{sample}.opal_report",
                sample = cami_strain_samples, tool = ['singlem', 'sylph', 'singlem_joint_a846591', 'singlem-regime3'])
-
-rule taxonomake_cami_strain:
-    input:
-        coverages = cami_strain_coverage_definitions,
-        reads1 = cami_strain_reads1,
-        reads2 = cami_strain_reads2,
-        gtdbtk_data = cami_strain_gtdbtk_data,
-        genomes_list = cami_strain_genomes_list
-    output:
-        truth = cami_strain_truths
-    log:
-        "8_cami2_strain/taxonomake.log"
-    localrule: True
-    shell:
-        f"SNAKEMAKE_PROFILE={PROFILE} "
-        "pixi run -e taxonomake "
-        "taxonomake 8_cami2_strain/community.yaml "
-        "--directory 8_cami2_strain/taxonomake &> {log}"
-
-rule generate_cami_genomes_list:
-    input:
-        "8_cami2_strain/genomes/"
-    output:
-        cami_strain_genomes_list
-    shell:
-        """
-        parallel echo -e "{{}}'\t'{/.}" ::: {input}/*.fasta > {output}
-        """
-
-# # classifying done by taxonomake
-# def gtdbtk_data_path(wildcards):
-#     return abspath("tool_reference_data/release207_v2")
-
-# rule gtdbtk_identify:
-#     input:
-#         fa="8_cami2_strain/short_read/source_genomes",
-#         data_path=gtdbtk_data_path
-#     output:
-#         output_dir=directory("8_cami2_strain/gtdbtk_r207/identify")
-#     log:
-#         "8_cami2_strain/gtdbtk_r207/identify.log"
-#     shell:
-#         "GTDBTK_DATA_PATH={input.data_path} " \
-#         "pixi run -e gtdbtk " \
-#         "gtdbtk identify --genome_dir {input.fa} " \
-#         "--out_dir {output.output_dir} " \
-#         "--extension .fasta " \
-#         "&> {log}"
-
-# rule gtdbtk_align:
-#     input:
-#         id="8_cami2_strain/gtdbtk_r207/identify",
-#         data_path=gtdbtk_data_path
-#     output:
-#         output_dir=directory("8_cami2_strain/gtdbtk_r207/align")
-#     log:
-#         "8_cami2_strain/gtdbtk_r207/align.log"
-#     shell:
-#         "GTDBTK_DATA_PATH={input.data_path} " \
-#         "pixi run -e gtdbtk " \
-#         "gtdbtk align --identify_dir {input.id} " \
-#         "--out_dir {output.output_dir} " \
-#         "&> {log}"
-
-# rule gtdbtk_classify:
-#     input:
-#         fa="8_cami2_strain/short_read/source_genomes",
-#         al="8_cami2_strain/gtdbtk_r207/align",
-#         data_path=gtdbtk_data_path
-#     output:
-#         output_dir=directory("8_cami2_strain/gtdbtk_r207/classify"),
-#         done=touch("8_cami2_strain/gtdbtk_r207/classify.done")
-#     log:
-#         "8_cami2_strain/gtdbtk_r207/classify.log"
-#     resources:
-#         mem_mb=64000
-#     shell:
-#         "GTDBTK_DATA_PATH={input.data_path} " \
-#         "pixi run -e gtdbtk " \
-#         "gtdbtk classify --genome_dir {input.fa} " \
-#         "--align_dir {input.al} " \
-#         "--extension .fasta " \
-#         #"--scratch_data " \
-#         "--out_dir {output.output_dir} " \
-#         "&> {log}"
-
-# rule gtdbtk_classify_wf:
-#     input:
-#         fa="8_cami2_strain/short_read/source_genomes",
-#         data_path=gtdbtk_data_path
-#     output:
-#         output_dir=directory("8_cami2_strain/gtdbtk_r207_wf")
-#     log:
-#         "8_cami2_strain/gtdb_r207_wf/classify_wf.log"
-#     shell:
-#         "GTDBTK_DATA_PATH={input.data_path} " \
-#         "pixi run -e gtdbtk " \
-#         "gtdbtk classify_wf --genome-dir {input.fa} " \
-#         "--out_dir {output.output_dir} " \
-#         "&> {log}"
 
 # ## bench 9 related
 
@@ -438,6 +305,7 @@ rule generate_community_and_reads_bench11:
         "--percent-known-at {params.percent_known_at} " \
         "2> {log}"
 
+# ## bench18 metax gut
 
 # ## bench19 clinical stool
 rule bench19:

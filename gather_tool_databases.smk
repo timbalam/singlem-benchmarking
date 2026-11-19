@@ -2,6 +2,29 @@ import os.path
 from os.path import join, abspath
 import os
 import polars as pl
+from ruamel.yaml import YAML
+
+# from taxonomake.modules.common
+def _make_absolute(dir, *paths):
+    return os.path.normpath(os.path.join(dir, *paths))
+
+# from taxonomake.modules.common
+def read_samples(path):
+    dir = os.path.dirname(path)
+    return (
+        pl.read_csv(path, separator = '\t')
+        .with_columns(
+            pl.col("reads1", "reads2", "truths", "coverages")
+            .map_elements(lambda path: _make_absolute(dir, path))
+        )
+        .to_dict(as_series = False)
+    )
+    
+PROFILE=(
+    sys.argv[sys.argv.index('--profile') + 1]
+    if '--profile' in sys.argv
+    else os.getenv('SNAKEMAKE_PROFILE', default = '')
+)
 
 output_directory = 'tool_reference_data'
 # mkdir
@@ -81,20 +104,44 @@ shakya_reads = [
     for dir in [1, 2]
 ]
 
-cami_strain_reads = [
-    f"8_cami2_strain/local_reads/strain{sample_number}.{dir}.fq.gz"
-    for sample_number in range(100)
-    for dir in [1,2]
-]
-cami_strain_coverage_definitions = [
-    f"8_cami2_strain/coverage_definitions/strain{sample_number}.tsv"
-    for sample_number in range(100)
-]
-metax_gut_reads = [
-    f"18_metax_gut/split_reads/sample_{sample_number}.{dir}.fq.gz"
-    for sample_number in range(10)
-    for dir in [1, 2]
-]
+yaml = YAML()
+with open("8_cami2_strain/community.yaml") as f:
+    cami_conf = yaml.load(f)
+
+cami_strain_samples = [f"strain{sample_number}" for sample_number in range(100)]
+cami_strain_samples_data = read_samples(_make_absolute("8_cami2_strain", cami_conf["samples"]))
+cami_strain_reads = cami_strain_samples_data["reads1"] + cami_strain_samples_data["reads2"]
+cami_strain_truths = cami_strain_samples_data["truths"]
+cami_strain_coverage_definitions = cami_strain_samples_data["coverages"]
+cami_strain_genomes_list = _make_absolute("8_cami2_strain", cami_conf["genomes_list"])
+cami_strain_gtdbtk_data = _make_absolute("8_cami2_strain", cami_conf["classify"]["data"])
+
+#cami_strain_reads = [
+#    f"8_cami2_strain/local_reads/strain{sample_number}.{dir}.fq.gz"
+#    for sample_number in range(100)
+#    for dir in [1,2]
+#]
+#cami_strain_coverage_definitions = [
+#    f"8_cami2_strain/coverage_definitions/strain{sample_number}.tsv"
+#    for sample_number in range(100)
+#]
+#metax_gut_reads = [
+#    f"18_metax_gut/split_reads/sample_{sample_number}.{dir}.fq.gz"
+#    for sample_number in range(10)
+#    for dir in [1, 2]
+#]
+
+with open("18_metax_gut/community.yaml") as f:
+    metax_gut_conf = yaml.load(f)
+
+metax_gut_samples_data = read_samples(_make_absolute("18_metax_gut", metax_gut_conf["samples"]))
+metax_gut_samples = metax_gut_samples_data["names"]
+metax_gut_reads = metax_gut_samples_data["reads1"] + metax_gut_samples_data["reads2"]
+metax_gut_truths = metax_gut_samples_data["truths"]
+metax_gut_coverage_definitions = metax_gut_samples_data["coverages"]
+metax_gut_genomes_list = _make_absolute("18_metax_gut", metax_gut_conf["genomes_list"]["taxon"])
+metax_gut_gtdbtk_data = _make_absolute("18_metax_gut", metax_gut_conf["classify"]["data"])
+
 
 def parse_clinical_stool_samples(report_file):
     return pl.read_csv(report_file, separator = "\t", columns = "run").to_series(0)
@@ -120,7 +167,14 @@ all_benchmarks_datasets = [
     cami_strain_reads,
     cami_strain_coverage_definitions,
     "8_cami2_strain/genomes",
-    metax_gut_reads
+    cami_strain_gtdbtk_data,
+    cami_strain_genomes_list,
+    cami_strain_truths,
+    metax_gut_reads,
+    metax_gut_truths,
+    metax_gut_coverage_definitions,
+    metax_gut_genomes_list,
+    metax_gut_gtdbtk_data
 ]
 
 rule all:
@@ -865,6 +919,33 @@ rule generate_cami_strain_coverage_definitions:
         "--read-mapping-counts {input.read_mapping_counts} " \
         "> {output[0]} 2> {log}"
 
+rule taxonomake_cami_strain:
+    input:
+        coverages = cami_strain_coverage_definitions,
+        reads = cami_strain_reads,
+        gtdbtk_data = cami_strain_gtdbtk_data,
+        genomes_list = cami_strain_genomes_list
+    output:
+        truth = cami_strain_truths
+    log:
+        "8_cami2_strain/taxonomake.log"
+    localrule: True
+    shell:
+        f"SNAKEMAKE_PROFILE={PROFILE} "
+        "pixi run -e taxonomake "
+        "taxonomake 8_cami2_strain/community.yaml "
+        "--directory 8_cami2_strain/taxonomake &> {log}"
+
+rule generate_cami_genomes_list:
+    input:
+        "8_cami2_strain/genomes/"
+    output:
+        cami_strain_genomes_list
+    shell:
+        """
+        parallel echo -e "{{}}'\t'{/.}" ::: {input}/*.fasta > {output}
+        """
+
 ## profiles not useful
 # rule download_cami2_profiles:
 #     output:
@@ -888,6 +969,79 @@ rule generate_cami_strain_coverage_definitions:
 #         "'cd 8_cami2_strain && " \
 #         "tar -xzf taxonomic_profiling_cami2.tar.gz' &> {log}"
 
+# # classifying done by taxonomake
+# def gtdbtk_data_path(wildcards):
+#     return abspath("tool_reference_data/release207_v2")
+
+# rule gtdbtk_identify:
+#     input:
+#         fa="8_cami2_strain/short_read/source_genomes",
+#         data_path=gtdbtk_data_path
+#     output:
+#         output_dir=directory("8_cami2_strain/gtdbtk_r207/identify")
+#     log:
+#         "8_cami2_strain/gtdbtk_r207/identify.log"
+#     shell:
+#         "GTDBTK_DATA_PATH={input.data_path} " \
+#         "pixi run -e gtdbtk " \
+#         "gtdbtk identify --genome_dir {input.fa} " \
+#         "--out_dir {output.output_dir} " \
+#         "--extension .fasta " \
+#         "&> {log}"
+
+# rule gtdbtk_align:
+#     input:
+#         id="8_cami2_strain/gtdbtk_r207/identify",
+#         data_path=gtdbtk_data_path
+#     output:
+#         output_dir=directory("8_cami2_strain/gtdbtk_r207/align")
+#     log:
+#         "8_cami2_strain/gtdbtk_r207/align.log"
+#     shell:
+#         "GTDBTK_DATA_PATH={input.data_path} " \
+#         "pixi run -e gtdbtk " \
+#         "gtdbtk align --identify_dir {input.id} " \
+#         "--out_dir {output.output_dir} " \
+#         "&> {log}"
+
+# rule gtdbtk_classify:
+#     input:
+#         fa="8_cami2_strain/short_read/source_genomes",
+#         al="8_cami2_strain/gtdbtk_r207/align",
+#         data_path=gtdbtk_data_path
+#     output:
+#         output_dir=directory("8_cami2_strain/gtdbtk_r207/classify"),
+#         done=touch("8_cami2_strain/gtdbtk_r207/classify.done")
+#     log:
+#         "8_cami2_strain/gtdbtk_r207/classify.log"
+#     resources:
+#         mem_mb=64000
+#     shell:
+#         "GTDBTK_DATA_PATH={input.data_path} " \
+#         "pixi run -e gtdbtk " \
+#         "gtdbtk classify --genome_dir {input.fa} " \
+#         "--align_dir {input.al} " \
+#         "--extension .fasta " \
+#         #"--scratch_data " \
+#         "--out_dir {output.output_dir} " \
+#         "&> {log}"
+
+# rule gtdbtk_classify_wf:
+#     input:
+#         fa="8_cami2_strain/short_read/source_genomes",
+#         data_path=gtdbtk_data_path
+#     output:
+#         output_dir=directory("8_cami2_strain/gtdbtk_r207_wf")
+#     log:
+#         "8_cami2_strain/gtdb_r207_wf/classify_wf.log"
+#     shell:
+#         "GTDBTK_DATA_PATH={input.data_path} " \
+#         "pixi run -e gtdbtk " \
+#         "gtdbtk classify_wf --genome-dir {input.fa} " \
+#         "--out_dir {output.output_dir} " \
+#         "&> {log}"
+
+
 rule download_gtdbtk_r207_data:
     output:
         join(output_directory, 'gtdbtk_r207_v2_data.tar.gz')
@@ -910,105 +1064,7 @@ rule extract_gtdbtk_r207_data:
         f"'cd {output_directory} && " \
         "tar -xzf gtdbtk_r207_v2_data.tar.gz' &> {log}"
 
-rule download_metax_profiles:
-    output:
-        done = touch("18_metax_gut/metax_profiles-download.done"),
-        zip = "18_metax_gut/metax_benchmark_profiles.zip"
-    log:
-        "18_metax_gut/metax_profiles-download.log"
-    shell:
-        "wget 'https://zenodo.org/records/20128301/files/metax_benchmark_profiles.zip?download=1' "
-        "-O {output.zip} &> {log}"
-
-rule extract_metax_profiles:
-    input:
-        zip = "18_metax_gut/metax_benchmark_profiles.zip"
-    output:
-        done = touch("18_metax_gut/metax_profiles-extract.done"),
-        dir = directory("18_metax_gut/metax_benchmark_profiles")
-    log:
-        "18_metax_gut/metax_profiles-extract.log"
-    shell:
-        "unzip {input.zip} -d 18_metax_gut &> {log}"
-
-rule metax_profiles_to_coverages:
-    input:
-        dir = "18_metax_gut/metax_benchmark_profiles"
-    output:
-        directory("18_metax_gut/coverages")
-    log:
-        "18_metax_gut/metax_profiles_to_condensed.log"
-    shell:
-        "mkdir -p {output} && "
-        "pixi run -e cami-opal-lib "
-        "python3 bin/biobox_to_coverages.py "
-        "--profile {input.dir}/gut/Gold_standard.profile "
-        "--outdir {output} &> {log}"
-
-rule metax_coverages_to_taxids:
-    input:
-        [f"18_metax_gut/coverages/sample_{sample_number}.tsv" for sample_number in range(10)]
-    output:
-        "18_metax_gut/taxids.txt"
-    shell:
-        'cat {input} | cut -f1 | sed "s/\..\+$//" > {output}'
-
-rule metax_taxids_to_genome_accessions:
-    input:
-        "18_metax_gut/taxids.txt"
-    output:
-        "18_metax_gut/taxids_to_genome_accessions.txt"
-    log:
-        "18_metax_gut/taxids_to_genome_accessions.log"
-    shell:
-        'datasets summary genome taxon --inputfile {input} --assembly-level complete --as-json-lines | '
-        'dataformat tsv genome --fields accession,assminfo-refseq-category,assminfo-name,organism-tax-id,assminfo-biosample-description-organism-tax-id 2> {log} > {output}'
-
-# convert ncbi to gtdb
-rule metax_download_ncbi_to_gtdb_bacteria_translation:
-    output:
-        "18_metax_gut/ncbi_vs_gtdb_r232_bacteria.xlsx"
-    shell:
-        "wget https://data.gtdb.ecogenomic.org/releases/release232/232.0/auxillary_files/ncbi_vs_gtdb_r232_bacteria.xlsx "
-        "-O 18_metax_gut"
-
-rule metax_download_ncbi_to_gtdb_archaea_translation:
-    output:
-        "18_metax_gut/ncbi_vs_gtdb_r232_archaea.xlsx"
-    shell:
-        "wget https://data.gtdb.ecogenomic.org/releases/release232/232.0/auxillary_files/ncbi_vs_gtdb_r232_archaea.xlsx "
-        "-O 18_metax_gut"
-
-rule metax_ncbi_to_gtdb_translation:
-    input:
-        bac = "18_metax_gut/ncbi_vs_gtdb_r232_bacteria.xlsx",
-        ar = "18_metax_gut/ncbi_vs_gtdb_r232_archaea.xlsx"
-    output:
-        "18_metax_gut/ncbi_to_gtdb_r232_mapping.tsv"
-    log:
-        "18_metax_gut/ncbi_to_gtdb_translation.log"
-    shell:
-        "pixi run -e fastexcel "
-        "python3 bin/ncbi_to_gtdb_translation.py --bac {input.bac} --ar {input.ar} "
-        "--output-file {output} &> {log}"
-
-rule metax_coverages_to_genomes_list:
-    input:
-        [f"18_metax_gut/coverages/sample_{sample_number}.tsv" for sample_number in range(10)]
-    output:
-        "18_metax_gut/genomes_to_ids.txt"
-    shell:
-        """
-        : > {output} && 
-        for f in {input}; do
-          cut -f1 "$f" | sed 's/\(.*\)/genomes/\1.fasta\t\1/' >> {output}
-        done
-        """
-
-rule all_metax_gut_reads:
-    input:
-        metax_gut_reads
-
+# ## Metax gut metagenome benchmark (GTDB profiles)
 rule download_metax_gut_reads:
     output:
         done = touch("18_metax_gut/metax_gut_reads-download.done"),
@@ -1031,6 +1087,135 @@ rule split_metax_gut_reads:
     shell:
         "mkdir -p 18_metax_gut/split_reads && "
         "zcat {input[0]} |./bin/deinterleave_fastq.sh {output.r1} {output.r2} compress &> {log}"
+
+rule metax_genome_coverages:
+    input:
+        tsv = "18_metax_gut/genome_relative_abundance.tsv"
+    output:
+        directory("18_metax_gut/coverages")
+    log:
+        "18_metax_gut/metax_genome_coverages.log"
+    shell:
+        "mkdir -p {output} && "
+        "pixi run -e taxonkit "
+        "python3 bin/table_to_coverages.py "
+        "--profile {input.tsv} "
+        "--outdir {output} &> {log}"
+
+# ## Metax gut metagenome benchmark (original NCBI profiles)
+rule download_metax_profiles:
+    output:
+        done = touch("20_metax_gut_ncbi/metax_profiles-download.done"),
+        zip = "20_metax_gut_ncbi/metax_benchmark_profiles.zip"
+    log:
+        "20_metax_gut/metax_profiles-download.log"
+    shell:
+        "wget 'https://zenodo.org/records/20128301/files/metax_benchmark_profiles.zip?download=1' "
+        "-O {output.zip} &> {log}"
+
+rule extract_metax_profiles:
+    input:
+        zip = "20_metax_gut/metax_benchmark_profiles.zip"
+    output:
+        done = touch("20_metax_gut/metax_profiles-extract.done"),
+        dir = directory("20_metax_gut/metax_benchmark_profiles")
+    log:
+        "20_metax_gut/metax_profiles-extract.log"
+    shell:
+        "unzip {input.zip} -d 18_metax_gut &> {log}"
+
+rule metax_profiles_to_coverages:
+    input:
+        dir = "18_metax_gut/metax_benchmark_profiles"
+    output:
+        directory("18_metax_gut/coverages")
+    log:
+        "18_metax_gut/metax_profiles_to_coverages.log"
+    shell:
+        "mkdir -p {output} && "
+        "pixi run -e cami-opal-lib "
+        "python3 bin/biobox_to_coverages.py "
+        "--profile {input.dir}/gut/Gold_standard.profile "
+        "--outdir {output} &> {log}"
+
+# # don't try ncbi -> gtdb conversion
+# rule metax_coverages_to_taxids:
+#     input:
+#         [f"18_metax_gut/coverages/sample_{sample_number}.tsv" for sample_number in range(10)]
+#     output:
+#         "18_metax_gut/taxids.txt"
+#     shell:
+#         'cat {input} | cut -f1 | sed "s/\..\+$//" > {output}'
+
+# rule metax_taxids_to_genome_accessions:
+#     input:
+#         "18_metax_gut/taxids.txt"
+#     output:
+#         "18_metax_gut/taxids_to_genome_accessions.txt"
+#     log:
+#         "18_metax_gut/taxids_to_genome_accessions.log"
+#     shell:
+#         'datasets summary genome taxon --inputfile {input} --assembly-level complete --as-json-lines | '
+#         'dataformat tsv genome --fields accession,assminfo-refseq-category,assminfo-name,organism-tax-id,assminfo-biosample-description-organism-tax-id 2> {log} > {output}'
+
+# # convert ncbi to gtdb
+# rule metax_download_ncbi_to_gtdb_bacteria_translation:
+#     output:
+#         "18_metax_gut/ncbi_vs_gtdb_r232_bacteria.xlsx"
+#     shell:
+#         "wget https://data.gtdb.ecogenomic.org/releases/release232/232.0/auxillary_files/ncbi_vs_gtdb_r232_bacteria.xlsx "
+#         "-O 18_metax_gut"
+
+# rule metax_download_ncbi_to_gtdb_archaea_translation:
+#     output:
+#         "18_metax_gut/ncbi_vs_gtdb_r232_archaea.xlsx"
+#     shell:
+#         "wget https://data.gtdb.ecogenomic.org/releases/release232/232.0/auxillary_files/ncbi_vs_gtdb_r232_archaea.xlsx "
+#         "-O 18_metax_gut"
+
+# rule metax_ncbi_to_gtdb_translation:
+#     input:
+#         bac = "18_metax_gut/ncbi_vs_gtdb_r232_bacteria.xlsx",
+#         ar = "18_metax_gut/ncbi_vs_gtdb_r232_archaea.xlsx"
+#     output:
+#         "18_metax_gut/ncbi_to_gtdb_r232_mapping.tsv"
+#     log:
+#         "18_metax_gut/ncbi_to_gtdb_translation.log"
+#     shell:
+#         "pixi run -e fastexcel "
+#         "python3 bin/ncbi_to_gtdb_translation.py --bac {input.bac} --ar {input.ar} "
+#         "--output-file {output} &> {log}"
+
+rule metax_coverages_to_genomes_list:
+    input:
+        [f"18_metax_gut/coverages/sample_{sample_number}.tsv" for sample_number in range(10)]
+    output:
+        "18_metax_gut/genomes_to_ids.tsv"
+    localrule: True
+    shell:
+        """
+        : > {output} && 
+        for f in {input}; do
+          cut -f1 "$f" | sed 's/\(.*\)/genomes\/\1.fasta\t\1/' >> {output}
+        done
+        """
+
+rule taxonomake_metax_gut:
+    input:
+        coverages = metax_gut_coverage_definitions,
+        reads = metax_gut_reads,
+        genomes_list = metax_gut_genomes_list
+    output:
+        gtdbtk_data = metax_gut_gtdbtk_data,
+        truth = metax_gut_truths
+    log:
+        "18_metax_gut/taxonomake.log"
+    localrule: True
+    shell:
+        f"SNAKEMAKE_PROFILE={PROFILE} "
+        "pixi run -e taxonomake "
+        "taxonomake 18_metax_gut/community.yaml "
+        "--directory 18_metax_gut/taxonomake &> {log}"
 
 # # don't need? datasets takes taxon ids directly     
 # rule download_cami2_accession2taxid:
@@ -1116,11 +1301,16 @@ rule winnow_tax_pull_image:
     shell:
         "singularity pull {output} docker://shansun1809/winnow-tax:latest &> {log}"
 
-rule winnow_tax_download:
+rule winnow_tax_db_download:
     input:
-        [join(output_directory, "gtdb-taxdump-R226.tar.gz"),
+        [join(output_directory, "gtdb-taxdump-R226/"),
+         join(output_directory, 'acc2taxid_r226.txt'),
          'bac120_taxonomy_r226.tsv.gz',
-         'ar53_taxonomy_r207.tar.gz']
+         'ar53_taxonomy_r226.tsv.gz',
+         join(output_directory, 'gtdb_genomes_reps_r226.tar.gz'),
+         join(output_directory, 'ktaxonomy.tsv'),
+         join(output_directory, 'acc2taxid.tsv'),
+         join(output_directory, 'clean_kraken2_gtdb_r226.done')]
 
 rule download_gtdb_taxdump_r226:
     output:
@@ -1160,7 +1350,7 @@ rule download_gtdb_bac120_taxonomy_r226:
 rule download_gtdb_ar53_taxonomy_r226:
     output:
         done=touch(join(output_directory, 'gtdb_ar_tax_r226-download.done')),
-        gz = 'ar53_taxonomy_r226.tar.gz'
+        gz = 'ar53_taxonomy_r226.tsv.gz'
     log:
         join(output_directory, 'gtdb_ar_tax_r226-download.log')
     localrule:
@@ -1175,6 +1365,7 @@ rule download_gtdb_genomes_reps_r226:
         tar = join(output_directory, 'gtdb_genomes_reps_r226.tar.gz')
     log:
         join(output_directory, 'gtdb_genomes_reps_r226-download.log')
+    localrule: True
     shell:
         'wget https://data.gtdb.ecogenomic.org/releases/release226/226.0/genomic_files_reps/gtdb_genomes_reps_r226.tar.gz '
         '-O {output.tar} &> {log}'
@@ -1185,25 +1376,26 @@ rule gtdb_reps_accessions_r226:
     output:
         join(output_directory, 'gtdb_genomes_reps_accessions_r226.txt')
     shell:
-        "tar -tzf {input.tar} | "
-        "sed s/.*\/\(GC[AF]_[0-9]\{{9\}}\)\(\.[0-9]\+\)?_genomic\.fna\(\.gz\)?$/\\1/ | "
+        "tar -I pigz -tf {input.tar} | "
+        "grep 'GC[AF]_[0-9]\{{9\}}' | "
+        "sed 's/.*\/\(GC[AF]_[0-9]\{{9\}}\)\(\.[0-9]\+\)\?_genomic\.fna\(\.gz\)\?$/\\1/' | "
         "sort -u > {output}"
 
 rule gtdb_r226_accessions:
     input:
-        bac = 'bac120_taxonomy_r226.tsv.gz'
-        ar = 'ar53_taxonomy_r226.tar.gz'
+        bac = 'bac120_taxonomy_r226.tsv.gz',
+        ar = 'ar53_taxonomy_r226.tsv.gz'
     output:
         join(output_directory, 'gtdb_accessions_r226.txt')
     shell:
         "zcat {input.bac} {input.ar} | "
         "pixi run -e taxonkit csvtk cut -H -t -f1 | "
         "sed 's/^.*\(GC[AF]_[0-9]\{{9\}}\).*/\\1/' | "
-        "sort -u }> {output}"
+        "sort -u > {output}"
 
 rule gtdb_r226_accessions_comm:
     input:
-        acc = join(output_directory, 'gtdb_accessions_r226.txt')
+        acc = join(output_directory, 'gtdb_accessions_r226.txt'),
         rep_acc = join(output_directory, 'gtdb_genomes_reps_accessions_r226.txt')
     output:
         join(output_directory, 'gtdb_accessions_r226_comm.txt')
@@ -1220,3 +1412,88 @@ rule winnow_tax_acc2taxid_r226:
         "datasets summary genome accession --inputfile {input.acc} --as-json-lines | "
         "pixi run -e taxonkit "
         "dataformat tsv genome --elide-header --fields accession,organism-tax-id > {output}"    
+
+rule make_gtdb_taxdump:
+    input:
+        bac = 'bac120_taxonomy_r226.tsv.gz',
+        ar = 'ar53_taxonomy_r226.tsv.gz',
+        tar = join(output_directory, 'gtdb_genomes_reps_r226.tar.gz')
+    output:
+        dir = directory(join(output_directory, "build_kraken2_gtdb_r226/taxonomy")),
+        acc2taxid = join(output_directory, "acc2taxid.tsv")
+    log:
+        join(output_directory, 'build_kraken2_gtdb_r226/make_gtdb_taxdump.log')
+    shell:
+        f'mkdir -p {output_directory}/build_kraken2_gtdb_r226 && '
+        'python3 -u {workflow.basedir}/kraken_gtdb_r226_build_scripts/make_gtdb_taxdump.py '
+        '--bac120-taxonomy {input.bac} '
+        '--ar53-taxonomy {input.ar} '
+        '--tarball {input.tar} '
+        '--outdir {output.dir} '
+        '--acc2taxid {output.acc2taxid} &> {log}'
+
+rule materialise_kraken_library:
+    input:
+        tar = join(output_directory, 'gtdb_genomes_reps_r226.tar.gz'),
+        acc2taxid = join(output_directory, 'acc2taxid.tsv'),
+    output:
+        libdir = directory(join(output_directory, 'kraken_gtdb_r226_db/taxonomy/library/added'))
+    log:
+        join(output_directory, 'build_kraken2_gtdb_r226/materialise_kraken_library.log')
+    params:
+        chunk_size_bites = 20000000000
+    shell:
+        'python3 -u {workflow.basedir}/kraken_gtdb_r226_build_scripts/materialize_kraken_library.py '
+        '--tarball {input.tar} '
+        '--acc2taxid {input.acc2taxid} '
+        '--outdir {output.libdir} '
+        '--chunk-size-bytes {params.chunk_size_bites}'
+
+rule copy_gtdb_taxdump_nodes_and_names:
+    input:
+        dir = join(output_directory, "build_kraken2_gtdb_r226/taxonomy")
+    output:
+        nodes = join(output_directory, 'kraken_gtdb_r226_db/taxonomy/nodes.dmp'),
+        names = join(output_directory, 'kraken_gtdb_r226_db/taxonomy/names.dmp')
+    shell:
+        'cp {input.dir}/nodes.dmp {output.nodes} && '
+        'cp {input.dir}/names.dmp {output.names}'
+
+rule build_kraken2_gtdb_r226:
+    input:
+        nodes = join(output_directory, 'kraken_gtdb_r226_db/taxonomy/nodes.dmp'),
+        names = join(output_directory, 'kraken_gtdb_r226_db/taxonomy/names.dmp'),
+        libdir = join(output_directory, 'kraken_gtdb_r226_db/taxonomy/library/added')
+    output:
+        touch(join(output_directory, 'build_kraken2_gtdb_r226.done'))
+    threads:
+        16
+    resources:
+        mem_mb = 1500000
+    log:
+        join(output_directory, 'build_kraken2_gtdb_r226.log')
+    shell:
+        f"pixi run -e kraken kraken2-build --db {output_directory}/kraken_gtdb_r226_db "
+        "--threads {threads} "
+        "--no-masking &> {log}"
+    
+rule clean_kraken2_gtdb_r226:
+    input:
+        done = join(output_directory, 'build_kraken2_gtdb_r226.done')
+    output:
+        touch(join(output_directory, 'clean_kraken2_gtdb_r226.done'))
+    log:
+        join(output_directory, 'clean_kraken2_gtdb_r226.log')
+    shell:
+        'pixi run -e kraken kraken2-build --db {input.db} --clean &> {log}'
+
+rule build_ktaxonomy:
+    input:
+        dir = join(output_directory, 'build_kraken2_gtdb_r226/taxonomy')
+    output:
+        join(output_directory, 'ktaxonomy.tsv')
+    log:
+        join(output_directory, 'build_ktaxonomy.log')
+    shell:
+        'python3 -u {workflow.basedir}/build_kraken2_gtdb_r226_scripts/build_ktaxonomy.py '
+        '{input.dir} {output} &> {log}'

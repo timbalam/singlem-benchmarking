@@ -1,7 +1,7 @@
 samples: "samples.tsv"
 
 genomes_list:
-  taxon: "genomes_to_ids.tsv"
+  accession: "genomes_to_ids.tsv"
 
 taxonomy: "taxonomy.tsv"
 

@@ -139,7 +139,7 @@ metax_gut_samples = metax_gut_samples_data["names"]
 metax_gut_reads = metax_gut_samples_data["reads1"] + metax_gut_samples_data["reads2"]
 metax_gut_truths = metax_gut_samples_data["truths"]
 metax_gut_coverage_definitions = metax_gut_samples_data["coverages"]
-metax_gut_genomes_list = _make_absolute("18_metax_gut", metax_gut_conf["genomes_list"]["taxon"])
+metax_gut_genomes_list = _make_absolute("18_metax_gut", metax_gut_conf["genomes_list"]["accession"])
 metax_gut_gtdbtk_data = _make_absolute("18_metax_gut", metax_gut_conf["classify"]["data"])
 
 
@@ -1102,6 +1102,57 @@ rule metax_genome_coverages:
         "--profile {input.tsv} "
         "--outdir {output} &> {log}"
 
+rule metax_coverages_to_genomes_list:
+    input:
+        [f"18_metax_gut/coverages/sample_{sample_number}.tsv" for sample_number in range(10)]
+    output:
+        prok = "18_metax_gut/genomes_to_ids.tsv",
+        vir = "18_metax_gut/virus_to_ids.tsv"
+    localrule: True
+    shell:
+        "cut -f1 {input} | "
+        "grep '^GC[FA]' | "
+        "sort -u | "
+        "sed 's/\(.*\)/genomes\/\\1.fasta\t\\1/' > {output.prok} && "
+        "cut -f1 {input} | "
+        "grep -v '^GC[FA]' | "
+        "sort -u | "
+        "sed 's/\(.*\)/genomes\/\\1.fasta\t\\1/' > {output.vir}"
+
+rule taxonomake_metax_gut_download:
+    input:
+        coverages = metax_gut_coverage_definitions,
+        reads = metax_gut_reads,
+        genomes_list = metax_gut_genomes_list
+    output:
+        gtdbtk_data = metax_gut_gtdbtk_data
+    log:
+        "18_metax_gut/taxonomake-download.log"
+    localrule: True
+    shell:
+        f"SNAKEMAKE_PROFILE={PROFILE} "
+        "pixi run -e taxonomake "
+        "taxonomake 18_metax_gut/community.yaml "
+        "--download "
+        "--directory 18_metax_gut/taxonomake &> {log}"
+
+rule taxonomake_metax_gut:
+    input:
+        coverages = metax_gut_coverage_definitions,
+        reads = metax_gut_reads,
+        genomes_list = metax_gut_genomes_list,
+        gtdbtk_data = metax_gut_gtdbtk_data
+    output:
+        truth = metax_gut_truths
+    log:
+        "18_metax_gut/taxonomake.log"
+    localrule: True
+    shell:
+        f"SNAKEMAKE_PROFILE={PROFILE} "
+        "pixi run -e taxonomake "
+        "taxonomake 18_metax_gut/community.yaml "
+        "--directory 18_metax_gut/taxonomake &> {log}"
+
 # ## Metax gut metagenome benchmark (original NCBI profiles)
 rule download_metax_profiles:
     output:
@@ -1126,11 +1177,11 @@ rule extract_metax_profiles:
 
 rule metax_profiles_to_coverages:
     input:
-        dir = "18_metax_gut/metax_benchmark_profiles"
+        dir = "20_metax_gut/metax_benchmark_profiles"
     output:
-        directory("18_metax_gut/coverages")
+        directory("20_metax_gut/coverages")
     log:
-        "18_metax_gut/metax_profiles_to_coverages.log"
+        "20_metax_gut/metax_profiles_to_coverages.log"
     shell:
         "mkdir -p {output} && "
         "pixi run -e cami-opal-lib "
@@ -1185,54 +1236,6 @@ rule metax_profiles_to_coverages:
 #         "pixi run -e fastexcel "
 #         "python3 bin/ncbi_to_gtdb_translation.py --bac {input.bac} --ar {input.ar} "
 #         "--output-file {output} &> {log}"
-
-rule metax_coverages_to_genomes_list:
-    input:
-        [f"18_metax_gut/coverages/sample_{sample_number}.tsv" for sample_number in range(10)]
-    output:
-        "18_metax_gut/genomes_to_ids.tsv"
-    localrule: True
-    shell:
-        """
-        : > {output} && 
-        for f in {input}; do
-          cut -f1 "$f" | sed 's/\(.*\)/genomes\/\\1.fasta\t\\1/' >> {output}
-        done
-        """
-
-rule taxonomake_metax_gut_download:
-    input:
-        coverages = metax_gut_coverage_definitions,
-        reads = metax_gut_reads,
-        genomes_list = metax_gut_genomes_list
-    output:
-        gtdbtk_data = metax_gut_gtdbtk_data
-    log:
-        "18_metax_gut/taxonomake-download.log"
-    localrule: True
-    shell:
-        f"SNAKEMAKE_PROFILE={PROFILE} "
-        "pixi run -e taxonomake "
-        "taxonomake 18_metax_gut/community.yaml "
-        "--download "
-        "--directory 18_metax_gut/taxonomake &> {log}"
-
-rule taxonomake_metax_gut:
-    input:
-        coverages = metax_gut_coverage_definitions,
-        reads = metax_gut_reads,
-        genomes_list = metax_gut_genomes_list,
-        gtdbtk_data = metax_gut_gtdbtk_data
-    output:
-        truth = metax_gut_truths
-    log:
-        "18_metax_gut/taxonomake.log"
-    localrule: True
-    shell:
-        f"SNAKEMAKE_PROFILE={PROFILE} "
-        "pixi run -e taxonomake "
-        "taxonomake 18_metax_gut/community.yaml "
-        "--directory 18_metax_gut/taxonomake &> {log}"
 
 # # don't need? datasets takes taxon ids directly     
 # rule download_cami2_accession2taxid:
@@ -1454,7 +1457,7 @@ rule materialise_kraken_library:
         tar = join(output_directory, 'gtdb_genomes_reps_r226.tar.gz'),
         acc2taxid = join(output_directory, 'acc2taxid.tsv'),
     output:
-        libdir = directory(join(output_directory, 'kraken_gtdb_r226_db/taxonomy/library/added'))
+        libdir = directory(join(output_directory, 'kraken_gtdb_r226_db/library/added'))
     log:
         join(output_directory, 'build_kraken2_gtdb_r226/materialise_kraken_library.log')
     params:
@@ -1480,7 +1483,7 @@ rule build_kraken2_gtdb_r226:
     input:
         nodes = join(output_directory, 'kraken_gtdb_r226_db/taxonomy/nodes.dmp'),
         names = join(output_directory, 'kraken_gtdb_r226_db/taxonomy/names.dmp'),
-        libdir = join(output_directory, 'kraken_gtdb_r226_db/taxonomy/library/added')
+        libdir = join(output_directory, 'kraken_gtdb_r226_db/library/added')
     output:
         touch(join(output_directory, 'build_kraken2_gtdb_r226.done'))
     threads:
@@ -1492,6 +1495,7 @@ rule build_kraken2_gtdb_r226:
     shell:
         f"pixi run -e kraken kraken2-build --db {output_directory}/kraken_gtdb_r226_db "
         "--threads {threads} "
+        "--build "
         "--no-masking &> {log}"
     
 rule clean_kraken2_gtdb_r226:
@@ -1512,5 +1516,5 @@ rule build_ktaxonomy:
     log:
         join(output_directory, 'build_ktaxonomy.log')
     shell:
-        'python3 -u {workflow.basedir}/kraken2_gtdb_r226_build_scripts/build_ktaxonomy.py '
+        'python3 -u {workflow.basedir}/kraken_gtdb_r226_build_scripts/build_ktaxonomy.py '
         '{input.dir} {output} &> {log}'
